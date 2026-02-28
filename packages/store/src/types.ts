@@ -191,8 +191,12 @@ export interface StoreInternalMethods<S extends StateDefinition> {
   /** Get a plain object snapshot of current state (with widened types). */
   $snapshot(): WidenedState<S>;
 
-  /** Restore state from a snapshot (used for time-travel debugging). */
-  $restore(snapshot: WidenedState<S>): void;
+  /** 
+   * Restore state from a snapshot (used for time-travel debugging).
+   * Accepts Record<string, unknown> for compatibility with AnyStore interface.
+   * Only known state keys are restored; unknown keys are ignored.
+   */
+  $restore(snapshot: Record<string, unknown>): void;
 }
 
 /**

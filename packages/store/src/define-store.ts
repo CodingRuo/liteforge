@@ -201,11 +201,14 @@ export function defineStore<
     return result;
   }
 
-  function $restore(snapshot: WidenedState<S>): void {
+  function $restore(snapshot: Record<string, unknown>): void {
     // Restore state from a snapshot (used for time-travel debugging)
-    for (const key of Object.keys(snapshot) as Array<keyof S>) {
-      const value = deepClone(snapshot[key]);
-      signalState[key].set(value);
+    // Only restore keys that exist in our state definition
+    for (const key of Object.keys(signalState) as Array<keyof S>) {
+      if (key in snapshot) {
+        const value = deepClone(snapshot[key as string]);
+        signalState[key].set(value);
+      }
     }
   }
 

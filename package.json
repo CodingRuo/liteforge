@@ -15,12 +15,14 @@
     "clean": "pnpm -r exec rm -rf dist",
     "clean:all": "pnpm clean && rm -rf node_modules",
     "prepublish:check": "pnpm clean && pnpm build:packages && pnpm test:run && pnpm typecheck:all",
-    "publish:all": "pnpm prepublish:check && pnpm -r publish --access public",
-    "publish:dry": "pnpm prepublish:check && pnpm -r publish --access public --dry-run",
-    "version:patch": "pnpm -r --filter './packages/*' exec npm version patch",
-    "version:minor": "pnpm -r --filter './packages/*' exec npm version minor"
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "changeset publish",
+    "release": "pnpm build:packages && pnpm test:run && pnpm changeset:publish"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.5.2",
+    "@changesets/cli": "^2.29.8",
     "@vitest/coverage-v8": "^2.1.8",
     "happy-dom": "^15.11.7",
     "typescript": "^5.7.2",

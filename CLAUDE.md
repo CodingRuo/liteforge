@@ -2,76 +2,146 @@
 
 ## Project Overview
 
-**LiteForge** is a modern frontend framework built from scratch with these core principles:
+**LiteForge** is a signals-based frontend framework built from scratch. Published on npm under `@liteforge/*`. Monorepo with 10 packages under `packages/`, demo app under `examples/starter/`.
 
-- **No Virtual DOM** – Direct, fine-grained DOM manipulation via Signals/Effects
-- **JSX Syntax** – Custom Vite plugin transforms JSX to direct DOM operations at build-time
-- **Signals-based Reactivity** – Automatic dependency tracking, no manual subscriptions
-- **Zero-Flicker Architecture** – Components render ONLY when async data is fully loaded
-- **Unified Context System** – No provider wrapping, no prop drilling, one `use()` function
-- **Built-in Router** – With guards, middleware, lazy loading, and nested routes
-- **Store System** – With global registry for full state inspection
-- **Data Fetching** – Signals-based query/mutation system with caching
-- **Form Management** – Zod-validated forms with reactive fields
-- **Data Tables** – Full-featured reactive tables with sorting, filtering, pagination
+**Repository:** https://github.com/SchildW3rk/liteforge
+**npm:** https://www.npmjs.com/org/liteforge
+**Author:** SchildW3rk (René), Salzburg, Austria
+**License:** MIT
 
-**Tech Stack:** TypeScript, Vite, JSX, pnpm monorepo.  
-**Target:** < 5kb gzipped core runtime. Zero external runtime dependencies in core packages.
+**Core Principles:**
+- **No Virtual DOM** — Direct, fine-grained DOM manipulation via Signals/Effects
+- **JSX Syntax** — Custom Vite plugin transforms JSX to direct DOM operations at build-time
+- **Signals-based Reactivity** — Automatic dependency tracking, no manual subscriptions
+- **Zero Dependencies** — Every package has zero external runtime deps (only peer deps on core)
+- **TypeScript-first** — Full strict mode, no `any` in public APIs
+- **Object-style APIs** — All `create*` functions take an options object, no positional args
+
+**Tech Stack:** TypeScript, Vite, JSX, pnpm monorepo.
 
 ---
 
-## Architecture Overview
+## Architecture Rules — NEVER break these
+
+1. Use ONLY `signal()`, `effect()`, `computed()` from `@liteforge/core` for reactivity
+2. No classes in public APIs — use factory functions (`createX` pattern)
+3. No `any` types in public APIs — full TypeScript generics with strict mode
+4. No external runtime dependencies — only `@liteforge/core` as peer dependency
+5. All date operations use native `Date` + `Intl.DateTimeFormat` — NO date-fns/dayjs/moment
+6. All DOM interaction uses native APIs — NO jQuery, NO external DOM libraries
+7. Drag & drop uses native Pointer Events — NO external drag libraries
+8. Every package exports through a clean `src/index.ts` barrel file
+9. ALL demo components MUST use JSX syntax
+10. Object-style API pattern everywhere (options object, not positional args)
+
+---
+
+## Package Dependency Graph
 
 ```
-liteforge/
-├── packages/
-│   ├── core/                # Reactivity: signal(), computed(), effect(), batch()
-│   ├── runtime/             # DOM Renderer, createComponent(), Lifecycle, use()
-│   ├── store/               # defineStore(), storeRegistry, time-travel
-│   ├── router/              # Router, Guards, Middleware, Link, lazy loading
-│   ├── query/               # createQuery(), createMutation(), queryCache
-│   ├── form/                # createForm() with Zod validation
-│   ├── table/               # createTable() with sort, filter, pagination
-│   ├── vite-plugin/         # JSX → DOM transform, template extraction
-│   └── devtools/            # DevTools panel (Ctrl+Shift+D) with 5 tabs
-├── examples/
-│   └── starter/             # Demo app showcasing all features
-├── tsconfig.json
-├── package.json             # Monorepo root (pnpm workspaces)
-└── vitest.config.ts
+core (no deps)
+├── store
+├── router
+├── runtime
+├── query
+├── form
+├── table
+└── calendar
+
+vite-plugin (standalone, no liteforge deps)
+devtools (depends on core + store)
 ```
+
+Build order follows this graph. `pnpm -r build` handles it automatically.
 
 ---
 
 ## Package Status
 
-| Package | Status | Tests | Description |
-|---------|--------|-------|-------------|
-| `@liteforge/core` | ✅ Complete | ~120 | signal, computed, effect, batch, onCleanup |
-| `@liteforge/runtime` | ✅ Complete | ~200 | createComponent, createApp, use(), Show, For, Switch, Dynamic |
-| `@liteforge/store` | ✅ Complete | ~150 | defineStore, storeRegistry, plugins, time-travel |
-| `@liteforge/router` | ✅ Complete | ~250 | Router, guards, middleware, nested routes, lazy loading |
-| `@liteforge/query` | ✅ Complete | 67 | createQuery, createMutation, queryCache |
-| `@liteforge/form` | ✅ Complete | 48 | createForm with Zod, nested fields, array fields |
-| `@liteforge/table` | ✅ Complete | 61 | createTable with sort, filter, pagination, selection |
-| `@liteforge/vite-plugin` | ✅ Complete | — | JSX transform, template extraction, signal-safe getters |
-| `@liteforge/devtools` | ✅ Complete | ~100 | 5-tab panel: Signals, Stores, Router, Components, Performance |
-| Demo App | ✅ Complete | — | Full app with all features at examples/starter |
+| Package | Version | Size (gzip) | Tests | Description |
+|---------|---------|-------------|-------|-------------|
+| `@liteforge/core` | 0.1.0 | ~6kb | ~120 | signal, computed, effect, batch, onCleanup |
+| `@liteforge/runtime` | 0.1.0 | ~12kb | ~200 | createComponent, createApp, use(), Show, For, Switch |
+| `@liteforge/store` | 0.1.0 | ~5kb | ~150 | defineStore, storeRegistry, plugins, time-travel |
+| `@liteforge/router` | 0.1.0 | ~20kb | ~250 | Router, guards, middleware, nested routes, lazy loading |
+| `@liteforge/query` | 0.1.0 | ~5kb | 67 | createQuery, createMutation, queryCache |
+| `@liteforge/form` | 0.1.0 | ~4kb | 48 | createForm with Zod, nested fields, array fields |
+| `@liteforge/table` | 0.1.0 | ~8kb | 61 | createTable with sort, filter, pagination, selection |
+| `@liteforge/calendar` | 0.1.0 | ~22kb | 184 | createCalendar with 4 views, drag & drop, resources |
+| `@liteforge/vite-plugin` | 0.1.0 | ~15kb | 275 | JSX transform, template extraction, signal-safe getters |
+| `@liteforge/devtools` | 0.1.0 | ~16kb | ~100 | 5-tab debug panel with time-travel |
 
-**Total: ~1000+ tests across all packages**
+**Total: 1474+ tests across all packages**
 
 ---
 
-## Core Packages (Phase 1)
+## Common Patterns
+
+### Signals — the foundation of everything:
+```ts
+import { signal, computed, effect } from '@liteforge/core'
+
+const count = signal(0)
+const doubled = computed(() => count() * 2)
+
+effect(() => {
+  console.log(doubled()) // auto-tracks dependencies
+})
+
+count.set(5)           // direct set
+count.update(n => n + 1) // functional update
+```
+
+### JSX Event Handlers — IMPORTANT:
+LiteForge JSX supports both `onclick` (lowercase) and `onClick` (PascalCase).
+The vite-plugin recognizes both as event handlers and does NOT wrap them in getter functions.
+
+```tsx
+// Reactive text — needs () => wrapper:
+<span>{() => count()}</span>
+
+// Event handler — NOT wrapped:
+<button onclick={() => doSomething()}>Click</button>
+
+// Static attribute:
+<div class="my-class" />
+
+// Dynamic attribute — needs () => wrapper:
+<div class={() => isActive() ? 'active' : 'inactive'} />
+```
+
+### Store pattern:
+```ts
+const myStore = defineStore('storeName', {
+  state: { value: null },
+  getters: (state) => ({
+    computed: () => state.value() !== null
+  }),
+  actions: (state) => ({
+    setValue(v) { state.value.set(v) }
+  })
+})
+```
+
+### Factory function pattern (ALL packages follow this):
+```ts
+// CORRECT:
+export function createThing<T>(options: ThingOptions<T>): ThingResult<T> { ... }
+
+// WRONG — never use classes in public APIs:
+export class Thing<T> { ... }
+```
+
+---
+
+## Core Packages
 
 ### `@liteforge/core` — Reactivity
 
 ```ts
-import { signal, computed, effect, batch, onCleanup } from '@liteforge/core'
-
 const count = signal(0)
 count()                     // read → 0
-count.set(5)                // write → notifies subscribers
+count.set(5)                // write
 count.update(n => n + 1)    // functional update
 
 const doubled = computed(() => count() * 2)  // lazy, cached
@@ -94,19 +164,15 @@ export const MyComponent = createComponent({
     const editMode = signal(false)
     return { editMode }
   },
-
   async load({ props, setup, use }) {
     const user = await api.get(`/users/${props.userId}`)
     return { user }
   },
-
   placeholder: () => <div class="skeleton" />,
   error: ({ error, retry }) => <button onclick={retry}>Retry</button>,
-
   component: ({ props, data, setup }) => (
     <div><h1>{data.user.name}</h1></div>
   ),
-
   mounted({ el }) { el.classList.add('fade-in') },
   destroyed() { console.log('cleaned up') },
 })
@@ -120,401 +186,198 @@ export const MyComponent = createComponent({
 <For each={items}>{(item) => <li>{item.name}</li>}</For>
 <Switch fallback={<Default />}>
   <Match when={a}>A</Match>
-  <Match when={b}>B</Match>
 </Switch>
 ```
 
 ### `@liteforge/store` — State Management
 
 ```ts
-export const userStore = defineStore('users', {
-  state: {
-    currentUser: null as User | null,
-    list: [] as User[],
-    loading: false,
-  },
+const userStore = defineStore('users', {
+  state: { currentUser: null, list: [], loading: false },
   getters: (state) => ({
     isLoggedIn: () => state.currentUser() !== null,
-    admins: () => state.list().filter(u => u.role === 'admin'),
   }),
-  actions: (state, use) => ({
+  actions: (state) => ({
     async fetchUsers() {
       state.loading.set(true)
-      state.list.set(await use('api').get('/users'))
+      state.list.set(await fetch('/api/users').then(r => r.json()))
       state.loading.set(false)
     },
   }),
 })
-
-// Registry
-storeRegistry.list()        // → ['users', 'ui']
-storeRegistry.snapshot()    // → full state as plain object
-storeRegistry.reset('ui')   // → reset to initial
 ```
 
 ### `@liteforge/router` — Routing
 
 ```ts
-const app = createApp({
-  router: {
-    routes: [
-      { path: '/', component: Home },
-      { path: '/users/:id', component: UserDetail, guard: 'auth' },
-      {
-        path: '/admin',
-        component: AdminLayout,
-        guard: ['auth', 'role:admin'],
-        children: [
-          { path: '/', component: Dashboard },
-          { path: '/users', component: AdminUsers },
-        ],
-      },
-    ],
-  },
+const router = createRouter({
+  routes: [
+    { path: '/', component: Home },
+    { path: '/users/:id', component: UserDetail, guard: 'auth' },
+    { path: '/admin', component: AdminLayout, guard: ['auth', 'role:admin'],
+      children: [
+        { path: '/', component: Dashboard },
+      ],
+    },
+  ],
 })
-
-// In components:
-const router = use('router')
-router.navigate('/path')
-router.params()    // Signal: { id: '42' }
-router.query()     // Signal: { search: 'foo' }
 ```
 
-**Features:** Guards, middleware, nested routes, lazy loading with `lazy()`, code splitting, route-based preloading.
-
----
-
-## Data Packages (Phase 2)
-
-### `@liteforge/query` — Data Fetching & Caching
-
-**Object-style API.** Every return value is a Signal.
+### `@liteforge/query` — Data Fetching
 
 ```ts
-import { createQuery, createMutation, queryCache } from '@liteforge/query'
-
-// Query — fetch data
 const users = createQuery({
   key: 'users',
   fn: () => fetch('/api/users').then(r => r.json()),
-  staleTime: 5 * 60 * 1000,   // 5 min fresh
-  retry: 3,
+  staleTime: 5 * 60 * 1000,
 })
 
-users.data()        // Signal: User[] | undefined
-users.error()       // Signal: Error | undefined
+users.data()        // Signal: User[]
 users.isLoading()   // Signal: boolean
 users.refetch()     // Manual refetch
 
-// Reactive key — refetches when signal changes
-const userId = signal(1)
-const user = createQuery({
-  key: () => ['user', userId()],
-  fn: () => fetch(`/api/users/${userId()}`).then(r => r.json()),
-})
-
-// Mutation
 const addUser = createMutation({
-  fn: (data: NewUser) => api.createUser(data),
-  invalidate: ['users'],        // Refetch users on success
-  onSuccess: (data) => { ... },
-  onError: (err) => { ... },
+  fn: (data) => api.createUser(data),
+  invalidate: ['users'],
 })
-addUser.mutate({ name: 'René' })
-
-// Optimistic updates via onMutate + rollback
-const addUserOptimistic = createMutation({
-  fn: api.addUser,
-  onMutate: (newUser, cache) => {
-    const previous = cache.get('users')
-    cache.set('users', [...(previous ?? []), { ...newUser, id: 'temp' }])
-    return previous  // rollback value
-  },
-  onError: (err, vars, rollback) => queryCache.set('users', rollback),
-  onSuccess: () => queryCache.invalidate('users'),
-})
-
-// Cache control
-queryCache.invalidate('users')
-queryCache.invalidate('user:*')   // Pattern matching
-queryCache.set('users', data)
-queryCache.clear()
 ```
-
-**Options:**
-- `staleTime` — ms until data is stale (default: 0)
-- `cacheTime` — ms to keep unused cache (default: 5 min)
-- `refetchOnFocus` — refetch on tab focus (default: true)
-- `refetchInterval` — polling interval
-- `retry` / `retryDelay` — retry on error
-- `enabled` — reactive guard: `() => !!token()`
 
 ### `@liteforge/form` — Form Management
 
-**Zod schema → reactive form. Object-style API.**
-
 ```ts
-import { createForm } from '@liteforge/form'
-import { z } from 'zod'
-
 const form = createForm({
   schema: z.object({
-    name: z.string().min(2, 'Min 2 Zeichen'),
-    email: z.string().email('Ungültige E-Mail'),
-    address: z.object({
-      street: z.string().min(1),
-      zip: z.string().regex(/^\d{4}$/, 'Ungültige PLZ'),
-    }),
-    items: z.array(z.object({
-      description: z.string().min(1),
-      quantity: z.number().min(1),
-      price: z.number().min(0),
-    })).min(1, 'Mindestens ein Posten'),
+    name: z.string().min(2),
+    email: z.string().email(),
   }),
-  initial: { name: '', email: '', address: { street: '', zip: '' }, items: [] },
-  onSubmit: async (values) => { ... },  // Typed from schema
-  validateOn: 'blur',          // 'change' | 'blur' | 'submit'
-  revalidateOn: 'change',     // After first error: revalidate on change
+  initial: { name: '', email: '' },
+  onSubmit: async (values) => { ... },
+  validateOn: 'blur',
+  revalidateOn: 'change',
 })
 
-// Field access — all Signals
-form.field('name').value()     // current value
-form.field('name').error()     // validation error
-form.field('name').touched()   // has been blurred
-form.field('name').dirty()     // value ≠ initial
+form.field('name').value()   // Signal
+form.field('name').error()   // Signal
 form.field('name').set('...')
-form.field('name').touch()     // trigger blur validation
-form.field('name').reset()
-
-// Nested fields — dot notation
-form.field('address.street').value()
-form.field('address.zip').error()
-
-// Array fields
-const items = form.array('items')
-items.fields()                 // Signal: ArrayItemField[]
-items.append({ description: '', quantity: 1, price: 0 })
-items.remove(index)
-items.move(from, to)
-items.swap(a, b)
-
-// Array item fields
-items.fields()[0].field('description').value()
-
-// Form-level state (all Signals)
-form.values()        // full form values
-form.errors()        // all errors
-form.isValid()       // all fields valid?
-form.isDirty()       // any field changed?
-form.isSubmitting()  // submit in progress?
-form.submitCount()   // number of submits
-
-// Actions
-form.submit()        // validate + call onSubmit
-form.reset()         // reset to initial
-form.setValues({})   // partial update
-form.validate()      // manual validation
-form.clearErrors()
-
-// In JSX:
-<input
-  value={() => form.field('email').value()}
-  oninput={(e) => form.field('email').set(e.target.value)}
-  onblur={() => form.field('email').touch()}
-/>
-<Show when={() => form.field('email').error()}>
-  <span class="error">{() => form.field('email').error()}</span>
-</Show>
+form.submit()
 ```
-
-**Peer dependencies:** `zod`, `@liteforge/core`
 
 ### `@liteforge/table` — Data Tables
 
-**Full-featured reactive table. Object-style API.**
-
 ```ts
-import { createTable } from '@liteforge/table'
-
 const table = createTable<User>({
-  // Data source — Signal or getter
   data: () => usersQuery.data() ?? [],
-
-  // Column definitions
   columns: [
-    { key: 'id', header: 'ID', width: 60, sortable: true },
     { key: 'name', header: 'Name', sortable: true },
     { key: 'email', header: 'Email', sortable: true },
-    { key: 'company.name', header: 'Company', sortable: true, filterable: true },
-    {
-      key: 'website',
-      header: 'Website',
-      cell: (value) => <a href={`https://${value}`} target="_blank">{value}</a>,
-    },
-    {
-      key: '_actions',    // Virtual column (no data field)
-      header: '',
-      cell: (_, row) => (
-        <div>
-          <button onclick={() => editUser(row)}>Edit</button>
-          <button onclick={() => deleteUser.mutate(row.id)}>Delete</button>
-        </div>
-      ),
-    },
+    { key: '_actions', header: '',
+      cell: (_, row) => <button onclick={() => edit(row)}>Edit</button> },
   ],
-
-  // Features (all optional)
-  search: { enabled: true, columns: ['name', 'email'], placeholder: 'Search...' },
-  filters: { 'company.name': { type: 'select' } },
-  pagination: { pageSize: 20, pageSizes: [10, 20, 50] },
+  pagination: { pageSize: 20 },
   selection: { enabled: true, mode: 'multi' },
-  columnToggle: true,
-  onRowClick: (row) => navigate(`/users/${row.id}`),
-  rowClass: (row) => row.active ? '' : 'row-inactive',
-
-  // Styling
-  unstyled: false,         // true = no CSS injected
-  classes: { ... },        // Override CSS classes per element
 })
 
-// Mount in JSX
 <table.Root />
-
-// Programmatic control (all Signals)
-table.sorting()            // { key, direction } | null
-table.sort('name', 'asc')
-table.searchQuery()        // current search text
-table.setSearch('...')
-table.filters()            // { 'company.name': 'Acme' }
-table.setFilter(key, value)
-table.page() / table.setPage(2) / table.nextPage()
-table.pageSize() / table.setPageSize(50)
-table.selected()           // Selected rows
-table.selectedCount()
-table.selectAll() / table.deselectAll() / table.toggleRow(row)
-table.visibleColumns()     // Visible column keys
-table.showColumn(key) / table.hideColumn(key) / table.toggleColumn(key)
-table.rows()               // Current visible rows (filtered + sorted + paginated)
 ```
 
-**Column Definition:**
-```ts
-interface ColumnDef<T> {
-  key: string                    // Data field or '_prefix' for virtual
-  header: string
-  width?: number | string
-  sortable?: boolean
-  filterable?: boolean
-  visible?: boolean              // Default visibility
-  cell?: (value, row) => Node    // Custom cell renderer (JSX)
-  headerCell?: () => Node        // Custom header renderer
-}
-```
-
-**Filter Types:** `text` (with debounce), `select` (auto-generated options), `boolean`, `number-range`
-
-**Dynamic Columns:** `columns` can be a Signal for server-driven tables.
-
-**Styling — 3 Layers:**
-1. BEM classes always present: `.lf-table`, `.lf-table-row`, `.lf-table-cell`, etc.
-2. Default theme via CSS Variables (overridable)
-3. `classes` override for Tailwind or full control
-4. `unstyled: true` disables default CSS injection
-
-**Data Pipeline (computed chain for performance):**
-```
-data() → filteredData (computed) → sortedData (computed) → paginatedData (computed) → DOM
-```
-
----
-
-## Tooling Packages
-
-### `@liteforge/vite-plugin` — Build-time JSX Transform
-
-Transforms JSX to direct DOM operations with signal-safe getter wrapping:
-```tsx
-// Input:
-<h1>Count: {count()}</h1>
-
-// Output:
-const _h1 = document.createElement('h1')
-_effect(() => { _h1.textContent = `Count: ${count()}` })
-```
-
-Features: Template extraction for static HTML, code splitting support, JSX → DOM compilation.
-
-**Known Issue:** HMR (Hot Module Replacement) is not yet working. Manual browser refresh required after changes.
-
-### `@liteforge/devtools` — Debug Panel
-
-Toggle with `Ctrl+Shift+D`. Five tabs:
-- **Signals** — Live values, update counts, dependency graphs
-- **Stores** — State tree with time-travel debugging (restore any past state)
-- **Router** — Navigation history, guard results, timing
-- **Components** — Component tree with mount/unmount tracking
-- **Performance** — Signal updates/sec, effect executions, component counts
-
----
-
-## Demo App (`examples/starter`)
-
-Located at `examples/starter/`. Demonstrates all packages working together:
-
-- **Dashboard layout** with sidebar navigation
-- **Home** — Component lifecycle demo (load/placeholder)
-- **Users** — User list (basic)
-- **Posts** — `@liteforge/query` with JSONPlaceholder API, createMutation
-- **Post Detail** — Reactive query keys from route params, dependent queries (comments)
-- **Forms** — Contact form (simple) + Invoice form (array fields, computed totals)
-- **Tables** — Full-featured table with sorting, filtering, pagination, selection
-- **Settings** — Theme toggle (light/dark)
-- **Admin Panel** — Nested routes demo
-
----
-
-## API Consistency
-
-All data packages use **object-style API** for consistency:
+### `@liteforge/calendar` — Scheduling Calendar
 
 ```ts
-// Query
-createQuery({ key: '...', fn: () => ..., staleTime: 5000 })
+const calendar = createCalendar({
+  events: () => appointments(),
+  view: 'week',
+  resources: [
+    { id: 'anna', name: 'Anna Müller', color: '#3b82f6' },
+    { id: 'tom', name: 'Tom Weber', color: '#10b981' },
+  ],
+  editable: true,
+  selectable: true,
+  locale: 'de-AT',
+  time: { dayStart: 8, dayEnd: 20, slotDuration: 30, weekStart: 1 },
+  onEventDrop: (event, newStart, newEnd, resourceId) => { ... },
+  onEventResize: (event, newEnd) => { ... },
+  onSlotClick: (start, end, resourceId) => { ... },
+})
 
-// Mutation
-createMutation({ fn: (data) => ..., invalidate: ['...'] })
+<calendar.Toolbar />
+<calendar.Root />
 
-// Form
-createForm({ schema: z.object({...}), initial: {...}, onSubmit: async (v) => {...} })
-
-// Table
-createTable({ data: () => [...], columns: [...], pagination: { pageSize: 20 } })
+calendar.next()
+calendar.prev()
+calendar.setView('month')
+calendar.toggleResource('anna')
 ```
 
-No positional arguments. Every option is named and self-documenting.
+**4 Views:** Day (with resource columns), Week, Month, Agenda
+**Features:** Drag & drop, resize, recurring events, working hours, now indicator, all-day row, dark mode
 
 ---
 
-## Coding Standards
+## Styling Convention — 3 Layers
 
-- **Language:** TypeScript strict mode, no `any` unless absolutely necessary
-- **Testing:** Vitest for all packages, 1000+ total tests across all packages
-- **Naming:** Concise variable names in internals, descriptive names in public API
-- **Exports:** Clean barrel exports via index.ts per package
-- **Dependencies:** No external runtime deps in core/runtime/store/router/query/table. `zod` is peer dep of form only.
-- **API Style:** Object-style options for all `create*` functions
-- **JSX:** All demo components and user-facing code uses JSX (not document.createElement)
-- **Comments:** Document WHY, not WHAT
+All UI packages (table, calendar) use this system:
+
+1. **BEM classes** (always present): `.lf-cal-event`, `.lf-table-header`
+2. **CSS Variables** for theming (light + dark mode)
+3. **`classes` override** prop for Tailwind or custom classes
+4. **`unstyled: true`** option to skip default CSS injection
+
+Dark mode: CSS variables under `:root.dark`, `[data-theme="dark"]`, and `@media (prefers-color-scheme: dark)`.
 
 ---
 
-## Known Issues & TODOs
+## Vite Plugin — Important Behavior
 
-- [ ] **HMR not working** — Vite plugin needs HMR boundary implementation for component-level hot reload
-- [ ] **Form value binding** — `value={field.value}` doesn't work, must use `value={() => field.value()}` (signal needs explicit getter in JSX attributes)
-- [ ] **Text spacing in JSX** — Adjacent text nodes and signals need explicit `{' '}` for spaces
-- [ ] **DevTools keydown** — `e.key?.toLowerCase()` needs optional chaining (some events have undefined key)
-- [ ] **create-liteforge CLI** — Scaffolding tool not yet built
+The `@liteforge/vite-plugin` transforms JSX to direct DOM operations with signal-safe getter wrapping.
+
+**Event handler detection:** The `isEventHandler()` function in `packages/vite-plugin/src/utils.ts` recognizes:
+- PascalCase: `onClick`, `onPointerDown`, etc. (any `on` + uppercase)
+- Lowercase: `onclick`, `onpointerdown`, etc. (checked against `KNOWN_EVENTS` set)
+
+Props like `online` or `once` are NOT treated as events.
+
+If a new DOM event isn't recognized as an event handler and gets wrapped in a getter function, add it to the `KNOWN_EVENTS` set in `utils.ts`.
+
+---
+
+## Testing
+
+- **Framework:** Vitest with happy-dom environment
+- **Test location:** `packages/*/tests/`
+- **Run all:** `pnpm test`
+- **Run single package:** `pnpm vitest run packages/core/tests`
+- **Tests excluded from typecheck:** tsconfig in each package excludes `tests/` from `tsc --noEmit`
+- **Happy-DOM known issue:** Script tag loading causes unhandled rejections — caught in `tests/setup.ts`, safe to ignore
+
+## Build & Publish
+
+- All packages build with Vite library mode (ESM + CJS + .d.ts)
+- Build: `pnpm build:packages`
+- Output per package: `dist/index.js`, `dist/index.cjs`, `dist/index.d.ts`
+- Typecheck: `pnpm typecheck:all` (checks source only, not tests)
+- Publish: `pnpm publish:dry` (verify), then `pnpm publish:all`
+- Changesets: `pnpm changeset` → `pnpm changeset version` → `pnpm publish:all`
+
+---
+
+## Known Issues & Gotchas
+
+1. **HMR not working** — Vite plugin needs HMR boundary implementation. Manual browser refresh required.
+2. **Form value binding** — Must use `value={() => field.value()}` not `value={field.value}`. Signal needs explicit getter wrapper in JSX attributes.
+3. **Text spacing in JSX** — Adjacent text nodes and signals need explicit `{' '}` for spaces.
+4. **Calendar drag & drop** uses event delegation on the grid container (not individual event elements) to survive reactive re-renders.
+5. **Store signals** use `.set()` for updates, not direct assignment: `state.value.set(newVal)` not `state.value = newVal`.
+
+---
+
+## When Making Changes
+
+1. Always run `pnpm test` after changes
+2. Always run `pnpm build:packages` to verify builds
+3. Test UI changes in the browser: `pnpm --filter starter dev`
+4. **For interaction features (drag, resize, click handlers): TEST IN THE BROWSER, not just in vitest**
+5. Create a changeset for any user-facing change: `pnpm changeset`
+6. When fixing a bug or learning a new gotcha — ADD IT to this file under Known Issues
 
 ---
 
@@ -524,7 +387,7 @@ No positional arguments. Every option is named and self-documenting.
 - [ ] `@liteforge/router` — Route-level DX refactor (lazy directly in route definitions)
 - [ ] `@liteforge/table` — Virtual scrolling for large datasets
 - [ ] `@liteforge/i18n` — Internationalization plugin
+- [ ] `@liteforge/calendar` — Month view click-to-navigate, multi-day event spanning
 - [ ] Docs site — Built with LiteForge itself
-- [ ] `create-liteforge` — CLI scaffolding tool (minimal + full templates)
+- [ ] `create-liteforge` — CLI scaffolding tool
 - [ ] HMR fix — Component-level hot module replacement
-- [ ] Published npm packages

@@ -1,6 +1,6 @@
 {
   "name": "@liteforge/client",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "TypeScript-first HTTP client. createClient, resource-based CRUD, interceptors, optional @liteforge/query integration.",
   "author": "SchildW3rk <contact@schildw3rk.dev>",
   "license": "MIT",

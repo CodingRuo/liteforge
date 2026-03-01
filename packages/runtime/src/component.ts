@@ -26,7 +26,7 @@ import type {
   InputPropsFromSchema,
   Simplify,
 } from './types.js';
-import { use, withContext } from './context.js';
+import { use, withContext, getContextSnapshot } from './context.js';
 import { getHMRHandler, type HMRInstance } from './hmr.js';
 
 // Track parent component for debug hierarchy
@@ -312,6 +312,9 @@ function createComponentInstance<
     const moduleUrl = hmrId.split('::')[0];
     if (!moduleUrl) return;
     
+    // Capture context for HMR restoration (e.g., router:outlet-depth)
+    const capturedContext = getContextSnapshot();
+    
     // Create HMR instance
     hmrInstance = {
       __hmrId: hmrId,
@@ -320,6 +323,7 @@ function createComponentInstance<
       __setup: (setupResult ?? {}) as Record<string, unknown>,
       __data: (loadedData ?? {}) as Record<string, unknown>,
       __cleanup: typeof mountedCleanup === 'function' ? mountedCleanup : undefined,
+      __context: capturedContext,
       
       __hmrUpdate(newModule: Record<string, unknown>): void {
         // Find the matching component factory in the new module
@@ -358,37 +362,41 @@ function createComponentInstance<
         
         // Re-render with new component function but EXISTING setup/data
         // This is the key to preserving state!
+        // We restore the captured context so nested RouterOutlets get correct depth
         try {
-          const newNode = currentDefinition.component({
-            props,
-            data: loadedData as D,
-            setup: setupResult as S,  // ← Signals keep their values!
-            use,
-          });
+          const newNode = withContext(this.__context, () =>
+            currentDefinition.component({
+              props,
+              data: loadedData as D,
+              setup: setupResult as S,  // ← Signals keep their values!
+              use,
+            })
+          );
           
-          // Swap DOM nodes
-          const parent = currentNode?.parentNode;
-          if (parent && currentNode) {
-            parent.replaceChild(newNode, currentNode);
-            currentNode = newNode;
-            
-            // Update HMR instance reference
-            this.__el = newNode;
-            
-            // Run new mounted callback
-            if (currentDefinition.mounted && currentNode instanceof Element) {
-              mountedCleanup = currentDefinition.mounted({
-                el: currentNode,
-                props,
-                data: loadedData as D,
-                setup: setupResult as S,
-                use,
-              });
-              this.__cleanup = typeof mountedCleanup === 'function' ? mountedCleanup : undefined;
-            }
-            
-            console.log(`[LiteForge HMR] ✅ Component updated: ${hmrId}`);
+        // Swap DOM nodes
+        const parent = currentNode?.parentNode;
+        
+        if (parent && currentNode) {
+          parent.replaceChild(newNode, currentNode);
+          currentNode = newNode;
+          
+          // Update HMR instance reference
+          this.__el = newNode;
+          
+          // Run new mounted callback
+          if (currentDefinition.mounted && currentNode instanceof Element) {
+            mountedCleanup = currentDefinition.mounted({
+              el: currentNode,
+              props,
+              data: loadedData as D,
+              setup: setupResult as S,
+              use,
+            });
+            this.__cleanup = typeof mountedCleanup === 'function' ? mountedCleanup : undefined;
           }
+          
+          console.log(`[LiteForge HMR] ✅ Component updated: ${hmrId}`);
+        }
         } catch (err) {
           console.error(`[LiteForge HMR] ❌ Render failed for ${hmrId}:`, err);
           
@@ -396,17 +404,21 @@ function createComponentInstance<
           try {
             console.log(`[LiteForge HMR] 🔄 Attempting full remount...`);
             
-            // Re-run setup with new definition
+            // Re-run setup with new definition (within captured context)
             if (currentDefinition.setup) {
-              setupResult = currentDefinition.setup({ props, use });
+              setupResult = withContext(this.__context, () =>
+                currentDefinition.setup!({ props, use })
+              );
             }
             
-            const newNode = currentDefinition.component({
-              props,
-              data: loadedData as D,
-              setup: setupResult as S,
-              use,
-            });
+            const newNode = withContext(this.__context, () =>
+              currentDefinition.component({
+                props,
+                data: loadedData as D,
+                setup: setupResult as S,
+                use,
+              })
+            );
             
             const parent = currentNode?.parentNode;
             if (parent && currentNode) {

@@ -43,6 +43,8 @@ export interface HMRInstance {
   __data: Record<string, unknown>;
   /** Cleanup function for mounted effects */
   __cleanup: (() => void) | undefined;
+  /** Captured context at time of registration (for HMR restoration) */
+  __context: Record<string, unknown>;
   /** 
    * Update this instance with a new module.
    * Called by the HMR handler when the source file changes.
@@ -103,6 +105,23 @@ export function initHMR(): HMRHandler {
       }
       const instances = this.registry.get(moduleUrl);
       if (instances) {
+        // Clean up any orphaned instances (nodes no longer in document)
+        // This happens when a parent component is HMR-replaced, removing child nodes
+        for (const existing of instances) {
+          if (!existing.__el.isConnected) {
+            instances.delete(existing);
+            // Run cleanup if available
+            if (existing.__cleanup) {
+              try {
+                existing.__cleanup();
+              } catch {
+                // Ignore cleanup errors
+              }
+            }
+            console.log(`[LiteForge HMR] 🧹 Cleaned up orphaned: ${existing.__hmrId}`);
+          }
+        }
+        
         instances.add(instance);
         console.log(`[LiteForge HMR] 📝 Registered: ${instance.__hmrId} (${instances.size} instance(s))`);
       }

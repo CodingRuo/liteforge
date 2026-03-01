@@ -133,3 +133,17 @@ export function createBoundUse(): UseFn {
   // which includes any scopes pushed by parent components
   return use as UseFn;
 }
+
+/**
+ * Get a snapshot of all current context values merged together.
+ * Used by HMR to capture context state for later restoration.
+ * 
+ * @returns A shallow merge of all context scopes from bottom to top
+ */
+export function getContextSnapshot(): ContextValues {
+  const merged: ContextValues = {};
+  for (const scope of contextStack) {
+    Object.assign(merged, scope);
+  }
+  return merged;
+}

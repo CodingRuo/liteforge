@@ -82,6 +82,11 @@ export const DashboardLayout = createComponent({
               children: 'Modals',
               activeClass: 'active',
             })}
+            {Link({
+              href: '/dashboard/client',
+              children: 'Client',
+              activeClass: 'active',
+            })}
             {Show({
               when: () => authStore.isAdmin(),
               children: () => Link({

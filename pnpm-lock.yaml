@@ -79,6 +79,12 @@ importers:
         specifier: workspace:*
         version: link:../core
 
+  packages/client:
+    devDependencies:
+      '@liteforge/query':
+        specifier: workspace:*
+        version: link:../query
+
   packages/core: {}
 
   packages/devtools:

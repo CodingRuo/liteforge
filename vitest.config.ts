@@ -12,6 +12,7 @@ export default defineConfig({
       '@liteforge/table': path.resolve(__dirname, 'packages/table/src/index.ts'),
       '@liteforge/calendar': path.resolve(__dirname, 'packages/calendar/src/index.ts'),
       '@liteforge/modal': path.resolve(__dirname, 'packages/modal/src/index.ts'),
+      '@liteforge/client': path.resolve(__dirname, 'packages/client/src/index.ts'),
     },
   },
   test: {
@@ -29,6 +30,7 @@ export default defineConfig({
       ['packages/table/**', 'happy-dom'],
       ['packages/calendar/**', 'happy-dom'],
       ['packages/modal/**', 'happy-dom'],
+      ['packages/client/**', 'node'],
     ],
     coverage: {
       provider: 'v8',

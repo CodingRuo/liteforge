@@ -18,7 +18,9 @@
       "@liteforge/vite-plugin": ["./packages/vite-plugin/src/index.ts"],
       "@liteforge/vite-plugin/*": ["./packages/vite-plugin/src/*"],
       "@liteforge/devtools": ["./packages/devtools/src/index.ts"],
-      "@liteforge/devtools/*": ["./packages/devtools/src/*"]
+      "@liteforge/devtools/*": ["./packages/devtools/src/*"],
+      "@liteforge/client": ["./packages/client/src/index.ts"],
+      "@liteforge/client/*": ["./packages/client/src/*"]
     },
     "noUncheckedIndexedAccess": true,
     "noEmit": false,

@@ -237,6 +237,12 @@ export const routes: RouteDefinition[] = [
         export: 'ModalsPage',
         meta: { title: 'Modals' },
       },
+      {
+        path: '/client',
+        component: () => import('./pages/dashboard/Client.js'),
+        export: 'ClientPage',
+        meta: { title: 'Client' },
+      },
     ],
   },
 

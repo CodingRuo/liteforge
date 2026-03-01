@@ -21,6 +21,7 @@ export default defineConfig({
       '@liteforge/router': path.resolve(__dirname, '../../packages/router/src/index.ts'),
       '@liteforge/devtools': path.resolve(__dirname, '../../packages/devtools/src/index.ts'),
       '@liteforge/modal': path.resolve(__dirname, '../../packages/modal/src/index.ts'),
+      '@liteforge/client': path.resolve(__dirname, '../../packages/client/src/index.ts'),
     },
   },
 });

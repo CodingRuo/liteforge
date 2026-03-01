@@ -1,0 +1,65 @@
+{
+  "name": "@liteforge/client",
+  "version": "0.1.0",
+  "description": "TypeScript-first HTTP client. createClient, resource-based CRUD, interceptors, optional @liteforge/query integration.",
+  "author": "SchildW3rk <contact@schildw3rk.dev>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/schildw3rk/liteforge",
+    "directory": "packages/client"
+  },
+  "homepage": "https://github.com/schildw3rk/liteforge#readme",
+  "bugs": {
+    "url": "https://github.com/schildw3rk/liteforge/issues"
+  },
+  "keywords": [
+    "liteforge",
+    "http",
+    "client",
+    "fetch",
+    "rest",
+    "api",
+    "signals",
+    "reactive"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "peerDependencies": {
+    "@liteforge/query": ">=0.1.0"
+  },
+  "peerDependenciesMeta": {
+    "@liteforge/query": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@liteforge/query": "workspace:*"
+  }
+}

@@ -74,7 +74,7 @@ export const DashboardLayout = createComponent({
             })}
             {Link({
               href: '/dashboard/calendar',
-              children: 'Calendar',
+              children: 'Calendars',
               activeClass: 'active',
             })}
             {Show({

@@ -268,19 +268,11 @@ export function renderWeekView<T extends CalendarEvent>(
       dayColumn.appendChild(eventsContainer)
       dayColumnsRef.push(dayColumn)
 
-      // Now indicator line in every column, dot only on today
-      if (config.nowIndicator) {
-        const indicator = createNowIndicator(config)
-        if (indicator) {
-          // Only show dot on today column
-          if (!isToday(day)) {
-            indicator.classList.add('lf-cal-now-indicator--no-dot')
-          }
-          eventsContainer.appendChild(indicator)
-        }
-        // Save reference for cleanup (use the one from today)
-        if (isToday(day)) {
-          nowIndicator = indicator
+      // Now indicator (only render if this day is today)
+      if (config.nowIndicator && isToday(day)) {
+        nowIndicator = createNowIndicator(config)
+        if (nowIndicator) {
+          eventsContainer.appendChild(nowIndicator)
         }
       }
 

@@ -16,6 +16,7 @@ export default defineConfig({
   test: {
     globals: true,
     include: ['packages/*/tests/**/*.test.ts'],
+    setupFiles: ['./tests/setup.ts'],
     // Use happy-dom for runtime tests (has synchronous MutationObserver)
     environmentMatchGlobs: [
       ['packages/core/**', 'node'],

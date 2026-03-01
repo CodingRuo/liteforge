@@ -192,6 +192,36 @@ LiteForge is built on these principles:
 3. **Developer experience** — Familiar JSX syntax with excellent TypeScript support
 4. **Zero runtime cost for static content** — Build-time optimization extracts static HTML
 
+## Status
+
+> **LiteForge is in active early development (v0.1.x).** APIs may change between minor versions. I use it in my own production projects, but if you adopt it today, expect some rough edges.
+
+LiteForge is a personal framework born from real frustration with React's re-rendering model and Vue's adapter overhead. I built it because I wanted a tool that works the way I think — signals that directly update the DOM, no virtual DOM diffing, no magic.
+
+I'm actively building real applications on top of it (scheduling software, business tools, DevOps dashboards), so the framework evolves based on actual needs, not theoretical purity.
+
+**What works well today:** Core reactivity, routing, state management, forms, data tables, and the calendar — all battle-tested through my own projects.
+
+**What's still maturing:** Documentation, edge cases in complex layouts, and the ecosystem around it.
+
+If you find it useful, feel free to use it. If you find a bug, I'd appreciate an issue. PRs are welcome but please open an issue first so we can discuss the approach.
+
+## Built with AI
+
+I want to be transparent: LiteForge was developed with significant AI assistance. I used Claude (Anthropic) as a development partner throughout the entire process — from architecture decisions to implementation, testing, and documentation.
+
+**What that means in practice:**
+- I designed the API, made all architecture decisions, and defined what the framework should do
+- AI helped write implementation code, tests, and documentation based on my specifications
+- Every feature was reviewed, tested, and validated by me in real browser environments
+- The framework reflects my opinions and preferences as a developer, not generic AI output
+
+I believe AI-assisted development is the future of how software gets built. Being upfront about it is more honest than pretending otherwise. The code quality speaks for itself — 1400+ tests, TypeScript strict mode, zero external dependencies.
+
+## About
+
+LiteForge is built and maintained by [SchildW3rk](https://schildw3rk.dev) — a one-person software studio from Salzburg, Austria.
+
 ## Development
 
 ```bash

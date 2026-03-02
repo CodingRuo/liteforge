@@ -33,3 +33,15 @@ html {
 .dark ::-webkit-scrollbar-thumb {
   background: #4b5563;
 }
+
+/* ─── Modal dark-mode override (docs uses .dark, not [data-theme="dark"]) ─── */
+html.dark {
+  --lf-modal-backdrop:      rgba(0, 0, 0, 0.75);
+  --lf-modal-bg:            #0f0f0f;
+  --lf-modal-shadow:        0 20px 60px rgba(0, 0, 0, 0.7);
+  --lf-modal-header-bg:     #171717;
+  --lf-modal-header-color:  #f5f5f5;
+  --lf-modal-body-color:    #a3a3a3;
+  --lf-modal-close-color:   #525252;
+  --lf-modal-border-radius: 12px;
+}

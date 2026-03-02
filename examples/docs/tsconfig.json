@@ -23,7 +23,13 @@
       "@liteforge/client": ["packages/client/src/index.ts"],
       "@liteforge/client/*": ["packages/client/src/*"],
       "@liteforge/calendar": ["packages/calendar/src/index.ts"],
-      "@liteforge/calendar/*": ["packages/calendar/src/*"]
+      "@liteforge/calendar/*": ["packages/calendar/src/*"],
+      "@liteforge/store": ["packages/store/src/index.ts"],
+      "@liteforge/store/*": ["packages/store/src/*"],
+      "@liteforge/modal": ["packages/modal/src/index.ts"],
+      "@liteforge/modal/*": ["packages/modal/src/*"],
+      "@liteforge/devtools": ["packages/devtools/src/index.ts"],
+      "@liteforge/devtools/*": ["packages/devtools/src/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"]

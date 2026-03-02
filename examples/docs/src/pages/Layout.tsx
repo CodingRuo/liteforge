@@ -11,8 +11,10 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Foundation',
     links: [
-      { href: '/core', text: 'core', badge: 'signals' },
-      { href: '/runtime', text: 'runtime', badge: 'jsx' },
+      { href: '/core',     text: 'core',     badge: 'signals' },
+      { href: '/runtime',  text: 'runtime',  badge: 'jsx'     },
+      { href: '/store',    text: 'store',    badge: 'state'   },
+      { href: '/devtools', text: 'devtools', badge: 'debug'   },
     ],
   },
   {
@@ -37,8 +39,9 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: 'UI',
     links: [
-      { href: '/form', text: 'form' },
-      { href: '/table', text: 'table' },
+      { href: '/form',     text: 'form'     },
+      { href: '/table',    text: 'table'    },
+      { href: '/modal',    text: 'modal'    },
       { href: '/calendar', text: 'calendar' },
     ],
   },

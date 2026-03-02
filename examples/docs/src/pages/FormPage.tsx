@@ -1,18 +1,21 @@
-import { createComponent } from '@liteforge/runtime';
+import { createComponent, Show } from '@liteforge/runtime';
 import { createForm } from '@liteforge/form';
+import { computed } from '@liteforge/core';
 import { z } from 'zod';
 import { DocSection } from '../components/DocSection.js';
 import { CodeBlock } from '../components/CodeBlock.js';
 import { LiveExample } from '../components/LiveExample.js';
 import { ApiTable } from '../components/ApiTable.js';
+import { Button } from '../components/Button.js';
+import { inputClass } from '../components/Input.js';
 import type { ApiRow } from '../components/ApiTable.js';
 
-// ─── Live example ─────────────────────────────────────────────────────────────
+// ─── Live example: Login form (JSX) ──────────────────────────────────────────
 
 function LoginFormExample(): Node {
   const form = createForm({
     schema: z.object({
-      email: z.string().email('Please enter a valid email'),
+      email:    z.string().email('Please enter a valid email'),
       password: z.string().min(8, 'Password must be at least 8 characters'),
     }),
     initial: { email: '', password: '' },
@@ -24,60 +27,120 @@ function LoginFormExample(): Node {
     revalidateOn: 'change',
   });
 
-  const wrap = document.createElement('div');
-  wrap.className = 'space-y-3 max-w-sm';
+  const email    = form.field('email');
+  const password = form.field('password');
 
-  function field(name: 'email' | 'password', type: string, label: string): Node {
-    const f = form.field(name);
-    const group = document.createElement('div');
-
-    const lbl = document.createElement('label');
-    lbl.className = 'block text-xs text-neutral-400 mb-1';
-    lbl.textContent = label;
-
-    const inp = document.createElement('input');
-    inp.type = type;
-    inp.className = 'w-full px-3 py-1.5 rounded bg-neutral-800 border text-sm text-white focus:outline-none transition-colors';
-    inp.placeholder = label;
-
-    import('@liteforge/core').then(({ effect }) => {
-      effect(() => {
-        const err = f.error();
-        inp.className = `w-full px-3 py-1.5 rounded bg-neutral-800 border text-sm text-white focus:outline-none transition-colors ${err !== undefined ? 'border-red-500' : 'border-neutral-700 focus:border-indigo-500'}`;
-      });
-
-      inp.addEventListener('blur', () => f.touch());
-      inp.addEventListener('input', () => f.set(inp.value));
-
-      const errEl = document.createElement('p');
-      errEl.className = 'text-xs text-red-400 mt-0.5 min-h-4';
-      effect(() => { errEl.textContent = f.error() ?? ''; });
-
-      group.appendChild(lbl);
-      group.appendChild(inp);
-      group.appendChild(errEl);
-    });
-
-    return group;
+  function FieldRow(f: ReturnType<typeof form.field>, type: string, label: string): Node {
+    return (
+      <div class="space-y-1">
+        <label class="block text-xs text-neutral-400">{label}</label>
+        <input
+          type={type}
+          placeholder={label}
+          class={() => inputClass({ error: f.error() !== undefined })}
+          oninput={(e: Event) => f.set((e.target as HTMLInputElement).value)}
+          onblur={() => f.blur()}
+        />
+        {Show({
+          when: () => f.error() !== undefined,
+          children: () => <p class="text-xs text-red-400">{() => f.error()}</p>,
+        })}
+      </div>
+    );
   }
 
-  const submitBtn = document.createElement('button');
-  submitBtn.type = 'submit';
-  submitBtn.className = 'w-full py-1.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium transition-colors disabled:opacity-50';
+  return (
+    <div class="space-y-3 max-w-sm">
+      {FieldRow(email,    'email',    'Email')}
+      {FieldRow(password, 'password', 'Password')}
+      <Button variant="primary" class="w-full" onclick={() => form.submit()}>
+        {() => form.isSubmitting() ? 'Logging in…' : 'Log in'}
+      </Button>
+    </div>
+  );
+}
 
-  import('@liteforge/core').then(({ effect }) => {
-    effect(() => {
-      submitBtn.textContent = form.isSubmitting() ? 'Logging in…' : 'Log in';
-      submitBtn.disabled = form.isSubmitting();
-    });
+// ─── Live example: Array fields ───────────────────────────────────────────────
+
+function ArrayFieldExample(): Node {
+  const form = createForm({
+    schema: z.object({
+      items: z.array(z.object({
+        description: z.string().min(1, 'Required'),
+        qty:         z.coerce.number().min(1, 'Min 1'),
+        price:       z.coerce.number().min(0, 'Min 0'),
+      })),
+    }),
+    initial: { items: [{ description: '', qty: 1, price: 0 }] },
+    onSubmit: async (values) => {
+      console.log('[Invoice] submitted', values);
+    },
+    validateOn: 'blur',
+    revalidateOn: 'change',
   });
 
-  submitBtn.addEventListener('click', () => form.submit());
+  const items = form.array('items');
 
-  wrap.appendChild(field('email', 'email', 'Email'));
-  wrap.appendChild(field('password', 'password', 'Password'));
-  wrap.appendChild(submitBtn);
-  return wrap;
+  const total = computed(() =>
+    items.items().reduce((sum, item) => {
+      const qty   = Number(item.field('qty').value())   || 0;
+      const price = Number(item.field('price').value()) || 0;
+      return sum + qty * price;
+    }, 0)
+  );
+
+  return (
+    <div class="space-y-3 max-w-lg">
+      <div class="grid grid-cols-[1fr_4rem_6rem_2rem] gap-2 text-xs text-neutral-500 px-1">
+        <span>Description</span>
+        <span>Qty</span>
+        <span>Price (€)</span>
+        <span />
+      </div>
+
+      {() => items.items().map((item, i) => (
+        <div class="grid grid-cols-[1fr_4rem_6rem_2rem] gap-2 items-start">
+          <div>
+            <input
+              class={() => inputClass({ size: 'sm', error: !!item.field('description').error() })}
+              placeholder="Description"
+              oninput={(e: Event) => item.field('description').set((e.target as HTMLInputElement).value)}
+              onblur={() => item.field('description').blur()}
+            />
+          </div>
+          <div>
+            <input
+              type="number"
+              class={inputClass({ size: 'sm' })}
+              value={() => String(item.field('qty').value())}
+              oninput={(e: Event) => item.field('qty').set((e.target as HTMLInputElement).value)}
+            />
+          </div>
+          <div>
+            <input
+              type="number"
+              step="0.01"
+              class={inputClass({ size: 'sm' })}
+              value={() => String(item.field('price').value())}
+              oninput={(e: Event) => item.field('price').set((e.target as HTMLInputElement).value)}
+            />
+          </div>
+          <div>
+            <Button variant="danger" size="sm" class="mt-0.5 w-6 h-7" onclick={() => items.remove(i)}>×</Button>
+          </div>
+        </div>
+      ))}
+
+      <div class="flex items-center justify-between pt-2">
+        <Button variant="ghost" size="sm" onclick={() => items.append({ description: '', qty: 1, price: 0 })}>+ Add line</Button>
+        <span class="text-sm text-white font-medium">
+          Total: <span class="text-indigo-300">{() => `€${total().toFixed(2)}`}</span>
+        </span>
+      </div>
+
+      <Button variant="primary" class="w-full" onclick={() => form.submit()}>Submit invoice</Button>
+    </div>
+  );
 }
 
 // ─── Code strings ─────────────────────────────────────────────────────────────
@@ -182,6 +245,33 @@ const email = form.field('email');
   {() => form.isSubmitting() ? 'Loading…' : 'Log in'}
 </button>`;
 
+const ARRAY_LIVE_CODE = `const form = createForm({
+  schema: z.object({
+    items: z.array(z.object({
+      description: z.string().min(1),
+      qty:         z.coerce.number().min(1),
+      price:       z.coerce.number().min(0),
+    })),
+  }),
+  initial: { items: [{ description: '', qty: 1, price: 0 }] },
+  onSubmit: async (values) => console.log(values),
+});
+
+const items = form.array('items');
+const total = computed(() =>
+  items.items().reduce((sum, item) => sum + Number(item.field('qty').value()) * Number(item.field('price').value()), 0)
+);
+
+// Render each row:
+{() => items.items().map((item, i) => (
+  <div>
+    <input oninput={e => item.field('description').set(e.target.value)} />
+    <button onclick={() => items.remove(i)}>×</button>
+  </div>
+))}
+<button onclick={() => items.append({ description: '', qty: 1, price: 0 })}>+ Add line</button>
+Total: {() => total().toFixed(2)}`;
+
 // ─── API rows ─────────────────────────────────────────────────────────────────
 
 const FORM_API: ApiRow[] = [
@@ -190,6 +280,13 @@ const FORM_API: ApiRow[] = [
   { name: 'onSubmit', type: '(values: T) => Promise<void>', description: 'Called when form is submitted and validation passes' },
   { name: 'validateOn', type: "'blur' | 'change' | 'submit'", default: "'submit'", description: 'When to run validation for the first time' },
   { name: 'revalidateOn', type: "'blur' | 'change'", default: "'change'", description: 'When to re-run validation after first error' },
+];
+
+const ARRAY_API: ApiRow[] = [
+  { name: 'items()', type: 'ArrayItemField[]', description: 'Reactive array of item field instances — re-renders when rows are added/removed' },
+  { name: 'append(value)', type: '(value: T) => void', description: 'Add a new row at the end with the given initial value' },
+  { name: 'remove(index)', type: '(index: number) => void', description: 'Remove the row at the given index' },
+  { name: 'item.field(name)', type: 'FieldInstance', description: 'Access a field on a specific array item — has .value(), .error(), .set(), .blur()' },
 ];
 
 export const FormPage = createComponent({
@@ -240,7 +337,10 @@ export const FormPage = createComponent({
           id="arrays"
           description="Dynamic lists (medications, addresses, contacts) with append/remove and per-item field access."
         >
-          <CodeBlock code={ARRAY_CODE} language="typescript" />
+          <div>
+            <CodeBlock code={ARRAY_CODE} language="typescript" />
+            <ApiTable rows={ARRAY_API} />
+          </div>
         </DocSection>
 
         <DocSection
@@ -251,7 +351,7 @@ export const FormPage = createComponent({
         </DocSection>
 
         <DocSection
-          title="Live example"
+          title="Live example — Login form"
           id="live"
         >
           <LiveExample
@@ -259,6 +359,19 @@ export const FormPage = createComponent({
             description="Blur a field to trigger validation"
             component={LoginFormExample}
             code={LIVE_CODE}
+          />
+        </DocSection>
+
+        <DocSection
+          title="Live example — Array fields"
+          id="live-array"
+          description="Dynamic invoice line items with reactive total."
+        >
+          <LiveExample
+            title="Invoice form with array fields"
+            description="Add/remove rows, total updates reactively"
+            component={ArrayFieldExample}
+            code={ARRAY_LIVE_CODE}
           />
         </DocSection>
       </div>

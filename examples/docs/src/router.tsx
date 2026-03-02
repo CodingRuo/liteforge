@@ -62,6 +62,24 @@ export const routes: RouteDefinition[] = [
         export: 'CalendarPage',
         meta: { title: 'calendar — LiteForge' },
       },
+      {
+        path: '/store',
+        component: () => import('./pages/StorePage.js'),
+        export: 'StorePage',
+        meta: { title: 'store — LiteForge' },
+      },
+      {
+        path: '/modal',
+        component: () => import('./pages/ModalPage.js'),
+        export: 'ModalPage',
+        meta: { title: 'modal — LiteForge' },
+      },
+      {
+        path: '/devtools',
+        component: () => import('./pages/DevtoolsPage.js'),
+        export: 'DevtoolsPage',
+        meta: { title: 'devtools — LiteForge' },
+      },
     ],
   },
   {

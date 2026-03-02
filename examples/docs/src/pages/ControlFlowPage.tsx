@@ -1,4 +1,5 @@
 import { createComponent, Show, For, Switch, Match } from '@liteforge/runtime';
+import { Button } from '../components/Button.js';
 import { createTable } from '@liteforge/table';
 import { signal } from '@liteforge/core';
 import { DocSection } from '../components/DocSection.js';
@@ -117,15 +118,13 @@ function SwitchLiveExample(): Node {
   type Status = 'idle' | 'loading' | 'success' | 'error';
   const status = signal<Status>('idle');
 
-  const btnClass = 'px-3 py-1.5 text-sm rounded border border-neutral-700 hover:border-neutral-500 text-neutral-300 transition-colors font-mono';
-
   return (
     <div class="space-y-3">
       <div class="flex flex-wrap gap-2">
-        <button class={btnClass} onclick={() => status.set('idle')}>idle</button>
-        <button class={btnClass} onclick={() => status.set('loading')}>loading</button>
-        <button class={btnClass} onclick={() => status.set('success')}>success</button>
-        <button class={btnClass} onclick={() => status.set('error')}>error</button>
+        <Button variant="secondary" size="sm" onclick={() => status.set('idle')}>idle</Button>
+        <Button variant="secondary" size="sm" onclick={() => status.set('loading')}>loading</Button>
+        <Button variant="secondary" size="sm" onclick={() => status.set('success')}>success</Button>
+        <Button variant="secondary" size="sm" onclick={() => status.set('error')}>error</Button>
       </div>
 
       <div class="p-3 rounded border border-neutral-800 bg-neutral-900/50 text-sm min-h-12">

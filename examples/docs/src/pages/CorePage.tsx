@@ -4,6 +4,8 @@ import { DocSection } from '../components/DocSection.js';
 import { CodeBlock } from '../components/CodeBlock.js';
 import { LiveExample } from '../components/LiveExample.js';
 import { ApiTable } from '../components/ApiTable.js';
+import { btnClass } from '../components/Button.js';
+import { inputClass } from '../components/Input.js';
 import type { ApiRow } from '../components/ApiTable.js';
 
 // ─── Live examples ──────────────────────────────────────────────────────────
@@ -16,12 +18,12 @@ function CounterExample(): Node {
   el.className = 'flex items-center gap-4';
 
   const btn = document.createElement('button');
-  btn.className = 'px-3 py-1.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-sm transition-colors';
+  btn.className = btnClass('primary');
   btn.textContent = 'Increment';
   btn.addEventListener('click', () => count.update(n => n + 1));
 
   const reset = document.createElement('button');
-  reset.className = 'px-3 py-1.5 rounded border border-neutral-700 hover:border-neutral-500 text-neutral-300 text-sm transition-colors';
+  reset.className = btnClass('secondary');
   reset.textContent = 'Reset';
   reset.addEventListener('click', () => count.set(0));
 
@@ -53,7 +55,7 @@ function FullNameExample(): Node {
     lbl.className = 'text-xs text-neutral-500 w-20';
     lbl.textContent = label;
     const inp = document.createElement('input');
-    inp.className = 'px-2 py-1 rounded bg-neutral-800 border border-neutral-700 text-sm text-white focus:outline-none focus:border-indigo-500 w-36';
+    inp.className = inputClass({ size: 'sm', extra: 'w-36' });
     inp.value = sig();
     inp.addEventListener('input', () => sig.set(inp.value));
     row.appendChild(lbl);

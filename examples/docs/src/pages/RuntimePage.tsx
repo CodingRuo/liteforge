@@ -4,6 +4,8 @@ import { DocSection } from '../components/DocSection.js';
 import { CodeBlock } from '../components/CodeBlock.js';
 import { LiveExample } from '../components/LiveExample.js';
 import { ApiTable } from '../components/ApiTable.js';
+import { btnClass } from '../components/Button.js';
+import { inputClass } from '../components/Input.js';
 import type { ApiRow } from '../components/ApiTable.js';
 
 // ─── Live examples ────────────────────────────────────────────────────────────
@@ -15,7 +17,7 @@ function ToggleExample(): Node {
   wrap.className = 'space-y-3';
 
   const btn = document.createElement('button');
-  btn.className = 'px-3 py-1.5 text-sm rounded bg-indigo-600 hover:bg-indigo-500 text-white transition-colors';
+  btn.className = btnClass('primary', 'sm');
   effect(() => { btn.textContent = open() ? 'Hide details' : 'Show details'; });
   btn.addEventListener('click', () => open.update(v => !v));
 
@@ -36,7 +38,7 @@ function ForExample(): Node {
   wrap.className = 'space-y-2';
 
   const input = document.createElement('input');
-  input.className = 'w-full px-3 py-1.5 rounded bg-neutral-800 border border-neutral-700 text-sm text-white mb-2 focus:outline-none focus:border-indigo-500';
+  input.className = inputClass({ extra: 'mb-2' });
   input.placeholder = 'Add item...';
   input.addEventListener('keydown', (e: KeyboardEvent) => {
     if (e.key === 'Enter' && input.value.trim() !== '') {

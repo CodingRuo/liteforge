@@ -1,8 +1,110 @@
 import { createComponent } from '@liteforge/runtime';
+import { createCalendar } from '@liteforge/calendar';
+import type { CalendarEvent } from '@liteforge/calendar';
+import { signal } from '@liteforge/core';
 import { DocSection } from '../components/DocSection.js';
 import { CodeBlock } from '../components/CodeBlock.js';
+import { LiveExample } from '../components/LiveExample.js';
 import { ApiTable } from '../components/ApiTable.js';
 import type { ApiRow } from '../components/ApiTable.js';
+
+// ─── Live example ─────────────────────────────────────────────────────────────
+
+let _apptCounter = 10;
+
+function CalendarLiveExample(): Node {
+  const now = new Date();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  monday.setHours(0, 0, 0, 0);
+
+  function d(dayOffset: number, hour: number, minute = 0): Date {
+    const dt = new Date(monday);
+    dt.setDate(monday.getDate() + dayOffset);
+    dt.setHours(hour, minute, 0, 0);
+    return dt;
+  }
+
+  const appointments = signal<CalendarEvent[]>([
+    { id: '1', title: 'Anna — Check-up',     start: d(0, 9),  end: d(0, 9, 30),  resourceId: 'anna', color: '#6366f1' },
+    { id: '2', title: 'Tom — Consultation',  start: d(1, 11), end: d(1, 12),     resourceId: 'tom',  color: '#10b981' },
+    { id: '3', title: 'Anna — Follow-up',    start: d(2, 14), end: d(2, 14, 30), resourceId: 'anna', color: '#6366f1' },
+    { id: '4', title: 'Tom — Review',        start: d(3, 10), end: d(3, 11),     resourceId: 'tom',  color: '#10b981' },
+  ]);
+
+  const calendar = createCalendar({
+    events: () => appointments(),
+    view: 'week',
+    locale: 'de-AT',
+    editable: true,
+    selectable: true,
+    resources: [
+      { id: 'anna', name: 'Anna Müller', color: '#6366f1' },
+      { id: 'tom',  name: 'Tom Weber',   color: '#10b981' },
+    ],
+    time: { dayStart: 8, dayEnd: 18, slotDuration: 30, weekStart: 1 },
+    onSlotClick: (start, end) => {
+      const id = String(++_apptCounter);
+      appointments.update(list => [
+        ...list,
+        { id, title: 'New Appointment', start, end, color: '#f59e0b' },
+      ]);
+    },
+    onEventDrop: (event, newStart, newEnd, resourceId) => {
+      appointments.update(list =>
+        list.map(a => {
+          if (a.id !== event.id) return a;
+          const updated: CalendarEvent = { ...a, start: newStart, end: newEnd };
+          if (resourceId !== undefined) updated.resourceId = resourceId;
+          return updated;
+        })
+      );
+    },
+    onEventResize: (event, newEnd) => {
+      appointments.update(list =>
+        list.map(a => a.id === event.id ? { ...a, end: newEnd } : a)
+      );
+    },
+  });
+
+  const toolbar = calendar.Toolbar();
+  const root = calendar.Root();
+
+  return (
+    <div style="height:520px;display:flex;flex-direction:column;gap:8px">
+      {toolbar}
+      <div style="flex:1;min-height:0">{root}</div>
+    </div>
+  );
+}
+
+const LIVE_CODE = `const appointments = signal<Appointment[]>([
+  { id: '1', title: 'Anna — Check-up', start: d(0, 9), end: d(0, 9, 30), resourceId: 'anna' },
+]);
+
+const calendar = createCalendar({
+  events: () => appointments(),
+  view: 'week',
+  locale: 'de-AT',
+  editable: true,
+  selectable: true,
+  resources: [
+    { id: 'anna', name: 'Anna Müller', color: '#6366f1' },
+    { id: 'tom',  name: 'Tom Weber',   color: '#10b981' },
+  ],
+  time: { dayStart: 8, dayEnd: 18, slotDuration: 30, weekStart: 1 },
+  onSlotClick: (start, end) => {
+    appointments.update(list => [...list, { id: nextId(), title: 'New Appointment', start, end }]);
+  },
+  onEventDrop: (event, newStart, newEnd, resourceId) => {
+    appointments.update(list =>
+      list.map(a => a.id === event.id ? { ...a, start: newStart, end: newEnd, resourceId } : a)
+    );
+  },
+});
+
+calendar.Toolbar()
+calendar.Root()`;
 
 const SETUP_CODE = `import { createCalendar } from '@liteforge/calendar';
 import { signal } from '@liteforge/core';
@@ -136,6 +238,19 @@ export const CalendarPage = createComponent({
         </div>
 
         <DocSection
+          title="Live example"
+          id="live"
+          description="Week view with 2 resources. Click an empty slot to add an event, drag events to move them."
+        >
+          <LiveExample
+            title="Calendar — drag & drop, resources, week view"
+            description="Click empty slots to create events"
+            component={CalendarLiveExample}
+            code={LIVE_CODE}
+          />
+        </DocSection>
+
+        <DocSection
           title="createCalendar()"
           id="setup"
           description="Pass events as a reactive function and configure the view, locale, and time range."
@@ -178,21 +293,6 @@ export const CalendarPage = createComponent({
           <CodeBlock code={NAVIGATION_CODE} language="typescript" />
         </DocSection>
 
-        <div class="mt-8 p-4 rounded-lg border border-amber-800/40 bg-amber-950/20 text-sm">
-          <p class="font-semibold text-amber-300 mb-1">Live example</p>
-          <p class="text-neutral-400">
-            The calendar component renders best in a full-page context. See the{' '}
-            <a
-              href="http://localhost:3001/dashboard/calendar"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="text-indigo-400 hover:text-indigo-300 underline"
-            >
-              starter app demo ↗
-            </a>
-            {' '}for a live interactive example with drag & drop, resources, and view switching.
-          </p>
-        </div>
       </div>
     );
   },

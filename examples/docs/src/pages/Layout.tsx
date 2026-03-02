@@ -45,6 +45,12 @@ const NAV_GROUPS: NavGroup[] = [
       { href: '/calendar', text: 'calendar' },
     ],
   },
+  {
+    label: 'Tools',
+    links: [
+      { href: '/benchmark', text: 'benchmark', badge: 'perf', noPrefix: true },
+    ],
+  },
 ];
 
 export const Layout = createComponent({

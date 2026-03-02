@@ -1,5 +1,25 @@
 # @liteforge/runtime
 
+## 0.3.0
+
+### Minor Changes
+
+- feat(runtime): For component now passes getter functions to children
+
+  `For`'s `children` callback now receives `(item: () => T, index: () => number)` instead of plain values. This enables signal-backed in-place updates when items reorder — DOM nodes are moved, not destroyed/recreated. Reactive bindings like `{() => item().name}` update automatically without re-running the render function.
+
+  **Migration:** wrap item and index reads in the children callback:
+
+  ```tsx
+  // before
+  For({ children: (user, i) => <li>{user.name}</li> });
+
+  // after
+  For({ children: (user, i) => <li>{() => user().name}</li> });
+  ```
+
+  Also fixes `vite-plugin`: `ref` prop is no longer wrapped in a getter function.
+
 ## 0.2.3
 
 ### Patch Changes

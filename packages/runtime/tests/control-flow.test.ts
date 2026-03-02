@@ -107,10 +107,13 @@ describe('control flow components', () => {
   });
 
   describe('For', () => {
+    // NOTE: For() now uses getter-based API - item() and index() are functions
+    // This enables keyed reconciliation where DOM nodes are reused when items reorder
+
     it('should render list items', async () => {
       const node = For({
         each: ['a', 'b', 'c'],
-        children: (item) => document.createTextNode(item),
+        children: (item) => document.createTextNode(item()),
       });
 
       container.appendChild(node);
@@ -122,7 +125,7 @@ describe('control flow components', () => {
     it('should render with index', async () => {
       const node = For({
         each: ['x', 'y', 'z'],
-        children: (item, index) => document.createTextNode(`${index}:${item} `),
+        children: (item, index) => document.createTextNode(`${index()}:${item()} `),
       });
 
       container.appendChild(node);
@@ -136,7 +139,7 @@ describe('control flow components', () => {
 
       const node = For({
         each: () => items(),
-        children: (item) => document.createTextNode(`[${item}]`),
+        children: (item) => document.createTextNode(`[${item()}]`),
       });
 
       container.appendChild(node);
@@ -169,12 +172,13 @@ describe('control flow components', () => {
 
       const node = For({
         each: () => items(),
-        key: 'id',
+        key: (item) => item.id,
         children: (item, _index) => {
-          createdIds.push(item.id);
+          // This is called ONCE per unique key - captures initial value
+          createdIds.push(item().id);
           const span = document.createElement('span');
-          span.dataset.id = String(item.id);
-          span.textContent = item.text;
+          span.dataset.id = String(item().id);
+          span.textContent = item().text;
           return span;
         },
       });
@@ -209,7 +213,7 @@ describe('control flow components', () => {
         each: () => items(),
         children: (item) => {
           const span = document.createElement('span');
-          span.textContent = item;
+          span.textContent = item();
           return span;
         },
       });
@@ -229,7 +233,7 @@ describe('control flow components', () => {
 
       const node = For({
         each: () => items(),
-        children: (item) => document.createTextNode(item),
+        children: (item) => document.createTextNode(item()),
       });
 
       container.appendChild(node);
@@ -255,7 +259,7 @@ describe('control flow components', () => {
       const node = For({
         each: () => items(),
         key: (item) => `${item.firstName}-${item.lastName}`,
-        children: (item) => document.createTextNode(item.firstName),
+        children: (item) => document.createTextNode(item().firstName),
       });
 
       container.appendChild(node);
@@ -276,11 +280,12 @@ describe('control flow components', () => {
 
       const node = For({
         each: () => items(),
-        key: 'id',
+        key: (item) => item.id,
         children: (item, index) => {
           const span = document.createElement('span');
-          span.dataset.id = String(item.id);
-          span.textContent = `${item.name}:${index}`;
+          span.dataset.id = String(item().id);
+          // Note: index() is reactive - but we capture initial in textContent
+          span.textContent = `${item().name}:${index()}`;
           return span;
         },
       });
@@ -419,7 +424,7 @@ describe('control flow components', () => {
     });
 
     it('should work with createComponent factories', async () => {
-      const CompA = createComponent({
+      const CompA = createComponent<{ value: string }>({
         component: ({ props }) => {
           const div = document.createElement('div');
           div.textContent = `A: ${props.value}`;
@@ -427,7 +432,7 @@ describe('control flow components', () => {
         },
       });
 
-      const CompB = createComponent({
+      const CompB = createComponent<{ value: string }>({
         component: ({ props }) => {
           const div = document.createElement('div');
           div.textContent = `B: ${props.value}`;

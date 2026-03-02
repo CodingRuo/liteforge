@@ -80,6 +80,12 @@ export const routes: RouteDefinition[] = [
         export: 'DevtoolsPage',
         meta: { title: 'devtools — LiteForge' },
       },
+      {
+        path: '/benchmark',
+        component: () => import('./pages/benchmark/BenchmarkPage.js'),
+        export: 'BenchmarkPage',
+        meta: { title: 'Benchmark — LiteForge' },
+      },
     ],
   },
   {

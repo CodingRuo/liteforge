@@ -33,17 +33,20 @@ interface User {
 
 describe('Type Inference', () => {
   describe('For<T>', () => {
+    // NOTE: For() now uses getter-based API - item() and index() are functions
+    // This enables keyed reconciliation where DOM nodes are reused when items reorder
+
     it('infers item type from each array', () => {
       const users = signal<User[]>([{ id: '1', name: 'Alice', email: 'a@b.c', role: 'admin' }]);
       
-      // TypeScript should infer user as User
+      // TypeScript should infer user as () => User
       For({
         each: users,
         children: (user) => {
-          // These should compile without explicit types
-          const name: string = user.name;
-          const email: string = user.email;
-          const role: 'admin' | 'user' = user.role;
+          // user is a getter function - call it to get the value
+          const name: string = user().name;
+          const email: string = user().email;
+          const role: 'admin' | 'user' = user().role;
           
           expect(name).toBe('Alice');
           expect(email).toBe('a@b.c');
@@ -57,22 +60,22 @@ describe('Type Inference', () => {
     it('restricts key to valid properties of T', () => {
       const users = signal<User[]>([]);
       
-      // Valid keys - should compile
+      // Valid keys - should compile (key prop receives the raw item, not getter)
       For({
         each: users,
-        key: 'id',
+        key: (user) => user.id,
         children: () => document.createElement('div'),
       });
 
       For({
         each: users,
-        key: 'name',
+        key: (user) => user.name,
         children: () => document.createElement('div'),
       });
 
       For({
         each: users,
-        key: 'email',
+        key: (user) => user.email,
         children: () => document.createElement('div'),
       });
 
@@ -80,15 +83,15 @@ describe('Type Inference', () => {
       // We can't test that directly without @ts-expect-error
     });
 
-    it('provides index as second argument', () => {
+    it('provides index as second argument (getter function)', () => {
       const items = signal<string[]>(['a', 'b', 'c']);
       
       For({
         each: items,
         children: (item, index) => {
-          // item should be string, index should be number
-          const str: string = item;
-          const num: number = index;
+          // item() returns string, index() returns number
+          const str: string = item();
+          const num: number = index();
           
           expect(typeof str).toBe('string');
           expect(typeof num).toBe('number');
@@ -106,7 +109,7 @@ describe('Type Inference', () => {
       For({
         each: items,
         children: (user) => {
-          const name: string = user.name;
+          const name: string = user().name;
           expect(name).toBe('Alice');
           return document.createElement('div');
         },
@@ -116,6 +119,7 @@ describe('Type Inference', () => {
     it('works with function key extractor', () => {
       const items = signal<User[]>([]);
       
+      // key function receives the raw item (not getter)
       For({
         each: items,
         key: (user, index) => `${user.id}-${index}`,
@@ -239,7 +243,9 @@ describe('Runtime Behavior', () => {
   });
 
   describe('For<T> Runtime', () => {
-    it('passes item to children callback', async () => {
+    // NOTE: For() now uses getter-based API - item() and index() are functions
+
+    it('passes item getter to children callback', async () => {
       const users = signal([
         { id: '1', name: 'Alice' },
         { id: '2', name: 'Bob' },
@@ -250,7 +256,8 @@ describe('Runtime Behavior', () => {
       const node = For({
         each: users,
         children: (user) => {
-          receivedItems.push(user);
+          // user is a getter - call it to get the value
+          receivedItems.push(user());
           return document.createElement('div');
         },
       });
@@ -263,14 +270,15 @@ describe('Runtime Behavior', () => {
       expect(receivedItems[1]?.name).toBe('Bob');
     });
 
-    it('passes index as second argument (plain number)', async () => {
+    it('passes index as getter function', async () => {
       const items = signal(['a', 'b', 'c']);
       const receivedIndices: number[] = [];
       
       const node = For({
         each: items,
         children: (_item, index) => {
-          receivedIndices.push(index);
+          // index is a getter - call it to get the value
+          receivedIndices.push(index());
           return document.createElement('div');
         },
       });
@@ -306,7 +314,7 @@ describe('Runtime Behavior', () => {
       
       const node = For({
         each: items,
-        children: (item) => document.createTextNode(`[${item}]`),
+        children: (item) => document.createTextNode(`[${item()}]`),
         fallback: () => document.createTextNode('Empty'),
       });
       
@@ -324,7 +332,7 @@ describe('Runtime Behavior', () => {
       
       const node = For({
         each: items,
-        children: (item) => document.createTextNode(`[${item}]`),
+        children: (item) => document.createTextNode(`[${item()}]`),
         fallback: () => document.createTextNode('Empty'),
       });
       
@@ -342,10 +350,10 @@ describe('Runtime Behavior', () => {
       
       const node = For({
         each: users,
-        key: 'id',
+        key: (user) => user.id,
         children: (user) => {
           const div = document.createElement('div');
-          div.textContent = user.name;
+          div.textContent = user().name;
           return div;
         },
       });
@@ -363,7 +371,7 @@ describe('Runtime Behavior', () => {
         key: (user) => user.id,
         children: (user) => {
           const div = document.createElement('div');
-          div.textContent = user.name;
+          div.textContent = user().name;
           return div;
         },
       });

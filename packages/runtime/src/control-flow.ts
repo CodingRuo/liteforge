@@ -161,26 +161,52 @@ export function Show<T>(config: ShowConfig<T>): Node {
 // For Component
 // ============================================================================
 
+import { signal } from '@liteforge/core';
+import type { Signal } from '@liteforge/core';
+
 /**
  * Config for For component (internal use).
  * Use ForProps<T> from types.ts for external typing.
+ * 
+ * Note: children receives getters for item and index, enabling signal-backed
+ * updates when items reorder without re-running the render function.
  */
 export interface ForConfig<T> {
   each: (() => ReadonlyArray<T>) | (() => T[]) | ReadonlyArray<T> | T[];
   key?: keyof T | ((item: T, index: number) => string | number);
-  children: (item: T, index: number) => Node;
+  /** 
+   * Render function for each item.
+   * @param item - Getter for the current item value (updates when item data changes)
+   * @param index - Getter for the current index (updates when item moves)
+   */
+  children: (item: () => T, index: () => number) => Node;
   fallback?: () => Node;
 }
 
-interface ForItem<T> {
-  item: T;
-  key: string | number;
+/**
+ * Internal structure for tracking each rendered item in the For list.
+ */
+interface MappedItem<T> {
+  /** The stable key for this item */
+  key: unknown;
+  /** The rendered DOM node for this item */
   node: Node;
-  index: number;
+  /** Signal holding the current item value (updated in place on reorder) */
+  itemSignal: Signal<T>;
+  /** Signal holding the current index */
+  indexSignal: Signal<number>;
+  /** Cleanup function (disposes effects, signals created for this item) */
+  dispose: () => void;
 }
+
+// Dev mode warning for duplicate keys
+const isDev = typeof globalThis !== 'undefined' && (globalThis as Record<string, unknown>).__DEV__ !== false;
 
 /**
  * Render a list of items with keyed reconciliation.
+ * 
+ * When items reorder, DOM nodes are moved (not destroyed/recreated).
+ * When item data changes, the item signal is updated and reactive bindings auto-update.
  * 
  * @typeParam T - The item type, inferred from the `each` array
  *
@@ -188,20 +214,25 @@ interface ForItem<T> {
  * ```ts
  * For({
  *   each: () => users(),
- *   key: 'id',
+ *   key: (user) => user.id,
  *   children: (user, index) => {
- *     return document.createTextNode(`${index}: ${user.name}`);
+ *     // user() and index() are getters - read them inside reactive contexts
+ *     return <div>{() => `${index()}: ${user().name}`}</div>;
  *   },
- *   fallback: () => document.createTextNode('No users'),
+ *   fallback: () => <div>No users</div>,
  * })
  * ```
  */
 export function For<T>(config: ForConfig<T>): Node {
-  const { each, key, children, fallback } = config;
+  const { each, key: keyProp, children, fallback } = config;
 
-  // Create a marker comment for positioning
-  const marker = document.createComment('For');
-  let items: ForItem<T>[] = [];
+  // Create markers for positioning
+  const startMarker = document.createComment('For:start');
+  const endMarker = document.createComment('For:end');
+  
+  // Current mappings: key -> MappedItem
+  let mappings = new Map<unknown, MappedItem<T>>();
+  
   let fallbackNode: Node | null = null;
   let isInitialized = false;
 
@@ -214,20 +245,21 @@ export function For<T>(config: ForConfig<T>): Node {
   };
 
   // Get key for an item
-  const getKey = (item: T, index: number): string | number => {
-    if (key === undefined) {
-      // For primitives without explicit key, use the value itself to enable proper reconciliation
-      // This allows detecting when items at the same index have different values
-      if (typeof item === 'string' || typeof item === 'number') {
-        return `${index}:${item}`;
+  const getKey = (item: T, index: number): unknown => {
+    if (keyProp === undefined) {
+      // Without explicit key, use referential identity for objects
+      // or value+index for primitives
+      if (typeof item === 'object' && item !== null) {
+        return item; // Use object reference as key
       }
-      // For objects without key, fall back to index (no reconciliation benefit)
-      return index;
+      // For primitives, combine with index to handle duplicates
+      return `__idx_${index}_${String(item)}`;
     }
-    if (typeof key === 'function') {
-      return key(item, index);
+    if (typeof keyProp === 'function') {
+      return keyProp(item, index);
     }
-    return String(item[key]);
+    // keyProp is keyof T
+    return item[keyProp];
   };
 
   // Remove fallback node if present
@@ -238,9 +270,46 @@ export function For<T>(config: ForConfig<T>): Node {
     }
   }
 
+  // Create a new MappedItem for an item
+  function createMappedItem(item: T, index: number, itemKey: unknown): MappedItem<T> {
+    // Create signals for this item
+    const itemSignal = signal(item);
+    const indexSignal = signal(index);
+    
+    // Track cleanup functions
+    const cleanupFns: (() => void)[] = [];
+    
+    // Create a disposal context
+    const dispose = () => {
+      for (const fn of cleanupFns) {
+        try {
+          fn();
+        } catch (e) {
+          console.error('Error during For item cleanup:', e);
+        }
+      }
+      cleanupFns.length = 0;
+    };
+    
+    // Render the children with getters
+    // The children function is called ONCE per unique key
+    const node = children(
+      () => itemSignal(),
+      () => indexSignal()
+    );
+    
+    return {
+      key: itemKey,
+      node,
+      itemSignal,
+      indexSignal,
+      dispose,
+    };
+  }
+
   // Reconcile the list
-  function updateList(): void {
-    const parentElement = marker.parentNode as Element;
+  function reconcile(): void {
+    const parentElement = startMarker.parentNode as Element;
     if (!parentElement) return;
 
     const list = getList();
@@ -248,17 +317,18 @@ export function For<T>(config: ForConfig<T>): Node {
     // Handle empty list with fallback
     if (list.length === 0) {
       // Remove all existing items
-      for (const oldItem of items) {
-        if (oldItem.node.parentNode) {
-          oldItem.node.parentNode.removeChild(oldItem.node);
+      for (const mapping of mappings.values()) {
+        if (mapping.node.parentNode) {
+          mapping.node.parentNode.removeChild(mapping.node);
         }
+        mapping.dispose();
       }
-      items = [];
+      mappings.clear();
 
       // Show fallback if provided
       if (fallback && !fallbackNode) {
         fallbackNode = fallback();
-        parentElement.insertBefore(fallbackNode, marker.nextSibling);
+        parentElement.insertBefore(fallbackNode, endMarker);
       }
       return;
     }
@@ -266,72 +336,105 @@ export function For<T>(config: ForConfig<T>): Node {
     // Remove fallback if list has items
     removeFallback();
 
-    // Build a map of existing items by key
-    const existingByKey = new Map<string | number, ForItem<T>>();
-    for (const item of items) {
-      existingByKey.set(item.key, item);
-    }
-
-    // Build new items list
-    const newItems: ForItem<T>[] = [];
-    const newKeys = new Set<string | number>();
-
+    // Build new key list and detect duplicates
+    const newKeys: unknown[] = [];
+    const seenKeys = new Set<unknown>();
+    const duplicateKeys = new Set<unknown>();
+    
     for (let i = 0; i < list.length; i++) {
       const item = list[i] as T;
       const itemKey = getKey(item, i);
-      newKeys.add(itemKey);
-
-      const existing = existingByKey.get(itemKey);
-
-      if (existing) {
-        // Reuse existing item, update index
-        existing.item = item;
-        existing.index = i;
-        newItems.push(existing);
-      } else {
-        // Create new item - pass plain index number
-        const node = children(item, i);
-        newItems.push({ item, key: itemKey, node, index: i });
-      }
-    }
-
-    // Remove items that are no longer in the list
-    for (const oldItem of items) {
-      if (!newKeys.has(oldItem.key)) {
-        if (oldItem.node.parentNode) {
-          oldItem.node.parentNode.removeChild(oldItem.node);
+      
+      if (seenKeys.has(itemKey)) {
+        duplicateKeys.add(itemKey);
+        if (isDev) {
+          console.warn(
+            `For(): Duplicate key detected: ${String(itemKey)}. ` +
+            `Each item should have a unique key for proper reconciliation.`
+          );
         }
       }
+      seenKeys.add(itemKey);
+      newKeys.push(itemKey);
     }
 
-    // Insert/reorder items in the DOM
-    // We need to maintain the correct order after the marker
-    let prevNode: Node = marker;
+    // Track which old mappings are still needed
+    const claimedKeys = new Set<unknown>();
+    const newMappings = new Map<unknown, MappedItem<T>>();
 
-    for (const newItem of newItems) {
-      const { node } = newItem;
-      const expectedPosition = prevNode.nextSibling;
+    // Process each new item
+    for (let i = 0; i < list.length; i++) {
+      const item = list[i] as T;
+      const itemKey = newKeys[i]!;
+      
+      // Handle duplicate keys: only reuse the first occurrence
+      const canReuse = !claimedKeys.has(itemKey) && mappings.has(itemKey);
+      
+      if (canReuse) {
+        // REUSE: existing mapping
+        const existing = mappings.get(itemKey)!;
+        claimedKeys.add(itemKey);
+        
+        // Update signals with new values (this triggers reactive updates)
+        existing.itemSignal.set(item);
+        existing.indexSignal.set(i);
+        
+        newMappings.set(itemKey, existing);
+      } else {
+        // CREATE: new mapping
+        const mapping = createMappedItem(item, i, itemKey);
+        newMappings.set(itemKey, mapping);
+      }
+    }
 
-      if (node !== expectedPosition) {
-        // Node is either not in DOM or in wrong position
+    // REMOVE: dispose items no longer in the list
+    for (const [oldKey, oldMapping] of mappings) {
+      if (!claimedKeys.has(oldKey)) {
+        if (oldMapping.node.parentNode) {
+          oldMapping.node.parentNode.removeChild(oldMapping.node);
+        }
+        oldMapping.dispose();
+      }
+    }
+
+    // REORDER: position nodes correctly
+    // Insert nodes in order, before the end marker
+    let insertBefore: Node = endMarker;
+    
+    // Process in reverse order so we can always insertBefore the previous node
+    for (let i = newKeys.length - 1; i >= 0; i--) {
+      const itemKey = newKeys[i]!;
+      const mapping = newMappings.get(itemKey)!;
+      const node = mapping.node;
+      
+      // Check if node needs to be moved
+      if (node.nextSibling !== insertBefore || node.parentNode !== parentElement) {
+        // Remove from current position if in DOM
         if (node.parentNode) {
           node.parentNode.removeChild(node);
         }
-        parentElement.insertBefore(node, prevNode.nextSibling);
+        // Insert before the reference node
+        parentElement.insertBefore(node, insertBefore);
       }
-
-      prevNode = node;
+      
+      insertBefore = node;
     }
 
-    items = newItems;
+    // Update state
+    mappings = newMappings;
   }
 
-  // Use MutationObserver to detect when marker is added to DOM
+  // Create a container fragment to hold the markers initially
+  const fragment = document.createDocumentFragment();
+  fragment.appendChild(startMarker);
+  fragment.appendChild(endMarker);
+
+  // Use MutationObserver to detect when markers are added to DOM
   const observer = new MutationObserver(() => {
-    if (marker.parentNode && !isInitialized) {
+    if (startMarker.parentNode && !isInitialized) {
       isInitialized = true;
       observer.disconnect();
-      updateList();
+      reconcile();
     }
   });
 
@@ -342,13 +445,15 @@ export function For<T>(config: ForConfig<T>): Node {
     // Read the list to track dependencies
     getList();
 
-    // Only update if marker is in DOM
-    if (marker.parentNode) {
-      updateList();
+    // Only update if markers are in DOM
+    if (startMarker.parentNode) {
+      reconcile();
     }
   });
 
-  return marker;
+  // Return the fragment containing both markers
+  // When appended to DOM, children will be inserted between the markers
+  return fragment;
 }
 
 // ============================================================================

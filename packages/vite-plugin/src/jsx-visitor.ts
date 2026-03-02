@@ -262,6 +262,11 @@ export function processAttributeValue(
     return expr;
   }
 
+  // ref prop is never wrapped — it's a callback function, not a reactive value
+  if (propName === 'ref') {
+    return expr;
+  }
+
   // Component props are never wrapped — components manage their own reactivity
   if (isComponentTag) {
     return expr;

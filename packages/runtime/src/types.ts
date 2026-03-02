@@ -443,13 +443,16 @@ export interface ShowProps<T> {
  * 
  * @typeParam T - The item type, inferred from the `each` array.
  * 
+ * Note: children receives GETTERS for item and index, enabling signal-backed
+ * updates when items reorder without re-running the render function.
+ * 
  * @example
  * ```ts
  * For({
  *   each: () => users(),           // () => User[]
  *   key: 'id',                      // keyof User - TypeScript validates this
- *   children: (user, index) => (   // user is User, index is number
- *     <li>{index}: {user.name}</li>
+ *   children: (user, index) => (   // user() returns User, index() returns number
+ *     <li>{() => `${index()}: ${user().name}`}</li>
  *   ),
  * })
  * ```
@@ -469,10 +472,10 @@ export interface ForProps<T> {
   
   /** 
    * Render function for each item.
-   * @param item - The current item (type T, inferred from each)
-   * @param index - The current index (plain number)
+   * @param item - Getter for the current item value (updates when item data changes)
+   * @param index - Getter for the current index (updates when item moves)
    */
-  children: (item: T, index: number) => Node;
+  children: (item: () => T, index: () => number) => Node;
   
   /** Rendered when the array is empty */
   fallback?: () => Node;

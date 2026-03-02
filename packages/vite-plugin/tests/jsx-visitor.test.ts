@@ -203,6 +203,21 @@ describe('processAttributeValue', () => {
     }
   });
 
+  it('does NOT wrap ref callback', () => {
+    // ref={setRef} should NOT be wrapped in a getter
+    const ast = parse('setRef', { sourceType: 'module', plugins: ['jsx'] });
+    const stmt = ast.program.body[0];
+    if (!stmt || stmt.type !== 'ExpressionStatement') throw new Error('Expected expression');
+    const expr = stmt.expression as t.Expression;
+    
+    const result = processAttributeValue('ref', expr);
+    // Should return the same identifier, not wrap it
+    expect(t.isIdentifier(result)).toBe(true);
+    if (t.isIdentifier(result)) {
+      expect(result.name).toBe('setRef');
+    }
+  });
+
   it('does NOT wrap static values', () => {
     const literal = t.stringLiteral('static');
     const result = processAttributeValue('class', literal);

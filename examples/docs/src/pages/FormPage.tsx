@@ -82,7 +82,7 @@ function ArrayFieldExample(): Node {
   const items = form.array('items');
 
   const total = computed(() =>
-    items.items().reduce((sum, item) => {
+    items.fields().reduce((sum: number, item) => {
       const qty   = Number(item.field('qty').value())   || 0;
       const price = Number(item.field('price').value()) || 0;
       return sum + qty * price;
@@ -98,14 +98,14 @@ function ArrayFieldExample(): Node {
         <span />
       </div>
 
-      {() => items.items().map((item, i) => (
+      {() => items.fields().map((item, i: number) => (
         <div class="grid grid-cols-[1fr_4rem_6rem_2rem] gap-2 items-start">
           <div>
             <input
               class={() => inputClass({ size: 'sm', error: !!item.field('description').error() })}
               placeholder="Description"
               oninput={(e: Event) => item.field('description').set((e.target as HTMLInputElement).value)}
-              onblur={() => item.field('description').blur()}
+              onblur={() => item.field('description').touch()}
             />
           </div>
           <div>

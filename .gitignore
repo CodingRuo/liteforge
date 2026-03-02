@@ -30,3 +30,6 @@ pnpm-debug.log*
 # Misc
 *.tgz
 .turbo/
+
+# js-framework-benchmark (external benchmark suite)
+js-framework-benchmark/

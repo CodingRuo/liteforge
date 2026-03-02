@@ -1,5 +1,14 @@
 # @liteforge/starter
 
+## 0.0.6
+
+### Patch Changes
+
+- Updated dependencies
+  - @liteforge/runtime@0.2.2
+  - @liteforge/router@0.1.1
+  - @liteforge/table@0.1.1
+
 ## 0.0.5
 
 ### Patch Changes

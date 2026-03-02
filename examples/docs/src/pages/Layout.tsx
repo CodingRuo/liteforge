@@ -4,7 +4,7 @@ import { signal } from '@liteforge/core';
 
 interface NavGroup {
   label: string;
-  links: Array<{ href: string; text: string; badge?: string }>;
+  links: Array<{ href: string; text: string; badge?: string; noPrefix?: boolean }>;
 }
 
 const NAV_GROUPS: NavGroup[] = [
@@ -13,6 +13,12 @@ const NAV_GROUPS: NavGroup[] = [
     links: [
       { href: '/core', text: 'core', badge: 'signals' },
       { href: '/runtime', text: 'runtime', badge: 'jsx' },
+    ],
+  },
+  {
+    label: 'Control Flow',
+    links: [
+      { href: '/control-flow', text: 'Show / Switch / For', badge: 'primitives', noPrefix: true },
     ],
   },
   {
@@ -95,7 +101,7 @@ export const Layout = createComponent({
                       class: 'flex items-center justify-between px-2 py-1.5 rounded-md text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors font-mono',
                       children: (
                         <span class="flex items-center gap-2">
-                          <span>@liteforge/{link.text}</span>
+                          <span>{link.noPrefix === true ? link.text : `@liteforge/${link.text}`}</span>
                           {link.badge !== undefined
                             ? <span class="text-[0.6rem] px-1 py-0.5 rounded bg-indigo-500/15 text-indigo-400">{link.badge}</span>
                             : null}

@@ -21,6 +21,12 @@ export const routes: RouteDefinition[] = [
         meta: { title: 'runtime — LiteForge' },
       },
       {
+        path: '/control-flow',
+        component: () => import('./pages/ControlFlowPage.js'),
+        export: 'ControlFlowPage',
+        meta: { title: 'control flow — LiteForge' },
+      },
+      {
         path: '/router',
         component: () => import('./pages/RouterPage.js'),
         export: 'RouterPage',

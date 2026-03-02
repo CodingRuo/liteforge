@@ -1,5 +1,13 @@
 # @liteforge/vite-plugin
 
+## 0.2.2
+
+### Patch Changes
+
+- Fix getter-wrapping incorrectly applied to MemberExpression component calls in JSX children.
+
+  Calls like `table.Root()` or `calendar.Toolbar()` previously got wrapped in a reactive getter `() => table.Root()` because `processChildExpression` only checked `Identifier`-callees with uppercase names. The fix extends the check to `MemberExpression`-callees whose property starts with an uppercase letter — matching the same convention used for components.
+
 ## 0.2.1
 
 ### Patch Changes

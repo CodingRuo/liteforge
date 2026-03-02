@@ -6,7 +6,11 @@ import { App } from './App.js';
 import './styles.css';
 
 const history = createBrowserHistory();
-const router = createRouter({ routes, history });
+const router = createRouter({
+  routes,
+  history,
+  titleTemplate: (title) => title ?? 'LiteForge Docs',
+});
 
 document.body.appendChild(ModalProvider());
 

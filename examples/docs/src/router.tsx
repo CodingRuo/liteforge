@@ -12,7 +12,7 @@ export const routes: RouteDefinition[] = [
         path: '/core',
         component: () => import('./pages/CorePage.js'),
         export: 'CorePage',
-        meta: { title: 'core — LiteForge' },
+        meta: { title: 'Core — LiteForge' },
       },
       {
         path: '/runtime',

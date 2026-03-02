@@ -1,10 +1,11 @@
 import { createComponent } from '@liteforge/runtime';
+import type { ComponentFactory } from '@liteforge/runtime';
 import { CodeBlock } from './CodeBlock.js';
 
 interface LiveExampleProps {
   title: string;
   description?: string;
-  component: () => Node;
+  component: ComponentFactory<object, object> | (() => Node);
   code: string;
   language?: string;
 }
@@ -12,6 +13,7 @@ interface LiveExampleProps {
 export const LiveExample = createComponent<LiveExampleProps>({
   name: 'LiveExample',
   component({ props }) {
+    const Component = props.component;
     return (
       <div class="my-6 rounded-xl border border-neutral-800 overflow-hidden">
         <div class="px-4 py-2.5 bg-neutral-900 border-b border-neutral-800 flex items-center gap-2">
@@ -22,7 +24,7 @@ export const LiveExample = createComponent<LiveExampleProps>({
             : null}
         </div>
         <div class="p-5 bg-neutral-950/60">
-          {props.component()}
+          <Component />
         </div>
         <div class="border-t border-neutral-800">
           <CodeBlock code={props.code} language={props.language ?? 'tsx'} />

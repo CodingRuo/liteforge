@@ -1,5 +1,5 @@
 import { createComponent } from '@liteforge/runtime';
-import { signal, computed, effect } from '@liteforge/core';
+import { signal, computed } from '@liteforge/core';
 import { DocSection } from '../components/DocSection.js';
 import { CodeBlock } from '../components/CodeBlock.js';
 import { LiveExample } from '../components/LiveExample.js';
@@ -10,68 +10,56 @@ import type { ApiRow } from '../components/ApiTable.js';
 
 // ─── Live examples ──────────────────────────────────────────────────────────
 
-function CounterExample(): Node {
-  const count = signal(0);
-  const doubled = computed(() => count() * 2);
+const CounterExample = createComponent({
+  name: 'CounterExample',
+  component() {
+    const count = signal(0);
+    const doubled = computed(() => count() * 2);
 
-  const el = document.createElement('div');
-  el.className = 'flex items-center gap-4';
+    return (
+      <div class="flex items-center gap-4">
+        <button class={btnClass('primary')} onclick={() => count.update(n => n + 1)}>Increment</button>
+        <button class={btnClass('secondary')} onclick={() => count.set(0)}>Reset</button>
+        <span class="text-sm text-neutral-300 font-mono">
+          {() => `count = ${count()},  doubled = ${doubled()}`}
+        </span>
+      </div>
+    );
+  },
+});
 
-  const btn = document.createElement('button');
-  btn.className = btnClass('primary');
-  btn.textContent = 'Increment';
-  btn.addEventListener('click', () => count.update(n => n + 1));
+const FullNameExample = createComponent({
+  name: 'FullNameExample',
+  component() {
+    const firstName = signal('Anna');
+    const lastName = signal('Müller');
+    const fullName = computed(() => `${firstName()} ${lastName()}`);
 
-  const reset = document.createElement('button');
-  reset.className = btnClass('secondary');
-  reset.textContent = 'Reset';
-  reset.addEventListener('click', () => count.set(0));
-
-  const info = document.createElement('span');
-  info.className = 'text-sm text-neutral-300 font-mono';
-
-  effect(() => {
-    info.textContent = `count = ${count()},  doubled = ${doubled()}`;
-  });
-
-  el.appendChild(btn);
-  el.appendChild(reset);
-  el.appendChild(info);
-  return el;
-}
-
-function FullNameExample(): Node {
-  const firstName = signal('Anna');
-  const lastName = signal('Müller');
-  const fullName = computed(() => `${firstName()} ${lastName()}`);
-
-  const wrap = document.createElement('div');
-  wrap.className = 'space-y-2';
-
-  function input(label: string, sig: ReturnType<typeof signal<string>>): Node {
-    const row = document.createElement('div');
-    row.className = 'flex items-center gap-3';
-    const lbl = document.createElement('label');
-    lbl.className = 'text-xs text-neutral-500 w-20';
-    lbl.textContent = label;
-    const inp = document.createElement('input');
-    inp.className = inputClass({ size: 'sm', extra: 'w-36' });
-    inp.value = sig();
-    inp.addEventListener('input', () => sig.set(inp.value));
-    row.appendChild(lbl);
-    row.appendChild(inp);
-    return row;
-  }
-
-  const display = document.createElement('p');
-  display.className = 'text-sm font-semibold text-indigo-300 font-mono';
-  effect(() => { display.textContent = `fullName = "${fullName()}"`; });
-
-  wrap.appendChild(input('First name', firstName));
-  wrap.appendChild(input('Last name', lastName));
-  wrap.appendChild(display);
-  return wrap;
-}
+    return (
+      <div class="space-y-2">
+        <div class="flex items-center gap-3">
+          <label class="text-xs text-neutral-500 w-20">First name</label>
+          <input
+            class={inputClass({ size: 'sm', extra: 'w-36' })}
+            value={() => firstName()}
+            oninput={(e: InputEvent) => firstName.set((e.target as HTMLInputElement).value)}
+          />
+        </div>
+        <div class="flex items-center gap-3">
+          <label class="text-xs text-neutral-500 w-20">Last name</label>
+          <input
+            class={inputClass({ size: 'sm', extra: 'w-36' })}
+            value={() => lastName()}
+            oninput={(e: InputEvent) => lastName.set((e.target as HTMLInputElement).value)}
+          />
+        </div>
+        <p class="text-sm font-semibold text-indigo-300 font-mono">
+          {() => `fullName = "${fullName()}"`}
+        </p>
+      </div>
+    );
+  },
+});
 
 // ─── Code strings ────────────────────────────────────────────────────────────
 

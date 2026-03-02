@@ -354,13 +354,22 @@ export function processChildExpression(expr: t.Expression): t.Expression {
     return expr;
   }
 
-  // Component calls (uppercase callee) should NOT be wrapped
-  // e.g., Link({...}), Show({...}), RouterOutlet()
-  // These return Nodes and should be called ONCE, not in a reactive effect
+  // Component calls should NOT be wrapped — they return Nodes and must be
+  // called ONCE, not inside a reactive effect.
+  // Covers:
+  //   Link({...}), Show({...}), RouterOutlet()     ← Identifier callee
+  //   table.Root(), calendar.Toolbar()             ← MemberExpression callee
   if (t.isCallExpression(expr)) {
     const callee = expr.callee;
     if (t.isIdentifier(callee) && /^[A-Z]/.test(callee.name)) {
-      return expr; // Don't wrap - it's a component that returns a Node
+      return expr;
+    }
+    if (
+      t.isMemberExpression(callee) &&
+      t.isIdentifier(callee.property) &&
+      /^[A-Z]/.test(callee.property.name)
+    ) {
+      return expr;
     }
   }
 

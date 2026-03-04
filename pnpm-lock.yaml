@@ -78,6 +78,9 @@ importers:
       '@liteforge/calendar':
         specifier: workspace:*
         version: link:../../packages/calendar
+      '@liteforge/client':
+        specifier: workspace:*
+        version: link:../../packages/client
       '@liteforge/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -130,6 +133,9 @@ importers:
       '@liteforge/query':
         specifier: workspace:*
         version: link:../query
+      '@liteforge/runtime':
+        specifier: workspace:*
+        version: link:../runtime
 
   packages/core: {}
 
@@ -138,6 +144,9 @@ importers:
       '@liteforge/core':
         specifier: workspace:*
         version: link:../core
+      '@liteforge/runtime':
+        specifier: workspace:*
+        version: link:../runtime
       '@liteforge/store':
         specifier: workspace:*
         version: link:../store
@@ -156,12 +165,18 @@ importers:
       '@liteforge/core':
         specifier: workspace:*
         version: link:../core
+      '@liteforge/runtime':
+        specifier: workspace:*
+        version: link:../runtime
 
   packages/query:
     devDependencies:
       '@liteforge/core':
         specifier: workspace:*
         version: link:../core
+      '@liteforge/runtime':
+        specifier: workspace:*
+        version: link:../runtime
 
   packages/router:
     devDependencies:

@@ -19,7 +19,7 @@ A signals-based frontend framework with no virtual DOM, zero external dependenci
 | Package | Version | Size (gzip) | Tests | Description |
 |---------|---------|-------------|-------|-------------|
 | [@liteforge/core](packages/core) | 0.1.0 | ~6kb | 120 | Reactive primitives: signal, computed, effect, batch |
-| [@liteforge/runtime](packages/runtime) | 0.4.1 | ~12kb | 265 | Components, lifecycle, control flow, plugin system |
+| [@liteforge/runtime](packages/runtime) | 0.4.2 | ~12kb | 265 | Components, lifecycle, control flow, plugin system |
 | [@liteforge/store](packages/store) | 0.1.0 | ~5kb | 150 | State management with registry and time-travel |
 | [@liteforge/router](packages/router) | 0.3.0 | ~20kb | 359 | Routing with guards, middleware, lazy loading, scroll behavior |
 | [@liteforge/query](packages/query) | 1.0.0 | ~5kb | 73 | Data fetching with caching and mutations |
@@ -28,10 +28,11 @@ A signals-based frontend framework with no virtual DOM, zero external dependenci
 | [@liteforge/calendar](packages/calendar) | 0.1.0 | ~22kb | 184 | Scheduling calendar with drag & drop and 4 views |
 | [@liteforge/client](packages/client) | 1.0.0 | ~8kb | 76 | TypeScript-first HTTP client with interceptors and CRUD resources |
 | [@liteforge/modal](packages/modal) | 1.0.0 | ~4kb | 27 | Modal system with focus trap, transitions, and promise presets |
+| [@liteforge/i18n](packages/i18n) | 0.2.0 | ~3kb | 47 | Signals-based i18n with lazy locales, pluralization, and fallback |
 | [@liteforge/vite-plugin](packages/vite-plugin) | 0.4.1 | ~15kb | 275 | JSX transform and build optimization |
 | [@liteforge/devtools](packages/devtools) | 1.0.0 | ~16kb | 100 | Debug panel with 5 tabs and time-travel |
 
-**1,721 tests across all packages.**
+**1,796 tests across all packages.**
 
 ## Architecture
 
@@ -45,7 +46,8 @@ core  (no deps)
 ├── table         — data tables
 ├── calendar      — scheduling calendar
 ├── client        — HTTP client
-└── modal         — modal system
+├── modal         — modal system
+└── i18n          — internationalization plugin
 
 vite-plugin       — standalone build transform
 devtools          — depends on core + store
@@ -129,12 +131,14 @@ import { createApp } from '@liteforge/runtime';
 import { routerPlugin } from '@liteforge/router';
 import { modalPlugin } from '@liteforge/modal';
 import { queryPlugin } from '@liteforge/query';
+import { i18nPlugin } from '@liteforge/i18n';
 import { devtoolsPlugin } from '@liteforge/devtools';
 
 await createApp({ root: App, target: '#app' })
   .use(routerPlugin({ routes: [...] }))
   .use(modalPlugin())
   .use(queryPlugin())
+  .use(i18nPlugin({ defaultLocale: 'en', load: (locale) => import(`./locales/${locale}.js`) }))
   .use(devtoolsPlugin())
   .mount();
 ```
@@ -256,6 +260,67 @@ const confirmed = await confirm({ title: 'Delete?', message: 'This cannot be und
 await alert({ title: 'Done', message: 'User deleted.' })
 ```
 
+### Internationalization (i18n)
+
+```bash
+npm install @liteforge/i18n
+```
+
+```ts
+// main.tsx
+import { i18nPlugin } from '@liteforge/i18n';
+
+await createApp({ root: App, target: '#app' })
+  .use(i18nPlugin({
+    defaultLocale: 'en',
+    fallbackLocale: 'en',          // used for missing keys
+    load: async (locale) => {
+      const mod = await import(`./locales/${locale}.js`);
+      return mod.default;          // plain TranslationTree object
+    },
+    persist: true,                 // saves locale to localStorage
+    storageKey: 'my-locale',       // default: 'lf-locale'
+  }))
+  .mount();
+```
+
+```ts
+// locales/en.ts
+export default {
+  greeting: 'Hello, {name}!',
+  nav: { home: 'Home', settings: 'Settings' },
+  items: '{count} item | {count} items',           // 2-part: singular | plural
+  messages: 'No messages | {count} message | {count} messages', // 3-part: zero | one | many
+} satisfies TranslationTree;
+```
+
+```tsx
+// Inside a component
+const MyPage = createComponent({
+  component({ use }) {
+    const { t, locale, setLocale } = use('i18n');
+
+    return (
+      <div>
+        <p>{() => t('greeting', { name: 'World' })}</p>
+        <p>{() => t('items', { count: count() }, count())}</p>
+        <p>{() => t('nav.home')}</p>
+
+        <button onclick={() => setLocale('de')}>🇩🇪 Deutsch</button>
+        <button onclick={() => setLocale('en')}>🇬🇧 English</button>
+      </div>
+    );
+  },
+});
+```
+
+Key properties:
+- **No re-render** — only the text nodes that call `t()` update on locale switch
+- **Fallback locale** — missing keys in the current locale transparently fall back
+- **Async plugin install** — initial locale is fully loaded before the app mounts (no flash of untranslated keys)
+- **Dot-notation keys** — `t('nav.home')` traverses nested objects
+- **Pipe pluralization** — `2-part` (`singular|plural`) or `3-part` (`zero|one|many`)
+
 ### Control Flow
 
 ```tsx
@@ -284,7 +349,7 @@ pnpm install
 # Build all packages
 pnpm build:packages
 
-# Run all tests (1,721 tests)
+# Run all tests (1,796 tests)
 pnpm test
 
 # Type check all packages
@@ -314,7 +379,7 @@ LiteForge is a personal framework born from real frustration with React's re-ren
 
 I'm actively building real applications on top of it (scheduling software, business tools, DevOps dashboards), so the framework evolves based on actual needs, not theoretical purity.
 
-**What works well today:** Core reactivity, routing, state management, forms, data tables, calendar, HTTP client, modals, and a full plugin system — all battle-tested through my own projects.
+**What works well today:** Core reactivity, routing, state management, forms, data tables, calendar, HTTP client, modals, i18n, and a full plugin system — all battle-tested through my own projects.
 
 **What's still maturing:** Documentation, edge cases in complex layouts, and the ecosystem around it.
 
@@ -330,7 +395,7 @@ I want to be transparent: LiteForge was developed with significant AI assistance
 - Every feature was reviewed, tested, and validated by me in real browser environments
 - The framework reflects my opinions and preferences as a developer, not generic AI output
 
-I believe AI-assisted development is the future of how software gets built. Being upfront about it is more honest than pretending otherwise. The code quality speaks for itself — 1,721 tests, TypeScript strict mode, zero external dependencies.
+I believe AI-assisted development is the future of how software gets built. Being upfront about it is more honest than pretending otherwise. The code quality speaks for itself — 1,796 tests, TypeScript strict mode, zero external dependencies.
 
 ## About
 

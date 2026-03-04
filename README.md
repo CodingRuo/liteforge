@@ -10,7 +10,7 @@ A signals-based frontend framework with no virtual DOM, zero external dependenci
 - **Zero-Flicker Architecture** — Components render only when async data is fully loaded
 - **Fine-Grained Reactivity** — Automatic dependency tracking, no manual subscriptions
 - **JSX Syntax** — Familiar developer experience with build-time optimization
-- **Unified Context System** — One `use()` function for stores, router, and services
+- **Plugin System** — First-class `AppBuilder.use()` API for router, modals, queries and more
 - **Type-Safe by Default** — Full TypeScript, strict mode, no `any` in public APIs
 - **Zero External Dependencies** — Every package has zero runtime deps
 
@@ -18,26 +18,26 @@ A signals-based frontend framework with no virtual DOM, zero external dependenci
 
 | Package | Version | Size (gzip) | Tests | Description |
 |---------|---------|-------------|-------|-------------|
-| [@liteforge/core](packages/core) | 0.2.0 | ~6kb | 120 | Reactive primitives: signal, computed, effect, batch |
-| [@liteforge/runtime](packages/runtime) | 0.2.0 | ~12kb | 239 | Components, lifecycle, control flow (Show, For, Switch) |
-| [@liteforge/store](packages/store) | 0.2.0 | ~5kb | 150 | State management with registry and time-travel |
-| [@liteforge/router](packages/router) | 0.2.0 | ~20kb | 344 | Routing with guards, middleware, lazy loading, scroll behavior |
-| [@liteforge/query](packages/query) | 0.2.0 | ~5kb | 67 | Data fetching with caching and mutations |
-| [@liteforge/form](packages/form) | 0.2.0 | ~4kb | 48 | Form management with Zod validation |
-| [@liteforge/table](packages/table) | 0.2.0 | ~8kb | 61 | Data tables with sorting, filtering, pagination |
-| [@liteforge/calendar](packages/calendar) | 0.2.0 | ~22kb | 184 | Scheduling calendar with drag & drop and 4 views |
-| [@liteforge/client](packages/client) | 0.2.0 | ~8kb | 72 | TypeScript-first HTTP client with interceptors and CRUD resources |
-| [@liteforge/modal](packages/modal) | 0.2.0 | ~4kb | 21 | Modal system with focus trap, transitions, and promise presets |
-| [@liteforge/vite-plugin](packages/vite-plugin) | 0.2.0 | ~15kb | 275 | JSX transform and build optimization |
-| [@liteforge/devtools](packages/devtools) | 0.2.0 | ~16kb | 100 | Debug panel with 5 tabs and time-travel |
+| [@liteforge/core](packages/core) | 0.1.0 | ~6kb | 120 | Reactive primitives: signal, computed, effect, batch |
+| [@liteforge/runtime](packages/runtime) | 0.4.1 | ~12kb | 265 | Components, lifecycle, control flow, plugin system |
+| [@liteforge/store](packages/store) | 0.1.0 | ~5kb | 150 | State management with registry and time-travel |
+| [@liteforge/router](packages/router) | 0.3.0 | ~20kb | 359 | Routing with guards, middleware, lazy loading, scroll behavior |
+| [@liteforge/query](packages/query) | 1.0.0 | ~5kb | 73 | Data fetching with caching and mutations |
+| [@liteforge/form](packages/form) | 0.1.0 | ~4kb | 48 | Form management with Zod validation |
+| [@liteforge/table](packages/table) | 0.1.1 | ~8kb | 61 | Data tables with sorting, filtering, pagination |
+| [@liteforge/calendar](packages/calendar) | 0.1.0 | ~22kb | 184 | Scheduling calendar with drag & drop and 4 views |
+| [@liteforge/client](packages/client) | 1.0.0 | ~8kb | 76 | TypeScript-first HTTP client with interceptors and CRUD resources |
+| [@liteforge/modal](packages/modal) | 1.0.0 | ~4kb | 27 | Modal system with focus trap, transitions, and promise presets |
+| [@liteforge/vite-plugin](packages/vite-plugin) | 0.4.1 | ~15kb | 275 | JSX transform and build optimization |
+| [@liteforge/devtools](packages/devtools) | 1.0.0 | ~16kb | 100 | Debug panel with 5 tabs and time-travel |
 
-**1,591 tests across all packages.**
+**1,721 tests across all packages.**
 
 ## Architecture
 
 ```
 core  (no deps)
-├── runtime       — components, JSX, control flow
+├── runtime       — components, JSX, control flow, plugin system
 ├── store         — global state
 ├── router        — client-side routing
 ├── query         — data fetching
@@ -72,9 +72,12 @@ export default defineConfig({
 
 ```tsx
 import { createApp } from '@liteforge/runtime';
+import { routerPlugin } from '@liteforge/router';
 import { App } from './App.js';
 
-await createApp({ root: App, target: '#app' });
+await createApp({ root: App, target: '#app' })
+  .use(routerPlugin({ routes: [...] }))
+  .mount();
 ```
 
 ## Core Concepts
@@ -117,14 +120,48 @@ const UserProfile = createComponent({
 })
 ```
 
+### Plugin System
+
+Plugins are installed via `AppBuilder.use()` before mounting. Each plugin provides typed services that are accessible via `use()` inside components.
+
+```tsx
+import { createApp } from '@liteforge/runtime';
+import { routerPlugin } from '@liteforge/router';
+import { modalPlugin } from '@liteforge/modal';
+import { queryPlugin } from '@liteforge/query';
+import { devtoolsPlugin } from '@liteforge/devtools';
+
+await createApp({ root: App, target: '#app' })
+  .use(routerPlugin({ routes: [...] }))
+  .use(modalPlugin())
+  .use(queryPlugin())
+  .use(devtoolsPlugin())
+  .mount();
+```
+
+Inside components, access plugins via the typed `use()` function:
+
+```tsx
+const MyPage = createComponent({
+  component({ use }) {
+    const router = use('router')   // typed as Router
+    const modal  = use('modal')    // typed as ModalApi
+
+    return (
+      <button onclick={() => router.push('/home')}>Go home</button>
+    )
+  }
+})
+```
+
 ### Router
 
 ```ts
-import { createRouter, createBrowserHistory } from '@liteforge/router'
+import { routerPlugin } from '@liteforge/router'
 
-const router = createRouter({
-  history: createBrowserHistory(),
-  scrollBehavior: 'top',   // 'top' | 'none' | (to, from) => void
+.use(routerPlugin({
+  history: 'browser',   // 'browser' | 'hash' | 'memory'
+  scrollBehavior: 'top',
   routes: [
     { path: '/', component: Home },
     { path: '/users/:id', component: () => import('./UserDetail.js') },
@@ -135,7 +172,7 @@ const router = createRouter({
       children: [{ path: '/', component: Dashboard }],
     },
   ],
-})
+}))
 ```
 
 ### Store
@@ -247,7 +284,7 @@ pnpm install
 # Build all packages
 pnpm build:packages
 
-# Run all tests (1,591 tests)
+# Run all tests (1,721 tests)
 pnpm test
 
 # Type check all packages
@@ -271,13 +308,13 @@ pnpm --filter docs dev
 
 ## Status
 
-> **LiteForge is in active early development (v0.2.x).** APIs may change between minor versions. I use it in my own production projects, but if you adopt it today, expect some rough edges.
+> **LiteForge is in active development.** APIs may change between minor versions. I use it in my own production projects, but if you adopt it today, expect some rough edges.
 
 LiteForge is a personal framework born from real frustration with React's re-rendering model and Vue's adapter overhead. I built it because I wanted a tool that works the way I think — signals that directly update the DOM, no virtual DOM diffing, no magic.
 
 I'm actively building real applications on top of it (scheduling software, business tools, DevOps dashboards), so the framework evolves based on actual needs, not theoretical purity.
 
-**What works well today:** Core reactivity, routing, state management, forms, data tables, calendar, HTTP client, and modals — all battle-tested through my own projects.
+**What works well today:** Core reactivity, routing, state management, forms, data tables, calendar, HTTP client, modals, and a full plugin system — all battle-tested through my own projects.
 
 **What's still maturing:** Documentation, edge cases in complex layouts, and the ecosystem around it.
 
@@ -293,7 +330,7 @@ I want to be transparent: LiteForge was developed with significant AI assistance
 - Every feature was reviewed, tested, and validated by me in real browser environments
 - The framework reflects my opinions and preferences as a developer, not generic AI output
 
-I believe AI-assisted development is the future of how software gets built. Being upfront about it is more honest than pretending otherwise. The code quality speaks for itself — 1,591 tests, TypeScript strict mode, zero external dependencies.
+I believe AI-assisted development is the future of how software gets built. Being upfront about it is more honest than pretending otherwise. The code quality speaks for itself — 1,721 tests, TypeScript strict mode, zero external dependencies.
 
 ## About
 

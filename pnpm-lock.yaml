@@ -27,42 +27,42 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@25.3.2)(happy-dom@15.11.7)(jsdom@25.0.1)(lightningcss@1.31.1)
 
-  examples/docs:
+  docs:
     dependencies:
       '@liteforge/calendar':
         specifier: workspace:*
-        version: link:../../packages/calendar
+        version: link:../packages/calendar
       '@liteforge/client':
         specifier: workspace:*
-        version: link:../../packages/client
+        version: link:../packages/client
       '@liteforge/core':
         specifier: workspace:*
-        version: link:../../packages/core
+        version: link:../packages/core
       '@liteforge/form':
         specifier: workspace:*
-        version: link:../../packages/form
+        version: link:../packages/form
       '@liteforge/query':
         specifier: workspace:*
-        version: link:../../packages/query
+        version: link:../packages/query
       '@liteforge/router':
         specifier: workspace:*
-        version: link:../../packages/router
+        version: link:../packages/router
       '@liteforge/runtime':
         specifier: workspace:*
-        version: link:../../packages/runtime
+        version: link:../packages/runtime
       '@liteforge/store':
         specifier: workspace:*
-        version: link:../../packages/store
+        version: link:../packages/store
       '@liteforge/table':
         specifier: workspace:*
-        version: link:../../packages/table
+        version: link:../packages/table
       zod:
         specifier: ^3.24.0
         version: 3.25.76
     devDependencies:
       '@liteforge/vite-plugin':
         specifier: workspace:*
-        version: link:../../packages/vite-plugin
+        version: link:../packages/vite-plugin
       '@tailwindcss/vite':
         specifier: ^4.1.0
         version: 4.2.1(vite@6.4.1(@types/node@25.3.2)(jiti@2.6.1)(lightningcss@1.31.1))

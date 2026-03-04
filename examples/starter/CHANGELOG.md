@@ -1,5 +1,17 @@
 # @liteforge/starter
 
+## 0.0.9
+
+### Patch Changes
+
+- Updated dependencies
+  - @liteforge/runtime@0.4.0
+  - @liteforge/router@0.3.0
+  - @liteforge/query@1.0.0
+  - @liteforge/client@1.0.0
+  - @liteforge/modal@1.0.0
+  - @liteforge/devtools@1.0.0
+
 ## 0.0.8
 
 ### Patch Changes

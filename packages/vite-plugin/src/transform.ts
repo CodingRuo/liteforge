@@ -20,6 +20,7 @@ const traverse = (traverseModule as any).default?.default ?? (traverseModule as 
 const generate = (generateModule as any).default?.default ?? (generateModule as any).default ?? generateModule;
 import type { TransformResult, JsxTransformState, ResolvedPluginOptions } from './types.js';
 import { createJsxVisitor } from './jsx-visitor.js';
+import { createForTransformVisitor } from './for-transform.js';
 import { mightContainJsx, createHImport } from './utils.js';
 import {
   createTemplateVisitor,
@@ -100,6 +101,11 @@ function transformWithHCalls(
   // Check for existing imports
   checkExistingImports(ast, state);
 
+  // Transform For() calls BEFORE JSX transform:
+  // Rewrites each in getter, rewrites item property accesses in children body.
+  // Must run on raw JSX nodes so it can see JSXExpressionContainers directly.
+  traverse(ast, createForTransformVisitor());
+
   // Transform JSX using our custom visitor
   const visitor = createJsxVisitor(state);
   traverse(ast, visitor);
@@ -164,6 +170,9 @@ function transformWithTemplates(
 
   // Check for existing imports
   checkExistingImports(ast, state);
+
+  // Transform For() calls before JSX transform (needs raw JSX nodes)
+  traverse(ast, createForTransformVisitor());
 
   // Transform JSX using template extraction visitor
   const visitor = createTemplateVisitor(state);

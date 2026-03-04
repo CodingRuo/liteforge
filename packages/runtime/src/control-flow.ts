@@ -165,20 +165,23 @@ import { signal } from '@liteforge/core';
 import type { Signal } from '@liteforge/core';
 
 /**
- * Config for For component (internal use).
- * Use ForProps<T> from types.ts for external typing.
- * 
- * Note: children receives getters for item and index, enabling signal-backed
- * updates when items reorder without re-running the render function.
+ * Config for For component.
+ * children receives plain values — the Vite plugin transforms item.x to () => item().x
+ * at compile time. Internally, For still uses signal-backed getters for performance.
  */
 export interface ForConfig<T> {
   each: (() => ReadonlyArray<T>) | (() => T[]) | ReadonlyArray<T> | T[];
   key?: keyof T | ((item: T, index: number) => string | number);
-  /** 
-   * Render function for each item.
-   * @param item - Getter for the current item value (updates when item data changes)
-   * @param index - Getter for the current index (updates when item moves)
-   */
+  children: (item: T, index: number) => Node;
+  fallback?: () => Node;
+}
+
+/**
+ * Internal config used by For() after wrapping children params into getters.
+ */
+interface ForConfigInternal<T> {
+  each: (() => ReadonlyArray<T>) | (() => T[]) | ReadonlyArray<T> | T[];
+  key?: keyof T | ((item: T, index: number) => string | number);
   children: (item: () => T, index: () => number) => Node;
   fallback?: () => Node;
 }
@@ -224,7 +227,12 @@ const isDev = typeof globalThis !== 'undefined' && (globalThis as Record<string,
  * ```
  */
 export function For<T>(config: ForConfig<T>): Node {
-  const { each, key: keyProp, children, fallback } = config;
+  const { each, key: keyProp, fallback } = config;
+  // The Vite plugin transforms children body at compile time so that property
+  // accesses on `item` become reactive getter calls (item.name → item().name).
+  // At runtime, we pass getters so the rendered DOM updates in-place on reorder.
+  // We cast here because the compiled children are compatible with the getter signature.
+  const children = config.children as unknown as ForConfigInternal<T>['children'];
 
   // Create markers for positioning
   const startMarker = document.createComment('For:start');

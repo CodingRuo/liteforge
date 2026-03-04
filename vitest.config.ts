@@ -16,6 +16,7 @@ export default defineConfig({
       '@liteforge/query': path.resolve(__dirname, 'packages/query/src/index.ts'),
       '@liteforge/form': path.resolve(__dirname, 'packages/form/src/index.ts'),
       '@liteforge/devtools': path.resolve(__dirname, 'packages/devtools/src/index.ts'),
+      '@liteforge/i18n': path.resolve(__dirname, 'packages/i18n/src/index.ts'),
     },
   },
   test: {
@@ -34,6 +35,7 @@ export default defineConfig({
       ['packages/calendar/**', 'happy-dom'],
       ['packages/modal/**', 'happy-dom'],
       ['packages/client/**', 'node'],
+      ['packages/i18n/**', 'node'],
       ['packages/liteforge/**', 'node'],
       ['create-liteforge/**', 'node'],
     ],

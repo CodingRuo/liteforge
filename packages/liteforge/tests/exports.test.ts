@@ -97,3 +97,11 @@ describe('liteforge/vite-plugin exports', () => {
     expect(typeof mod.default).toBe('function');
   });
 });
+
+describe('liteforge/i18n exports', () => {
+  it('exports i18nPlugin, createI18n', async () => {
+    const mod = await import('../src/i18n.ts');
+    expect(typeof mod.i18nPlugin).toBe('function');
+    expect(typeof mod.createI18n).toBe('function');
+  });
+});

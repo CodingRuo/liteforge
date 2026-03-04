@@ -179,9 +179,9 @@ async function installAndMount(
 
     for (const plugin of newStylePlugins) {
       try {
-        const cleanup = plugin.install(pluginCtx);
-        if (typeof cleanup === 'function') {
-          pluginCleanups.push(cleanup);
+        const result = await plugin.install(pluginCtx);
+        if (typeof result === 'function') {
+          pluginCleanups.push(result);
         }
       } catch (err) {
         // Run cleanups for already-installed plugins in reverse

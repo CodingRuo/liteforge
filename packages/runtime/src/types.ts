@@ -147,7 +147,7 @@ export interface LiteForgePlugin {
    * Called during app bootstrap. May return a cleanup function.
    * Cleanup is called in reverse order on app.unmount().
    */
-  install(context: PluginContext): void | (() => void);
+  install(context: PluginContext): void | (() => void) | Promise<void | (() => void)>;
 }
 
 /**

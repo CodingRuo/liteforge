@@ -67,6 +67,10 @@
     "./store": {
       "types": "./dist/store.d.ts",
       "import": "./dist/store.js"
+    },
+    "./i18n": {
+      "types": "./dist/i18n.d.ts",
+      "import": "./dist/i18n.js"
     }
   },
   "files": [
@@ -99,6 +103,7 @@
     "@liteforge/modal": "workspace:*",
     "@liteforge/calendar": "workspace:*",
     "@liteforge/devtools": "workspace:*",
-    "@liteforge/vite-plugin": "workspace:*"
+    "@liteforge/vite-plugin": "workspace:*",
+    "@liteforge/i18n": "workspace:*"
   }
 }

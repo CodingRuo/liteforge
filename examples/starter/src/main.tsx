@@ -13,6 +13,8 @@ import { clientPlugin, queryIntegration } from 'liteforge/client';
 import { queryPlugin } from 'liteforge/query';
 import { modalPlugin } from 'liteforge/modal';
 import { devtoolsPlugin } from 'liteforge/devtools';
+import { i18nPlugin } from 'liteforge/i18n';
+import type { TranslationTree } from 'liteforge/i18n';
 
 // Import app components
 import { App } from './App.js';
@@ -22,6 +24,19 @@ import { uiStore } from './stores/ui.js';
 
 // Import styles
 import './styles.css';
+
+// =============================================================================
+// i18n loader — lazy-loads locale files
+// =============================================================================
+
+async function loadLocale(locale: string): Promise<TranslationTree> {
+  if (locale === 'de') {
+    const mod = await import('./locales/de.js');
+    return mod.default as TranslationTree;
+  }
+  const mod = await import('./locales/en.js');
+  return mod.default as TranslationTree;
+}
 
 
 // =============================================================================
@@ -38,6 +53,13 @@ const app = await createApp({
   .use(queryPlugin())
   .use(clientPlugin({ baseUrl: '/api', query: queryIntegration() }))
   .use(modalPlugin())
+  .use(i18nPlugin({
+    defaultLocale: 'en',
+    fallbackLocale: 'en',
+    load: loadLocale,
+    persist: true,
+    storageKey: 'lf-demo-locale',
+  }))
   .use(devtoolsPlugin({
     shortcut: 'ctrl+shift+d',
     position: 'right',

@@ -87,6 +87,11 @@ export const DashboardLayout = createComponent({
               children: 'Client',
               activeClass: 'active',
             })}
+            {Link({
+              href: '/dashboard/i18n',
+              children: 'i18n',
+              activeClass: 'active',
+            })}
             {Show({
               when: () => authStore.isAdmin(),
               children: () => Link({

@@ -81,6 +81,12 @@ export const routes: RouteDefinition[] = [
         meta: { title: 'devtools — LiteForge' },
       },
       {
+        path: '/i18n',
+        component: () => import('./pages/I18nPage.js'),
+        export: 'I18nPage',
+        meta: { title: 'i18n — LiteForge' },
+      },
+      {
         path: '/benchmark',
         component: () => import('./pages/benchmark/BenchmarkPage.js'),
         export: 'BenchmarkPage',

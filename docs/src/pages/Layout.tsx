@@ -47,6 +47,12 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: 'Plugins',
+    links: [
+      { href: '/i18n', text: 'i18n', badge: 'l10n' },
+    ],
+  },
+  {
     label: 'Tools',
     links: [
       { href: '/benchmark', text: 'benchmark', badge: 'perf', noPrefix: true },

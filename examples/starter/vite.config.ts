@@ -25,6 +25,7 @@ export default defineConfig({
       'liteforge/modal': path.resolve(__dirname, '../../packages/liteforge/src/modal.ts'),
       'liteforge/calendar': path.resolve(__dirname, '../../packages/liteforge/src/calendar.ts'),
       'liteforge/devtools': path.resolve(__dirname, '../../packages/liteforge/src/devtools.ts'),
+      'liteforge/i18n': path.resolve(__dirname, '../../packages/liteforge/src/i18n.ts'),
       'liteforge': path.resolve(__dirname, '../../packages/liteforge/src/index.ts'),
     },
   },

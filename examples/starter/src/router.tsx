@@ -243,6 +243,12 @@ export const routes: RouteDefinition[] = [
         export: 'ClientPage',
         meta: { title: 'Client' },
       },
+      {
+        path: '/i18n',
+        component: () => import('./pages/dashboard/I18n.js'),
+        export: 'I18nPage',
+        meta: { title: 'i18n Demo' },
+      },
     ],
   },
 

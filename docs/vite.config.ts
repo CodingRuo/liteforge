@@ -28,6 +28,7 @@ export default defineConfig({
       'liteforge/store': path.resolve(__dirname, '../packages/liteforge/src/store.ts'),
       'liteforge/modal': path.resolve(__dirname, '../packages/liteforge/src/modal.ts'),
       'liteforge/devtools': path.resolve(__dirname, '../packages/liteforge/src/devtools.ts'),
+      'liteforge/i18n': path.resolve(__dirname, '../packages/liteforge/src/i18n.ts'),
       'liteforge': path.resolve(__dirname, '../packages/liteforge/src/index.ts'),
     },
   },

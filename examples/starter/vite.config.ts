@@ -3,7 +3,10 @@ import liteforge from '@liteforge/vite-plugin';
 import path from 'path';
 
 export default defineConfig({
-  plugins: [liteforge()],
+  plugins: [liteforge({
+    // Uncomment to test template extraction in dev mode (default: 'auto' = prod only):
+    // templateExtraction: true,
+  })],
   server: {
     port: 3000,
     open: true,

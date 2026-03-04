@@ -388,5 +388,5 @@ If a new DOM event isn't recognized as an event handler and gets wrapped in a ge
 - [ ] `@liteforge/i18n` — Internationalization plugin
 - [ ] `@liteforge/calendar` — Month view click-to-navigate, multi-day event spanning
 - [ ] Docs site — Built with LiteForge itself
-- [ ] `create-liteforge` — CLI scaffolding tool
+- [x] `create-liteforge` — CLI scaffolding tool
 - [x] HMR — Component-level hot module replacement with state preservation

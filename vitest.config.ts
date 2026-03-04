@@ -20,7 +20,7 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    include: ['packages/*/tests/**/*.test.ts'],
+    include: ['packages/*/tests/**/*.test.ts', 'create-liteforge/tests/**/*.test.ts'],
     setupFiles: ['./tests/setup.ts'],
     // Use happy-dom for runtime tests (has synchronous MutationObserver)
     environmentMatchGlobs: [
@@ -35,6 +35,7 @@ export default defineConfig({
       ['packages/modal/**', 'happy-dom'],
       ['packages/client/**', 'node'],
       ['packages/liteforge/**', 'node'],
+      ['create-liteforge/**', 'node'],
     ],
     coverage: {
       provider: 'v8',

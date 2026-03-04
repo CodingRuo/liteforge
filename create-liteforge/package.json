@@ -1,0 +1,52 @@
+{
+  "name": "create-liteforge",
+  "version": "0.1.0",
+  "description": "Scaffold a new LiteForge project",
+  "author": "SchildW3rk <contact@schildw3rk.dev>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/schildw3rk/liteforge",
+    "directory": "create-liteforge"
+  },
+  "homepage": "https://github.com/schildw3rk/liteforge#readme",
+  "bugs": {
+    "url": "https://github.com/schildw3rk/liteforge/issues"
+  },
+  "keywords": [
+    "create",
+    "liteforge",
+    "scaffold",
+    "cli",
+    "starter",
+    "signals",
+    "framework"
+  ],
+  "type": "module",
+  "bin": {
+    "create-liteforge": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "template",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

@@ -28,17 +28,13 @@ import { LoginPage } from './pages/Login.js';
 import { NotFoundPage } from './pages/NotFound.js';
 
 // Admin panel (liteforge/admin demo)
-import { buildAdminRoutes, resourceRegistry } from 'liteforge/admin';
+import { buildAdminRoutes } from 'liteforge/admin';
 import { postsResource, usersResource, adminDashboard, createMockClient } from './pages/admin-panel/resources.js';
 
-const mockClient = createMockClient();
-void postsResource; // ensure registered
-void usersResource; // ensure registered
-const adminResources = [...resourceRegistry.values()];
 const adminRoutes = buildAdminRoutes({
-  resources: adminResources,
+  resources: [postsResource, usersResource],
   basePath: '/lf-admin',
-  client: mockClient,
+  client: createMockClient(),
   title: 'LiteForge Admin',
   dashboard: adminDashboard,
   showActivityLog: true,
@@ -62,24 +58,6 @@ export const lazyDefaults: LazyDefaults = {
     return div;
   },
 };
-
-// =============================================================================
-// Loading Components (for route-specific overrides)
-// =============================================================================
-
-function DashboardLoading(): Node {
-  const div = document.createElement('div');
-  div.className = 'lazy-loading dashboard-loading';
-  div.textContent = 'Loading dashboard...';
-  return div;
-}
-
-function AdminLoading(): Node {
-  const div = document.createElement('div');
-  div.className = 'lazy-loading admin-loading';
-  div.textContent = 'Loading admin panel...';
-  return div;
-}
 
 // =============================================================================
 // Guards
@@ -136,30 +114,12 @@ export const guestGuard = defineGuard('guest', async () => {
 // Middleware
 // =============================================================================
 
-/**
- * Logging middleware - logs all navigations
- */
 export const loggerMiddleware = defineMiddleware('logger', async (ctx, next) => {
   const start = performance.now();
   console.log(`[Router] Navigating: ${ctx.from?.path ?? '(initial)'} -> ${ctx.to.path}`);
-  
   await next();
-  
-  const elapsed = (performance.now() - start).toFixed(2);
-  console.log(`[Router] Navigation complete in ${elapsed}ms`);
+  console.log(`[Router] Navigation complete in ${(performance.now() - start).toFixed(2)}ms`);
 });
-
-/**
- * Title middleware - updates document title based on route meta
- */
-// export const titleMiddleware = defineMiddleware('title', async (ctx, next) => {
-//   await next();
-  
-//   // Get title from route meta
-//   const route = ctx.matched[ctx.matched.length - 1];
-//   const title = (route?.route.meta?.title as string) ?? 'LiteForge Demo';
-//   uiStore.setPageTitle(title);
-// });
 
 // =============================================================================
 // Routes
@@ -193,8 +153,7 @@ export const routes: RouteDefinition[] = [
     path: '/dashboard',
     // Inline lazy import - automatically wrapped!
     component: () => import('./pages/dashboard/Layout.js'),
-    export: 'DashboardLayout',  // Named export from module
-    loading: DashboardLoading,  // Route-specific loading component
+    export: 'DashboardLayout',
     guard: authGuard,
     meta: { title: 'Dashboard' },
     children: [
@@ -287,7 +246,6 @@ export const routes: RouteDefinition[] = [
     path: '/admin',
     component: () => import('./pages/admin/Layout.js'),
     export: 'AdminLayout',
-    loading: AdminLoading,
     guard: [authGuard, adminGuard],
     meta: { title: 'Admin' },
     children: [

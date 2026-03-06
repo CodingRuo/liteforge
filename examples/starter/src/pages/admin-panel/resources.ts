@@ -38,14 +38,6 @@ const usersStore: Record<string, unknown>[] = [
   { id: '3', name: 'Tom Weber', email: 'tom@example.com', role: 'viewer', active: false, createdAt: '2026-01-20T10:00:00Z' },
 ];
 
-interface Post {
-  id: string;
-  title: string;
-  status: 'draft' | 'published';
-  author: string;
-  createdAt: string;
-}
-
 // ─── Mock Client Factory ───────────────────────────────────────────────────────
 
 function delay(ms: number): Promise<void> {

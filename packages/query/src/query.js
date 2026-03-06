@@ -4,6 +4,7 @@
  * Reactive data fetching with caching, retries, and automatic refetching.
  */
 import { signal, effect } from '@liteforge/core';
+import { onSetupCleanup } from '@liteforge/runtime';
 import { queryCache, serializeKey } from './cache.js';
 // ============================================================================
 // Default Options
@@ -318,7 +319,7 @@ export function createQuery(options) {
         // Cleanup cache subscription
         cleanup();
     }
-    return {
+    const result = {
         data: dataSignal,
         error: errorSignal,
         isLoading: isLoadingSignal,
@@ -327,6 +328,9 @@ export function createQuery(options) {
         refetch,
         dispose,
     };
+    // Auto-dispose when created inside a component setup() scope
+    onSetupCleanup(dispose);
+    return result;
 }
 // ============================================================================
 // Utilities

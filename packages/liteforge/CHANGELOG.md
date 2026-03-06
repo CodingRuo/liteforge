@@ -1,5 +1,11 @@
 # liteforge
 
+## 0.6.1
+
+### Patch Changes
+
+- Fix PluginRegistry augmentations not flowing through liteforge/\* subpath imports. Each barrel file (liteforge/toast, liteforge/router, etc.) now correctly activates the use() return type when imported.
+
 ## 0.6.0
 
 ### Minor Changes

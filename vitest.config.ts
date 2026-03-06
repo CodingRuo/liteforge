@@ -18,6 +18,7 @@ export default defineConfig({
       '@liteforge/devtools': path.resolve(__dirname, 'packages/devtools/src/index.ts'),
       '@liteforge/i18n': path.resolve(__dirname, 'packages/i18n/src/index.ts'),
       '@liteforge/admin': path.resolve(__dirname, 'packages/admin/src/index.ts'),
+      '@liteforge/theme': path.resolve(__dirname, 'packages/theme/src/index.ts'),
     },
   },
   test: {
@@ -38,6 +39,7 @@ export default defineConfig({
       ['packages/client/**', 'node'],
       ['packages/i18n/**', 'node'],
       ['packages/admin/**', 'happy-dom'],
+      ['packages/theme/**', 'happy-dom'],
       ['packages/liteforge/**', 'node'],
       ['create-liteforge/**', 'node'],
     ],

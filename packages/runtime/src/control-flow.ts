@@ -135,19 +135,19 @@ export function Show<T>(config: ShowConfig<T>): Node {
   }
 
   // Set up reactive effect for updates
-  // We use requestAnimationFrame to ensure the marker is in the DOM
-  // before the first update (replaces problematic MutationObserver)
   effect(() => {
     // Read the value to track dependencies
     getValue();
 
-    // Only update if marker is in DOM
-    if (marker.parentNode) {
+    if (marker.isConnected) {
+      // Marker already in DOM — update synchronously
       updateContent();
     } else {
-      // Marker not in DOM yet - schedule check for next frame
+      // Marker not in DOM yet (Show() called before _insert) — defer one frame.
+      // Use isConnected (not parentNode) so the RAF is a no-op if the router
+      // has already unmounted the outlet before the frame fires.
       requestAnimationFrame(() => {
-        if (marker.parentNode) {
+        if (marker.isConnected) {
           updateContent();
         }
       });

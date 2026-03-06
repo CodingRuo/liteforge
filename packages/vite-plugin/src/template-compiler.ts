@@ -327,6 +327,23 @@ function generateChildInsert(
  * Wrap an expression in a getter for reactivity if needed
  */
 function wrapForReactivity(expr: t.Expression): t.Expression {
+  // Component calls (Show, For, table.Root, etc.) return Nodes and manage their
+  // own reactivity. Wrapping them would cause _insert to re-invoke them on every
+  // signal update, destroying their internal effects.
+  if (t.isCallExpression(expr)) {
+    const callee = expr.callee;
+    if (t.isIdentifier(callee) && /^[A-Z]/.test(callee.name)) {
+      return expr; // Show({...}), For({...}), Link({...}) etc.
+    }
+    if (
+      t.isMemberExpression(callee) &&
+      t.isIdentifier(callee.property) &&
+      /^[A-Z]/.test(callee.property.name)
+    ) {
+      return expr; // table.Root(), calendar.Toolbar() etc.
+    }
+  }
+
   // Check if the expression potentially contains signal reads
   // Simple heuristic: call expressions or member expressions might be reactive
   if (

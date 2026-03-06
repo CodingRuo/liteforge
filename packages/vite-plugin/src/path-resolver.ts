@@ -5,7 +5,7 @@
  * Used to generate accessor chains like: el.firstChild.nextSibling.firstChild
  */
 
-import type { ElementInfo } from './template-extractor.js';
+import type { ElementInfo, ChildInfo } from './template-extractor.js';
 
 // =============================================================================
 // Types
@@ -52,14 +52,14 @@ export interface PathResolution {
 export function resolvePaths(info: ElementInfo): PathResolution {
   const paths: DomPath[] = [];
   let varCounter = 1; // Start from 1 (_el is root)
-  
+
   /**
    * Generate next variable name
    */
   function nextVar(): string {
     return `_el${++varCounter}`;
   }
-  
+
   // Start processing from root
   // Root element's dynamic attrs/events don't need a path (they're on _el)
   if (info.dynamicAttrs.length > 0 || info.eventHandlers.length > 0 || info.hasSpread) {
@@ -70,20 +70,18 @@ export function resolvePaths(info: ElementInfo): PathResolution {
       attrNames: [...info.dynamicAttrs, ...info.eventHandlers],
     });
   }
-  
+
   // Process children of root
   let childPath: PathStep[] = ['firstChild'];
   let isFirst = true;
-  
-  for (const child of info.children) {
+
+  for (const child of toDomChildren(info.children)) {
     if (!isFirst) {
-      // Replace last step with nextSibling
       childPath = childPath.slice(0, -1);
       childPath.push('nextSibling');
     }
-    
+
     if (child.type === 'element' && child.elementInfo && !child.elementInfo.isComponent) {
-      // Non-component element child: may need attribute/event binding + recurse into children
       const elemInfo = child.elementInfo;
       const needsVar =
         elemInfo.dynamicAttrs.length > 0 ||
@@ -100,11 +98,8 @@ export function resolvePaths(info: ElementInfo): PathResolution {
         });
       }
 
-      // Process children recursively
       processElementChildren(elemInfo, childPath, nextVar);
     } else if (!child.isStatic) {
-      // Dynamic child (expression, fragment, or component element) needs a 'child' path.
-      // A comment marker placeholder is emitted in the HTML template for this slot.
       const childVar = nextVar();
       paths.push({
         steps: [...childPath],
@@ -113,19 +108,18 @@ export function resolvePaths(info: ElementInfo): PathResolution {
         childIndex: child.index,
       });
     }
-    
+
     isFirst = false;
-    // Add nextSibling for next iteration
     childPath = [...childPath, 'nextSibling'];
   }
-  
+
   // Generate declarations
   const declarations = generateDeclarations(paths);
-  
+
   return { paths, declarations };
-  
+
   /**
-   * Process children of an element
+   * Process children of an element, using DOM-level child list (text nodes collapsed).
    */
   function processElementChildren(
     elemInfo: ElementInfo,
@@ -134,13 +128,13 @@ export function resolvePaths(info: ElementInfo): PathResolution {
   ): void {
     let childPath = [...parentPath, 'firstChild' as PathStep];
     let isFirst = true;
-    
-    for (const child of elemInfo.children) {
+
+    for (const child of toDomChildren(elemInfo.children)) {
       if (!isFirst) {
         childPath = childPath.slice(0, -1);
         childPath.push('nextSibling');
       }
-      
+
       if (child.type === 'element' && child.elementInfo && !child.elementInfo.isComponent) {
         const subInfo = child.elementInfo;
         const needsVar =
@@ -158,10 +152,8 @@ export function resolvePaths(info: ElementInfo): PathResolution {
           });
         }
 
-        // Recurse
         processElementChildren(subInfo, childPath, getNextVar);
       } else if (!child.isStatic) {
-        // Dynamic child (expression, fragment, or component element) — comment marker slot
         const childVar = getNextVar();
         paths.push({
           steps: [...childPath],
@@ -170,11 +162,42 @@ export function resolvePaths(info: ElementInfo): PathResolution {
           childIndex: child.index,
         });
       }
-      
+
       isFirst = false;
       childPath = [...childPath, 'nextSibling'];
     }
   }
+}
+
+/**
+ * Collapse consecutive static-text ChildInfo entries into a single representative entry.
+ *
+ * When a JSX element has multiple adjacent text/static-expression children they are
+ * written as individual entries in ChildInfo[], but the HTML parser merges adjacent
+ * text content into ONE Text node.  Walking .nextSibling must therefore count them
+ * as a single DOM node, not one per JSX child.
+ *
+ * Rule: a run of consecutive children that are ALL (type==='text' && isStatic===true)
+ * is represented by exactly one DOM text node → collapse to one ChildInfo entry.
+ * Everything else (elements, dynamic expressions, comment markers) stays as-is.
+ */
+function toDomChildren(children: ChildInfo[]): ChildInfo[] {
+  const result: ChildInfo[] = [];
+  let i = 0;
+  while (i < children.length) {
+    const child = children[i]!;
+    if (child.type === 'text' && child.isStatic) {
+      // Consume the entire run of adjacent static-text children as one DOM node
+      while (i + 1 < children.length && children[i + 1]!.type === 'text' && children[i + 1]!.isStatic) {
+        i++;
+      }
+      result.push(child); // representative entry (one DOM text node)
+    } else {
+      result.push(child);
+    }
+    i++;
+  }
+  return result;
 }
 
 /**

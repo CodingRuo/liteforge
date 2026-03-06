@@ -30,7 +30,9 @@
       "@liteforge/modal": ["./packages/modal/src/index.ts"],
       "@liteforge/modal/*": ["./packages/modal/src/*"],
       "@liteforge/calendar": ["./packages/calendar/src/index.ts"],
-      "@liteforge/calendar/*": ["./packages/calendar/src/*"]
+      "@liteforge/calendar/*": ["./packages/calendar/src/*"],
+      "@liteforge/theme": ["./packages/theme/src/index.ts"],
+      "@liteforge/theme/*": ["./packages/theme/src/*"]
     },
     "noUncheckedIndexedAccess": true,
     "noEmit": false,

@@ -1,5 +1,24 @@
 # @liteforge/router
 
+## 0.4.0
+
+### Minor Changes
+
+- feat(router): add `lazyChildren` for code-split route subtrees
+
+  `RouteDefinition` now accepts a `lazyChildren` property — a function that returns a `Promise<RouteDefinition[]>`. The children are loaded on the first navigation to any path under the route's prefix, resolved once, and cached.
+
+  ```ts
+  {
+    path: '/admin',
+    lazyChildren: () => import('./admin-routes.js').then(m => m.adminRoutes),
+  }
+  ```
+
+  - `matchRoutes()` is now async to support lazy loading
+  - New `matchRoutesSync()` export for sync contexts (router init, `resolve()`)
+  - Router initialization and back/forward navigation use sync matching; async lazy-loading fires transparently on first child navigation
+
 ## 0.3.0
 
 ### Minor Changes

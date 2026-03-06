@@ -62,7 +62,7 @@ export const App = createComponent({
         </header>
         
         <div class="app-content">
-          {RouterOutlet()}
+          <RouterOutlet />
         </div>
       </div>
     );

@@ -1,5 +1,5 @@
 import type { Signal } from '@liteforge/core';
-import type { ComponentFactory } from '@liteforge/runtime';
+import type { ComponentFactory, ErrorComponent } from '@liteforge/runtime';
 
 // =============================================================================
 // Core Location Types
@@ -142,6 +142,13 @@ export interface RouteDefinition {
    * Overrides global lazyDefaults for this route.
    */
   lazy?: RouteLazyConfig;
+
+  /**
+   * Per-route error fallback UI.
+   * Takes priority over the global AppConfig.errorComponent.
+   * Receives the raw error and its context.
+   */
+  errorComponent?: ErrorComponent;
 }
 
 /**
@@ -190,6 +197,11 @@ export interface CompiledRoute {
 
   /** Lazy children loader function (stored from RouteDefinition) */
   lazyChildrenFn?: () => Promise<RouteDefinition[]>;
+
+  // === Error handling ===
+
+  /** Per-route error fallback UI component */
+  routeErrorComponent?: ErrorComponent;
 }
 
 /**

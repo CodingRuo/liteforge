@@ -333,6 +333,11 @@ export function compileRoute(
     compiled.lazyChildrenFn = definition.lazyChildren;
   }
 
+  // Store per-route error component
+  if (definition.errorComponent !== undefined) {
+    compiled.routeErrorComponent = definition.errorComponent;
+  }
+
   // Compile children recursively
   if (definition.children) {
     compiled.children = definition.children.map((child) =>

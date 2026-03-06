@@ -36,6 +36,11 @@ export type {
   PluginRegistry,
   AnyStore,
   RouterLike,
+  // Error boundary types
+  ErrorType,
+  ErrorInfo,
+  ErrorHandler,
+  ErrorComponent,
   // Control flow types
   Falsy,
   ShowProps,
@@ -49,6 +54,9 @@ export type {
   FunctionComponent,
   HTMLAttributes,
 } from './types.js';
+
+// Error boundary (type exported for router/RouterOutlet to type-check context access)
+export type { ErrorBoundary } from './error-boundary.js';
 
 // Context
 export { use, hasContext } from './context.js';

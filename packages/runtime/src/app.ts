@@ -23,6 +23,7 @@ import { initAppContext, clearContext, use } from './context.js';
 import { isComponentFactory } from './component.js';
 import { getHMRHandler } from './hmr.js';
 import { createPluginContext } from './plugin-registry.js';
+import { createErrorBoundary } from './error-boundary.js';
 
 // ============================================================================
 // Debug Utilities Type
@@ -131,6 +132,8 @@ async function installAndMount(
   const appContext: Record<string, unknown> = {};
   const storesMap: Record<string, AnyStore> = {};
   const pluginCleanups: Array<() => void> = [];
+  // errorBoundary is created after targetElement is resolved (step 1)
+  let errorBoundary: ReturnType<typeof createErrorBoundary> | null = null;
 
   // Determine debug mode
   const isDebug =
@@ -150,6 +153,13 @@ async function installAndMount(
     } else {
       targetElement = config.target;
     }
+
+    // Create error boundary now that we have a target element
+    errorBoundary = createErrorBoundary(targetElement, {
+      ...(config.onError !== undefined ? { onError: config.onError } : {}),
+      ...(config.errorComponent !== undefined ? { errorComponent: config.errorComponent } : {}),
+    });
+    appContext['app:errorBoundary'] = errorBoundary;
 
     // ========================================
     // 2. Build app context
@@ -256,6 +266,9 @@ async function installAndMount(
 
     isMounted = true;
 
+    // Attach global error listeners now that the app is mounted
+    errorBoundary?.attachGlobalListeners();
+
     // ========================================
     // 10. Build app instance
     // ========================================
@@ -353,13 +366,13 @@ async function installAndMount(
 
     return app;
   } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error));
+    // Bootstrap errors: fire onError hook (e.g. Sentry) then rethrow.
+    // ErrorBoundary is not used here because the app never fully mounted.
+    try {
+      config.onError?.(error, { type: 'unhandled', originalError: error });
+    } catch { /* never let hook crash bootstrap */ }
 
-    if (config.onError) {
-      config.onError(err);
-    }
-
-    throw err;
+    throw error;
   }
 
   // ============================================================================
@@ -368,6 +381,9 @@ async function installAndMount(
 
   function unmount(): void {
     if (!isMounted) return;
+
+    // Detach global error listeners
+    errorBoundary?.detachGlobalListeners();
 
     // Plugin cleanups in REVERSE order
     for (let i = pluginCleanups.length - 1; i >= 0; i--) {

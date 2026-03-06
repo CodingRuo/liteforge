@@ -1,6 +1,8 @@
 import { effect } from '@liteforge/core';
 import { use, pushContext, popContext, isComponentFactory } from '@liteforge/runtime';
 import type { ComponentInstance, ComponentFactoryInternal } from '@liteforge/runtime';
+import type { ErrorInfo } from '@liteforge/runtime';
+import type { ErrorBoundary } from '@liteforge/runtime';
 import type { Router, RouteComponent, LazyComponent, CompiledRoute } from './types.js';
 import { isPathActive } from './route-matcher.js';
 import { isLazyComponent, getLazyDelay, getLazyLoading, getLazyError } from './lazy.js';
@@ -52,6 +54,14 @@ export function RouterOutlet(config: RouterOutletConfig = {}): Node {
     depth = 0;
   }
 
+  // Optional error boundary from app context (may be absent in standalone router usage)
+  let errorBoundary: ErrorBoundary | null = null;
+  try {
+    errorBoundary = use<ErrorBoundary>('app:errorBoundary');
+  } catch {
+    // No error boundary available — errors will be thrown to the console
+  }
+
   // Create a container for the outlet
   const container = document.createDocumentFragment();
   
@@ -76,6 +86,52 @@ export function RouterOutlet(config: RouterOutletConfig = {}): Node {
 
   // Delay timer ID
   let delayTimerId: ReturnType<typeof setTimeout> | null = null;
+
+  /**
+   * Report a render/lazy error.
+   * Priority: per-route errorComponent (rendered in outlet) > global error boundary > console.error.
+   * The onError hook is always fired first regardless of which UI handles display.
+   */
+  function handleOutletError(
+    error: unknown,
+    route: CompiledRoute | null,
+    type: ErrorInfo['type'],
+  ): void {
+    const info: ErrorInfo = {
+      type,
+      originalError: error,
+      ...(route?.fullPath !== undefined ? { route: route.fullPath } : {}),
+    };
+
+    const routeComp = route?.routeErrorComponent;
+
+    if (routeComp) {
+      // Fire hook first (Sentry etc.) — does NOT render global UI
+      errorBoundary?.invokeHook(error, info);
+      // Render per-route fallback inside the outlet
+      try {
+        const fallbackEl = routeComp(error, info);
+        unmountCurrent();
+        const parent = placeholder.parentNode;
+        if (parent) {
+          parent.insertBefore(fallbackEl, placeholder.nextSibling);
+          currentNode = fallbackEl;
+        }
+      } catch {
+        console.error('[LiteForge] Per-route errorComponent threw:', error);
+      }
+      return;
+    }
+
+    if (errorBoundary) {
+      // No per-route component — let the global boundary handle everything (app-wide UI)
+      errorBoundary.handle(error, info);
+      return;
+    }
+
+    // No boundary configured — log and swallow to avoid crashing the app silently
+    console.error(`[LiteForge] Unhandled ${type} error:`, error);
+  }
 
   /**
    * Clear delay timer if active
@@ -133,28 +189,32 @@ export function RouterOutlet(config: RouterOutletConfig = {}): Node {
     // Check if it's a ComponentFactory
     if (isComponentFactory(component)) {
       pushContext({ 'router:outlet-depth': depth + 1 });
-      
+
       try {
         currentInstance = (component as unknown as ComponentFactoryInternal)(props);
         const tempContainer = document.createElement('div');
         currentInstance.mount(tempContainer);
-        
+
         const mountedNode = tempContainer.firstChild;
         if (mountedNode) {
           parentNode.insertBefore(mountedNode, placeholder.nextSibling);
           currentNode = mountedNode;
         }
+      } catch (error) {
+        handleOutletError(error, currentRoute, 'render');
       } finally {
         popContext();
       }
     } else if (typeof component === 'function') {
       pushContext({ 'router:outlet-depth': depth + 1 });
-      
+
       try {
         // Call with props - some components expect them
         const result = (component as (p: Record<string, unknown>) => Node)(props);
         currentNode = result;
         parentNode.insertBefore(currentNode, placeholder.nextSibling);
+      } catch (error) {
+        handleOutletError(error, currentRoute, 'render');
       } finally {
         popContext();
       }
@@ -279,15 +339,19 @@ export function RouterOutlet(config: RouterOutletConfig = {}): Node {
       if (navigationId !== navId) return; // Stale navigation
       
       const err = error instanceof Error ? error : new Error(String(error));
-      console.error('Failed to load lazy component:', err);
-      
+
       if (errorFn) {
-        // Show error state with retry
+        // Lazy component has its own error UI — fire hook only, render locally
+        errorBoundary?.invokeHook(err, {
+          type: 'lazy',
+          originalError: err,
+          ...(currentRoute?.fullPath !== undefined ? { route: currentRoute.fullPath } : {}),
+        });
         const retry = () => {
           lazyComponent.reset();
           handleLazyComponent(lazyComponent, props, navigationId);
         };
-        
+
         unmountCurrent();
         parentNode = placeholder.parentNode;
         if (parentNode) {
@@ -295,6 +359,8 @@ export function RouterOutlet(config: RouterOutletConfig = {}): Node {
           parentNode.insertBefore(errorNode, placeholder.nextSibling);
           currentNode = errorNode;
         }
+      } else {
+        handleOutletError(err, currentRoute, 'lazy');
       }
     });
   }
@@ -316,7 +382,7 @@ export function RouterOutlet(config: RouterOutletConfig = {}): Node {
       renderSyncComponent(component, props);
     } catch (error) {
       if (navigationId !== navId) return; // Stale navigation
-      console.error('Failed to load lazy component:', error);
+      handleOutletError(error, currentRoute, 'lazy');
     }
   }
 

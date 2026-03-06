@@ -1,6 +1,6 @@
 {
   "name": "@liteforge/toast",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Signal-based toast notification system. Imperative API, multiple positions, promise support.",
   "author": "SchildW3rk <contact@schildw3rk.dev>",
   "license": "MIT",

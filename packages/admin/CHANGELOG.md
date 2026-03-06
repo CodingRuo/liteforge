@@ -1,5 +1,19 @@
 # @liteforge/admin
 
+## 0.2.1
+
+### Patch Changes
+
+- feat(toast): add @liteforge/toast — signals-based toast notification package
+
+  Imperative API (`toast.success/error/warning/info/promise/dismiss/dismissAll`),
+  signal store, `ToastProvider` DOM component with 6 positions, pause-on-hover,
+  auto-dismiss, CSS-first with `?url` import pattern, `toastPlugin()` with
+  `PluginRegistry` declaration merging. Available as `liteforge/toast`.
+
+  Also fixes `ResourceDefinition<any>` in `@liteforge/admin` to correctly handle
+  callback contravariance when passing typed resources to `buildAdminRoutes`.
+
 ## 0.2.0
 
 ### Minor Changes

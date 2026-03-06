@@ -5,6 +5,7 @@
     "outDir": "dist",
     "declaration": true,
     "declarationMap": true,
+    "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {}
   },

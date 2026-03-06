@@ -451,10 +451,11 @@ export const CalendarPage = createComponent({
 
           .calendar-toolbar {
             display: flex;
-            justify-content: space-between;
+            flex-wrap: wrap;
             align-items: center;
+            gap: 8px 12px;
             margin-bottom: 16px;
-            padding: 12px 16px;
+            padding: 10px 14px;
             background: var(--lf-color-bg-subtle, #f8fafc);
             border-radius: var(--lf-radius-lg, 8px);
           }
@@ -465,10 +466,13 @@ export const CalendarPage = createComponent({
             display: flex;
             gap: 8px;
             align-items: center;
+            flex-wrap: wrap;
           }
 
           .resource-filters {
-            gap: 16px;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
           }
 
           .resource-filter {
@@ -495,13 +499,14 @@ export const CalendarPage = createComponent({
           }
 
           .btn {
-            padding: 8px 16px;
+            padding: 6px 12px;
             border: 1px solid var(--lf-color-border, #e2e8f0);
             border-radius: var(--lf-radius-md, 6px);
             background: var(--lf-color-surface, #ffffff);
             color: var(--lf-color-text, #374151);
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
+            white-space: nowrap;
             transition: all 0.15s;
           }
 

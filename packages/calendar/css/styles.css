@@ -63,27 +63,29 @@
 .lf-cal-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 10px 14px;
   background: var(--lf-cal-header-bg);
   border-bottom: 1px solid var(--lf-cal-border);
-  gap: 16px;
 }
 
 .lf-cal-toolbar-nav {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .lf-cal-toolbar-nav button {
-  padding: 6px 12px;
+  padding: 5px 11px;
   border: 1px solid var(--lf-cal-border);
   border-radius: var(--lf-radius-sm, 4px);
   background: var(--lf-cal-bg);
   cursor: pointer;
   font-size: var(--lf-text-sm, 13px);
   transition: background-color var(--lf-transition-fast, 0.15s);
+  white-space: nowrap;
 }
 
 .lf-cal-toolbar-nav button:hover {
@@ -91,25 +93,31 @@
 }
 
 .lf-cal-toolbar-title {
-  font-size: var(--lf-text-md, 16px);
+  font-size: var(--lf-text-md, 15px);
   font-weight: var(--lf-cal-header-font-weight);
   color: var(--lf-cal-header-color);
-  min-width: 200px;
+  flex: 1;
+  min-width: 120px;
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .lf-cal-toolbar-views {
   display: flex;
-  gap: 4px;
+  gap: 0;
+  flex-shrink: 0;
 }
 
 .lf-cal-toolbar-views button {
-  padding: 6px 12px;
+  padding: 5px 11px;
   border: 1px solid var(--lf-cal-border);
   background: var(--lf-cal-bg);
   cursor: pointer;
   font-size: var(--lf-text-sm, 13px);
   transition: all var(--lf-transition-fast, 0.15s);
+  white-space: nowrap;
 }
 
 .lf-cal-toolbar-views button:first-child {
@@ -132,6 +140,32 @@
   background: var(--lf-cal-event-default-bg);
   color: var(--lf-cal-event-default-color);
   border-color: var(--lf-cal-event-default-bg);
+  z-index: 1;
+  position: relative;
+}
+
+/* Mobile toolbar — stack nav+title on first row, views on second */
+@media (max-width: 600px) {
+  .lf-cal-toolbar {
+    padding: 8px 10px;
+    gap: 6px 8px;
+  }
+
+  .lf-cal-toolbar-title {
+    text-align: left;
+    font-size: 13px;
+    min-width: 0;
+  }
+
+  .lf-cal-toolbar-views {
+    width: 100%;
+  }
+
+  .lf-cal-toolbar-views button {
+    flex: 1;
+    padding: 5px 4px;
+    font-size: 12px;
+  }
 }
 
 /* ─── Header ────────────────────────────────────────────── */
@@ -223,6 +257,19 @@
 
 /* ─── Body / Grid ───────────────────────────────────────── */
 
+/* Scroll wrapper — wraps header + allday + body together for horizontal scroll */
+.lf-cal-week-view,
+.lf-cal-day-view {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.lf-cal-week-view .lf-cal-header,
+.lf-cal-week-view .lf-cal-allday-row,
+.lf-cal-week-view .lf-cal-body {
+  min-width: var(--lf-cal-min-width, 560px);
+}
+
 .lf-cal-body {
   display: flex;
   overflow-y: auto;
@@ -254,6 +301,7 @@
 
 .lf-cal-day-column {
   flex: 1;
+  min-width: var(--lf-cal-day-min-width, 80px);
   position: relative;
   border-right: 1px solid var(--lf-cal-border);
 }
@@ -422,13 +470,12 @@
 .lf-cal-now-indicator::before {
   content: '';
   position: absolute;
-  left: 0;
+  left: -5px;
   top: -4px;
   width: 10px;
   height: 10px;
   border-radius: 50%;
   background: var(--lf-cal-now-color);
-  transform: translateX(-4px);
 }
 
 .lf-cal-now-indicator--no-dot::before {

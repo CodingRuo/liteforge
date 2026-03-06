@@ -2,9 +2,9 @@
  * @liteforge/calendar - Shared View Utilities
  */
 
+import { effect } from '@liteforge/core'
 import type {
   CalendarEvent,
-  Resource,
   ResolvedTimeConfig,
   OverlapLayout,
   CalendarClasses,
@@ -161,13 +161,11 @@ export function renderTimeColumn(
 export function renderTimeSlots(
   date: Date,
   config: ResolvedTimeConfig,
-  resource?: Resource
 ): HTMLDivElement {
   const container = document.createElement('div')
   container.style.position = 'relative'
 
   const slots = getTimeSlots(date, config.dayStart, config.dayEnd, config.slotDuration)
-  const dayOfWeek = date.getDay()
 
   for (let i = 0; i < slots.length; i++) {
     const slot = slots[i]
@@ -178,19 +176,6 @@ export function renderTimeSlots(
     let slotClass = 'lf-cal-time-slot'
     if (slot.getMinutes() === 0) {
       slotClass += ' lf-cal-time-slot--hour'
-    }
-
-    // Check if blocked (outside working hours)
-    if (resource?.workingHours) {
-      const workingHours = resource.workingHours[dayOfWeek]
-      if (!workingHours) {
-        slotClass += ' lf-cal-time-slot--blocked'
-      } else {
-        const hour = slot.getHours()
-        if (hour < workingHours.start || hour >= workingHours.end) {
-          slotClass += ' lf-cal-time-slot--blocked'
-        }
-      }
     }
 
     slotEl.className = slotClass
@@ -210,27 +195,28 @@ export function renderEvent<T extends CalendarEvent>(
   onClick?: (event: T) => void,
   editable?: boolean,
   onDragStart?: (event: T, element: HTMLElement) => void,
-  onResizeStart?: (event: T, element: HTMLElement) => void
+  onResizeStart?: (event: T, element: HTMLElement) => void,
+  selectedEventId?: () => string | null
 ): HTMLDivElement {
   const eventEl = document.createElement('div')
   eventEl.className = 'lf-cal-event'
   eventEl.dataset.eventId = event.id
-  
+
   // ARIA attributes for accessibility
   eventEl.setAttribute('role', 'button')
   eventEl.setAttribute('tabindex', '0')
   eventEl.setAttribute('aria-label', `${event.title}, ${formatTime(event.start)} - ${formatTime(event.end)}`)
   eventEl.title = event.title // Native tooltip with full title
 
-  // Position
-  const slotHeight = 40 // CSS variable --lf-cal-slot-height default
+  // Position — slot height scales with slotDuration (30min = 40px baseline)
+  const slotHeight = Math.round((config.slotDuration / 30) * 40)
   const top = getSlotPosition(event.start, config.dayStart, config.slotDuration, slotHeight)
   const height = getEventHeight(event.start, event.end, config.slotDuration, slotHeight)
 
   eventEl.style.top = `${top}px`
   eventEl.style.height = `${Math.max(height, 20)}px`
 
-  // Overlap positioning
+  // Overlap positioning — side-by-side columns
   const width = 100 / layout.totalColumns
   const left = layout.column * width
   eventEl.style.left = `calc(${left}% + 2px)`
@@ -287,6 +273,13 @@ export function renderEvent<T extends CalendarEvent>(
     }
   }
 
+  // Selected state
+  if (selectedEventId) {
+    effect(() => {
+      eventEl.classList.toggle('lf-cal-event--selected', selectedEventId() === event.id)
+    })
+  }
+
   return eventEl
 }
 
@@ -328,12 +321,15 @@ export interface AllDayRowOptions<T extends CalendarEvent> {
   classes: Partial<CalendarClasses>
   onEventClick: ((event: T) => void) | undefined
   hasTimeColumnSpacer: boolean | undefined
+  allDayLabel?: string
+  /** Maximum visible all-day events per cell before a "+N more" chip is shown (default: unlimited) */
+  maxVisible?: number
 }
 
 export function renderAllDayRow<T extends CalendarEvent>(
   options: AllDayRowOptions<T>
 ): HTMLDivElement {
-  const { days, events, classes, onEventClick, hasTimeColumnSpacer = true } = options
+  const { days, events, classes, onEventClick, hasTimeColumnSpacer = true, allDayLabel = 'All-day', maxVisible } = options
 
   const row = document.createElement('div')
   row.className = getClass('header', classes, 'lf-cal-allday-row')
@@ -342,7 +338,7 @@ export function renderAllDayRow<T extends CalendarEvent>(
   if (hasTimeColumnSpacer) {
     const spacer = document.createElement('div')
     spacer.className = 'lf-cal-allday-label'
-    spacer.textContent = 'All-day'
+    spacer.textContent = allDayLabel
     row.appendChild(spacer)
   }
 
@@ -357,9 +353,21 @@ export function renderAllDayRow<T extends CalendarEvent>(
     // Get all-day events for this day
     const dayAllDayEvents = events.filter((event) => isAllDayEvent(event) && isEventOnDay(event, day))
 
-    for (const event of dayAllDayEvents) {
+    const visibleEvents = maxVisible !== undefined
+      ? dayAllDayEvents.slice(0, maxVisible)
+      : dayAllDayEvents
+
+    for (const event of visibleEvents) {
       const eventEl = renderAllDayEvent(event, onEventClick)
       cell.appendChild(eventEl)
+    }
+
+    const overflow = maxVisible !== undefined ? dayAllDayEvents.length - maxVisible : 0
+    if (overflow > 0) {
+      const moreChip = document.createElement('div')
+      moreChip.className = 'lf-cal-allday-more'
+      moreChip.textContent = `+${overflow}`
+      cell.appendChild(moreChip)
     }
 
     cellsContainer.appendChild(cell)
@@ -381,7 +389,7 @@ export function createNowIndicator(
 
   const updatePosition = () => {
     const now = new Date()
-    const slotHeight = 40
+    const slotHeight = Math.round((config.slotDuration / 30) * 40)
     const top = getSlotPosition(now, config.dayStart, config.slotDuration, slotHeight)
     indicator.style.top = `${top}px`
 

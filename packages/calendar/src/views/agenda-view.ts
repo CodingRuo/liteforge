@@ -8,6 +8,7 @@
 import { effect } from '@liteforge/core'
 import type {
   CalendarEvent,
+  CalendarTranslations,
   Resource,
   ResolvedTimeConfig,
   CalendarClasses,
@@ -27,6 +28,7 @@ interface AgendaViewOptions<T extends CalendarEvent> {
   resources: () => Resource[]
   config: ResolvedTimeConfig
   locale: string
+  translations: CalendarTranslations
   classes: Partial<CalendarClasses>
   onEventClick: ((event: T) => void) | undefined
 }
@@ -40,6 +42,7 @@ export function renderAgendaView<T extends CalendarEvent>(
     resources,
     config: _config,
     locale,
+    translations: t,
     classes,
     onEventClick,
   } = options
@@ -164,7 +167,7 @@ export function renderAgendaView<T extends CalendarEvent>(
     if (!hasAnyEvents) {
       const empty = document.createElement('div')
       empty.className = 'lf-cal-empty'
-      empty.textContent = 'No events in this period'
+      empty.textContent = t.noEvents
       container.appendChild(empty)
     }
   })

@@ -2,7 +2,7 @@
  * @liteforge/calendar - Calendar State & API Tests
  */
 
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { signal } from '@liteforge/core'
 import { createCalendar } from '../src/calendar.js'
 import type { CalendarEvent, Resource } from '../src/types.js'
@@ -18,6 +18,10 @@ function createEvent(
 }
 
 describe('createCalendar', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
   describe('initialization', () => {
     it('creates calendar with default options', () => {
       const events = signal<CalendarEvent[]>([])
@@ -536,6 +540,107 @@ describe('createCalendar', () => {
 
       expect(toolbar).toBeDefined()
       expect(toolbar instanceof Node).toBe(true)
+    })
+  })
+
+  describe('responsive', () => {
+    let observerCallback: ResizeObserverCallback
+
+    beforeEach(() => {
+      vi.useFakeTimers()
+      vi.stubGlobal('ResizeObserver', class {
+        constructor(cb: ResizeObserverCallback) { observerCallback = cb }
+        observe() {}
+        disconnect() {}
+      })
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+      vi.unstubAllGlobals()
+    })
+
+    function fireResize(width: number) {
+      observerCallback([{ contentRect: { width } } as ResizeObserverEntry], null as unknown as ResizeObserver)
+    }
+
+    it('exposes sizeClass() on the result API', () => {
+      const events = signal<CalendarEvent[]>([])
+      const cal = createCalendar({ events, view: 'week', responsive: {}, unstyled: true })
+      const root = cal.Root() as HTMLElement
+      document.body.appendChild(root)
+      vi.advanceTimersByTime(0)
+      fireResize(400)
+      expect(cal.sizeClass()).toBe('mobile')
+      fireResize(900)
+      expect(cal.sizeClass()).toBe('tablet')
+      fireResize(1200)
+      expect(cal.sizeClass()).toBe('desktop')
+      root.remove()
+    })
+
+    it('does NOT auto-switch view on resize — user controls view', () => {
+      const events = signal<CalendarEvent[]>([])
+      const cal = createCalendar({ events, view: 'week', responsive: {}, unstyled: true })
+      const root = cal.Root() as HTMLElement
+      document.body.appendChild(root)
+      vi.advanceTimersByTime(0)
+      fireResize(400)
+      // No auto-switching — view stays as user set it
+      expect(cal.currentView()).toBe('week')
+      fireResize(1200)
+      expect(cal.currentView()).toBe('week')
+      root.remove()
+    })
+  })
+
+  describe('localStorage persistence', () => {
+    beforeEach(() => {
+      localStorage.clear()
+    })
+
+    it('restores view from localStorage on init', () => {
+      localStorage.setItem('lf-cal-preferred-view', 'month')
+      const events = signal<CalendarEvent[]>([])
+      const cal = createCalendar({ events, view: 'week', unstyled: true })
+      expect(cal.currentView()).toBe('month')
+    })
+
+    it('persists view to localStorage on setView()', () => {
+      const events = signal<CalendarEvent[]>([])
+      const cal = createCalendar({ events, view: 'week', unstyled: true })
+      cal.setView('agenda')
+      expect(localStorage.getItem('lf-cal-preferred-view')).toBe('agenda')
+    })
+
+    it('ignores invalid view in localStorage', () => {
+      localStorage.setItem('lf-cal-preferred-view', 'invalid-view')
+      const events = signal<CalendarEvent[]>([])
+      const cal = createCalendar({ events, view: 'week', unstyled: true })
+      expect(cal.currentView()).toBe('week')
+    })
+
+    it('restores active resource from localStorage on init', () => {
+      localStorage.setItem('lf-cal-preferred-resource', 'r1')
+      const events = signal<CalendarEvent[]>([])
+      const cal = createCalendar({ events, unstyled: true })
+      expect(cal.activeResource()).toBe('r1')
+    })
+
+    it('restores null active resource when stored value is empty string', () => {
+      localStorage.setItem('lf-cal-preferred-resource', '')
+      const events = signal<CalendarEvent[]>([])
+      const cal = createCalendar({ events, unstyled: true })
+      expect(cal.activeResource()).toBeNull()
+    })
+
+    it('persists active resource to localStorage on setActiveResource()', () => {
+      const events = signal<CalendarEvent[]>([])
+      const cal = createCalendar({ events, unstyled: true })
+      cal.setActiveResource('r2')
+      expect(localStorage.getItem('lf-cal-preferred-resource')).toBe('r2')
+      cal.setActiveResource(null)
+      expect(localStorage.getItem('lf-cal-preferred-resource')).toBe('')
     })
   })
 })

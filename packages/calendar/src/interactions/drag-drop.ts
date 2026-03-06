@@ -57,7 +57,7 @@ function calculateNewTime(
 ): Date {
   const rect = dayColumn.getBoundingClientRect()
   const relativeY = y - rect.top
-  const slotHeight = 40 // CSS variable --lf-cal-slot-height default
+  const slotHeight = Math.round((config.slotDuration / 30) * 40)
   const totalSlots = (config.dayEnd - config.dayStart) * (60 / config.slotDuration)
 
   // Calculate which slot index we're in
@@ -117,9 +117,12 @@ export function setupEventDrag<T extends CalendarEvent>(
 
   let thresholdMet = false
   let currentDropTarget: HTMLElement | null = null
+  // Offset from pointer to event top-left corner, computed on pointerdown
+  let offsetX = 0
+  let offsetY = 0
 
   const handlePointerDown = (e: PointerEvent) => {
-    // Only handle left click
+    // Only handle primary button (mouse left-click or touch)
     if (e.button !== 0) return
 
     // Ignore if clicking resize handle
@@ -135,6 +138,11 @@ export function setupEventDrag<T extends CalendarEvent>(
     state.startX = e.clientX
     state.startY = e.clientY
     thresholdMet = false
+
+    // Compute offset: where inside the event element the pointer landed
+    const rect = eventElement.getBoundingClientRect()
+    offsetX = e.clientX - rect.left
+    offsetY = e.clientY - rect.top
 
     // Add listeners for move/up
     document.addEventListener('pointermove', handlePointerMove)
@@ -156,11 +164,12 @@ export function setupEventDrag<T extends CalendarEvent>(
       thresholdMet = true
       state.isDragging = true
 
-      // Create ghost element
+      // Create ghost element (position: fixed, pointer-events: none — set in createGhostElement)
       state.ghostElement = createGhostElement(state.originalElement)
       document.body.appendChild(state.ghostElement)
 
-      // Mark original as dragging
+      // Dim original so the reserved slot is visible but not confusing
+      state.originalElement.style.opacity = '0.3'
       state.originalElement.classList.add('lf-cal-event--dragging')
 
       // Prevent text selection
@@ -170,9 +179,9 @@ export function setupEventDrag<T extends CalendarEvent>(
 
     if (!state.ghostElement) return
 
-    // Move ghost
-    state.ghostElement.style.left = `${e.clientX - state.ghostElement.offsetWidth / 2}px`
-    state.ghostElement.style.top = `${e.clientY - 10}px`
+    // Position ghost anchored to where the user grabbed it (offset-aware)
+    state.ghostElement.style.left = `${e.clientX - offsetX}px`
+    state.ghostElement.style.top = `${e.clientY - offsetY}px`
 
     // Find drop target
     const dayColumnInfo = findDayColumnAtX(e.clientX, dayColumns)
@@ -207,8 +216,9 @@ export function setupEventDrag<T extends CalendarEvent>(
       state.ghostElement = null
     }
 
-    // Remove dragging class
+    // Restore original element
     if (state.originalElement) {
+      state.originalElement.style.opacity = ''
       state.originalElement.classList.remove('lf-cal-event--dragging')
     }
 
@@ -253,6 +263,8 @@ export function setupEventDrag<T extends CalendarEvent>(
     document.body.style.cursor = ''
     thresholdMet = false
     currentDropTarget = null
+    offsetX = 0
+    offsetY = 0
   }
 
   // Attach listener
@@ -265,6 +277,10 @@ export function setupEventDrag<T extends CalendarEvent>(
     document.removeEventListener('pointerup', handlePointerUp)
     if (state.ghostElement) {
       state.ghostElement.remove()
+    }
+    if (state.originalElement) {
+      state.originalElement.style.opacity = ''
+      state.originalElement.classList.remove('lf-cal-event--dragging')
     }
     if (currentDropTarget) {
       currentDropTarget.classList.remove('lf-cal-day-column--drop-target')

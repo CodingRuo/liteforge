@@ -3,6 +3,7 @@
  */
 
 import { signal, computed, effect } from '@liteforge/core'
+import { createResponsiveController } from './responsive.js'
 import type {
   CalendarOptions,
   CalendarResult,
@@ -23,21 +24,26 @@ import {
 } from './date-utils.js'
 import { expandAllRecurring } from './recurring.js'
 import { injectCalendarStyles } from './styles.js'
+import { resolveTranslations } from './translations.js'
 import { renderWeekView } from './views/week-view.js'
 import { renderDayView } from './views/day-view.js'
 import { renderMonthView } from './views/month-view.js'
 import { renderAgendaView } from './views/agenda-view.js'
 import { renderToolbar } from './components/toolbar.js'
+import { renderMiniCalendar } from './components/mini-calendar.js'
 
 // ─── Resolve Time Config ───────────────────────────────────
 
-function resolveTimeConfig(config?: CalendarOptions<CalendarEvent>['time']): ResolvedTimeConfig {
+function resolveTimeConfig(
+  config: CalendarOptions<CalendarEvent>['time'] | undefined,
+  hiddenDays: () => number[]
+): ResolvedTimeConfig {
   return {
     slotDuration: config?.slotDuration ?? 30,
     dayStart: config?.dayStart ?? 0,
     dayEnd: config?.dayEnd ?? 24,
     weekStart: config?.weekStart ?? 1,
-    hiddenDays: config?.hiddenDays ?? [],
+    hiddenDays,
     nowIndicator: config?.nowIndicator ?? true,
   }
 }
@@ -47,6 +53,7 @@ function resolveTimeConfig(config?: CalendarOptions<CalendarEvent>['time']): Res
 function calculateDateRange(date: Date, view: CalendarView, weekStart: number): DateRange {
   switch (view) {
     case 'day':
+    case 'resource-day':
       return getDayRange(date)
     case 'week':
       return getWeekRange(date, weekStart)
@@ -79,6 +86,7 @@ export function createCalendar<T extends CalendarEvent>(
     resources: resourcesInput = [],
     editable = false,
     selectable = false,
+    selection: selectionConfig,
     onEventClick,
     onEventDrop,
     onEventResize,
@@ -92,20 +100,49 @@ export function createCalendar<T extends CalendarEvent>(
     unstyled = false,
     classes,
     locale = 'en-US',
+    translations: translationsInput,
+    toolbar: toolbarConfig,
+    responsive: responsiveOptions,
   } = options
+
+  const t = resolveTranslations(locale, translationsInput)
 
   // Inject styles
   if (!unstyled) {
     injectCalendarStyles()
   }
 
-  // Resolve config
-  const config = resolveTimeConfig(time)
+  // ─── localStorage Helpers ────────────────────────────────
+
+  const VALID_VIEWS: CalendarView[] = ['day', 'week', 'month', 'agenda', 'resource-day']
+
+  function readStoredView(): CalendarView | null {
+    try {
+      const v = localStorage.getItem('lf-cal-preferred-view')
+      if (v && (VALID_VIEWS as string[]).includes(v)) return v as CalendarView
+    } catch { /* no-op */ }
+    return null
+  }
+
+  function readStoredResource(): string | null {
+    try {
+      const v = localStorage.getItem('lf-cal-preferred-resource')
+      if (v === '') return null
+      if (v !== null) return v
+    } catch { /* no-op */ }
+    return null
+  }
 
   // ─── State ───────────────────────────────────────────────
 
   const currentDateSignal = signal(startOfDay(defaultDate))
-  const currentViewSignal = signal<CalendarView>(initialView)
+  const currentViewSignal = signal<CalendarView>(readStoredView() ?? initialView)
+
+  // Weekend visibility (hidden days signal)
+  const hiddenDaysSignal = signal<number[]>(time?.hiddenDays ?? [])
+
+  // Resolve config with reactive hiddenDays
+  const config = resolveTimeConfig(time, () => hiddenDaysSignal())
 
   // Resource visibility
   const resourceVisibility = signal<Record<string, boolean>>(
@@ -172,6 +209,7 @@ export function createCalendar<T extends CalendarEvent>(
     let newDate: Date
     switch (view) {
       case 'day':
+      case 'resource-day':
         newDate = addDays(current, 1)
         break
       case 'week':
@@ -196,6 +234,7 @@ export function createCalendar<T extends CalendarEvent>(
     let newDate: Date
     switch (view) {
       case 'day':
+      case 'resource-day':
         newDate = addDays(current, -1)
         break
       case 'week':
@@ -220,7 +259,22 @@ export function createCalendar<T extends CalendarEvent>(
 
   const setView = (view: CalendarView) => {
     currentViewSignal.set(view)
+    try { localStorage.setItem('lf-cal-preferred-view', view) } catch { /* no-op */ }
     onViewChange?.(view, dateRangeComputed())
+  }
+
+  // ─── Responsive Controller ────────────────────────────────
+
+  const responsiveCtrl = createResponsiveController(responsiveOptions ?? {})
+  const sizeClass = responsiveCtrl.sizeClass
+
+  // ─── Mobile Resource Filter ───────────────────────────────
+
+  const activeResourceSignal = signal<string | null>(readStoredResource())
+
+  const setActiveResource = (id: string | null) => {
+    activeResourceSignal.set(id)
+    try { localStorage.setItem('lf-cal-preferred-resource', id ?? '') } catch { /* no-op */ }
   }
 
   // ─── Event Management ────────────────────────────────────
@@ -241,6 +295,27 @@ export function createCalendar<T extends CalendarEvent>(
 
   const removeEvent = (id: string) => {
     localEvents.update((evts: T[]) => evts.filter((e: T) => e.id !== id))
+  }
+
+  // ─── Weekend Toggle ───────────────────────────────────────
+
+  const WEEKEND_DAYS = [0, 6] // Sun, Sat
+
+  const weekendsVisible = () => {
+    const hidden = hiddenDaysSignal()
+    return !WEEKEND_DAYS.every((d) => hidden.includes(d))
+  }
+
+  const toggleWeekends = () => {
+    hiddenDaysSignal.update((hidden) => {
+      if (WEEKEND_DAYS.every((d) => hidden.includes(d))) {
+        // Currently hidden → show weekends
+        return hidden.filter((d) => !WEEKEND_DAYS.includes(d))
+      } else {
+        // Currently visible → hide weekends
+        return [...hidden.filter((d) => !WEEKEND_DAYS.includes(d)), ...WEEKEND_DAYS]
+      }
+    })
   }
 
   // ─── Resource Management ─────────────────────────────────
@@ -288,6 +363,26 @@ export function createCalendar<T extends CalendarEvent>(
     const container = document.createElement('div')
     container.className = classes?.root ?? 'lf-cal'
 
+    // Set data-size attribute reactively
+    effect(() => { container.dataset.size = sizeClass() })
+
+    // Attach ResizeObserver after element is in DOM
+    // Note: cleanup is not captured (same acceptable pattern as toolbar click-away listeners)
+    setTimeout(() => {
+      if (container.isConnected || container.parentNode) {
+        responsiveCtrl.observe(container)
+      } else {
+        // Wait for insertion
+        const mo = new MutationObserver(() => {
+          if (container.isConnected || container.parentNode) {
+            mo.disconnect()
+            responsiveCtrl.observe(container)
+          }
+        })
+        mo.observe(document.body, { childList: true, subtree: true })
+      }
+    }, 0)
+
     let currentViewEl: HTMLDivElement | null = null
 
     // Reactively render the appropriate view
@@ -305,14 +400,17 @@ export function createCalendar<T extends CalendarEvent>(
           currentViewEl = renderDayView({
             date: () => currentDateSignal(),
             events: () => visibleEvents(),
-            resources: resourcesComputed,
-            visibleResources: visibleResourcesComputed,
+            // No resources → single column with overlap layout
+            resources: () => [],
+            visibleResources: () => [],
             config,
             locale,
+            translations: t,
             classes: classes ?? {},
             eventContent,
             slotContent,
             dayHeaderContent,
+            selectedEvent: () => selectedEventSignal(),
             onEventClick: handleEventClick,
             onSlotClick: selectable ? handleSlotClick : undefined,
             onSlotSelect: selectable ? handleSlotSelect : undefined,
@@ -320,6 +418,41 @@ export function createCalendar<T extends CalendarEvent>(
             onEventResize: editable ? handleEventResize : undefined,
             editable,
             selectable,
+            selectionConfig,
+            maxAllDayVisible: () => sizeClass() === 'mobile' ? 2 : undefined,
+            sizeClass,
+            activeResource: () => activeResourceSignal(),
+            allResources: resourcesInput,
+          })
+          break
+
+        case 'resource-day':
+          currentViewEl = renderDayView({
+            date: () => currentDateSignal(),
+            events: () => visibleEvents(),
+            // With resources → one column per resource (or merged on mobile)
+            resources: resourcesComputed,
+            visibleResources: visibleResourcesComputed,
+            config,
+            locale,
+            translations: t,
+            classes: classes ?? {},
+            eventContent,
+            slotContent,
+            dayHeaderContent,
+            selectedEvent: () => selectedEventSignal(),
+            onEventClick: handleEventClick,
+            onSlotClick: selectable ? handleSlotClick : undefined,
+            onSlotSelect: selectable ? handleSlotSelect : undefined,
+            onEventDrop: editable ? handleEventDrop : undefined,
+            onEventResize: editable ? handleEventResize : undefined,
+            editable,
+            selectable,
+            selectionConfig,
+            maxAllDayVisible: () => sizeClass() === 'mobile' ? 2 : undefined,
+            sizeClass,
+            activeResource: () => activeResourceSignal(),
+            allResources: resourcesInput,
           })
           break
 
@@ -329,10 +462,12 @@ export function createCalendar<T extends CalendarEvent>(
             events: () => visibleEvents(),
             config,
             locale,
+            translations: t,
             classes: classes ?? {},
             eventContent,
             slotContent,
             dayHeaderContent,
+            selectedEvent: () => selectedEventSignal(),
             onEventClick: handleEventClick,
             onSlotClick: selectable ? handleSlotClick : undefined,
             onSlotSelect: selectable ? handleSlotSelect : undefined,
@@ -340,6 +475,8 @@ export function createCalendar<T extends CalendarEvent>(
             onEventResize: editable ? handleEventResize : undefined,
             editable,
             selectable,
+            selectionConfig,
+            maxAllDayVisible: () => sizeClass() === 'mobile' ? 2 : undefined,
           })
           break
 
@@ -349,9 +486,14 @@ export function createCalendar<T extends CalendarEvent>(
             events: () => visibleEvents(),
             config,
             locale,
+            translations: t,
             classes: classes ?? {},
             onEventClick: handleEventClick,
             onSlotClick: selectable ? handleSlotClick : undefined,
+            onDateNavigate: (date: Date) => {
+              goTo(date)
+              setView('day')
+            },
             selectable,
           })
           break
@@ -363,6 +505,7 @@ export function createCalendar<T extends CalendarEvent>(
             resources: resourcesComputed,
             config,
             locale,
+            translations: t,
             classes: classes ?? {},
             onEventClick: handleEventClick,
           })
@@ -386,10 +529,72 @@ export function createCalendar<T extends CalendarEvent>(
       locale,
       weekStart: config.weekStart,
       classes: classes ?? {},
+      translations: t,
       onPrev: prev,
       onNext: next,
       onToday: today,
       onViewChange: setView,
+      resources: resourcesInput,
+      visibleResources: () => visibleResourcesComputed(),
+      onToggleResource: toggleResource,
+      weekendsVisible,
+      onToggleWeekends: toggleWeekends,
+      toolbarConfig,
+      sizeClass,
+    })
+  }
+
+  // ─── Mobile Resource Bar ─────────────────────────────────
+
+  const MobileResourceBar = (): Node => {
+    const bar = document.createElement('div')
+    bar.className = 'lf-cal-mobile-res-bar'
+
+    // Reactive: update tabs on resource/active changes
+    effect(() => {
+      const active = activeResourceSignal()
+      const visible = visibleResourcesComputed()
+      const rList = resourcesInput.filter((r) => visible.includes(r.id))
+
+      bar.innerHTML = ''
+
+      if (rList.length === 0) return
+
+      const isDE = t.allDay !== 'All-day'
+      const allLabel = isDE ? 'Alle' : 'All'
+      const allTab = document.createElement('button')
+      allTab.type = 'button'
+      allTab.className = `lf-cal-mobile-res-tab${active === null ? ' lf-cal-mobile-res-tab--active' : ''}`
+      allTab.textContent = allLabel
+      allTab.addEventListener('click', () => setActiveResource(null))
+      bar.appendChild(allTab)
+
+      for (const resource of rList) {
+        const tab = document.createElement('button')
+        tab.type = 'button'
+        tab.className = `lf-cal-mobile-res-tab${active === resource.id ? ' lf-cal-mobile-res-tab--active' : ''}`
+        tab.textContent = resource.name.split(' ').pop() ?? resource.name
+        if (active === resource.id && resource.color) {
+          tab.style.borderBottomColor = resource.color
+          tab.style.color = resource.color
+        }
+        tab.addEventListener('click', () => setActiveResource(resource.id))
+        bar.appendChild(tab)
+      }
+    })
+
+    return bar
+  }
+
+  // ─── MiniCalendar Component ──────────────────────────────
+
+  const MiniCalendar = (): Node => {
+    return renderMiniCalendar({
+      currentDate: () => currentDateSignal(),
+      currentView: () => currentViewSignal(),
+      locale,
+      goTo,
+      setView,
     })
   }
 
@@ -398,6 +603,11 @@ export function createCalendar<T extends CalendarEvent>(
   return {
     Root,
     Toolbar,
+    MiniCalendar,
+    MobileResourceBar,
+
+    // Responsive
+    sizeClass,
 
     // Navigation
     currentDate: () => currentDateSignal(),
@@ -422,6 +632,14 @@ export function createCalendar<T extends CalendarEvent>(
     showResource,
     hideResource,
     toggleResource,
+
+    // Mobile resource filter
+    activeResource: () => activeResourceSignal(),
+    setActiveResource,
+
+    // Weekend toggle
+    weekendsVisible,
+    toggleWeekends,
 
     // Selection
     selectedEvent: () => selectedEventSignal(),

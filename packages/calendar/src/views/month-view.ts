@@ -5,6 +5,7 @@
 import { effect } from '@liteforge/core'
 import type {
   CalendarEvent,
+  CalendarTranslations,
   ResolvedTimeConfig,
   CalendarClasses,
 } from '../types.js'
@@ -26,8 +27,10 @@ interface MonthViewOptions<T extends CalendarEvent> {
   config: ResolvedTimeConfig
   locale: string
   classes: Partial<CalendarClasses>
+  translations: CalendarTranslations
   onEventClick: ((event: T) => void) | undefined
   onSlotClick: ((start: Date, end: Date, resourceId?: string) => void) | undefined
+  onDateNavigate?: (date: Date) => void
   selectable: boolean | undefined
 }
 
@@ -40,8 +43,10 @@ export function renderMonthView<T extends CalendarEvent>(
     config,
     locale,
     classes,
+    translations: t,
     onEventClick,
     onSlotClick,
+    onDateNavigate,
     selectable,
   } = options
 
@@ -166,13 +171,13 @@ export function renderMonthView<T extends CalendarEvent>(
       if (remainingCount > 0) {
         const more = document.createElement('div')
         more.className = getClass('monthMore', classes, 'lf-cal-month-more')
-        more.textContent = `+${remainingCount} more`
+        more.textContent = t.more(remainingCount)
 
-        // Could show popup with all events on click
         more.addEventListener('click', (e) => {
           e.stopPropagation()
-          // For now, just log
-          console.log(`${remainingCount} more events on ${day.toDateString()}`)
+          if (onDateNavigate) {
+            onDateNavigate(day)
+          }
         })
 
         eventsContainer.appendChild(more)

@@ -10,20 +10,17 @@
   --lf-cal-header-font-weight: var(--lf-font-semibold, 600);
   --lf-cal-today-bg:         var(--lf-color-accent-subtle, #eff6ff);
   --lf-cal-weekend-bg:       var(--lf-color-bg-subtle, #fafafa);
-  --lf-cal-now-color:        var(--lf-color-danger, #ef4444);
-  --lf-cal-now-width:        2px;
+  --lf-cal-now-color:        rgba(239, 68, 68, 0.55);
+  --lf-cal-now-dot-color:    rgba(239, 68, 68, 0.75);
+  --lf-cal-now-width:        1px;
   --lf-cal-event-radius:     var(--lf-radius-sm, 4px);
   --lf-cal-event-font-size:  var(--lf-text-xs, 12px);
   --lf-cal-event-padding:    2px 6px;
   --lf-cal-event-default-bg: var(--lf-color-accent, #3b82f6);
   --lf-cal-event-default-color: var(--lf-color-text-on-accent, #ffffff);
-  --lf-cal-blocked-bg:       var(--lf-color-bg-muted, #f1f5f9);
-  --lf-cal-blocked-pattern: repeating-linear-gradient(
-    45deg, transparent, transparent 5px, rgba(0,0,0,0.03) 5px, rgba(0,0,0,0.03) 10px
-  );
   --lf-cal-selection-bg:     var(--lf-color-accent-subtle, rgba(59, 130, 246, 0.15));
   --lf-cal-selection-border: var(--lf-color-accent, #3b82f6);
-  --lf-cal-drag-opacity:     0.7;
+  --lf-cal-drag-opacity:     0.3;
   --lf-cal-time-color:       var(--lf-color-text-subtle, #94a3b8);
   --lf-cal-time-font-size:   var(--lf-text-xs, 11px);
   --lf-cal-time-width:       60px;
@@ -38,7 +35,6 @@
 .dark {
   --lf-cal-today-bg:         rgba(137, 180, 250, 0.1);
   --lf-cal-weekend-bg:       var(--lf-color-bg-subtle, #181825);
-  --lf-cal-blocked-bg:       var(--lf-color-bg, #11111b);
   --lf-cal-time-color:       #6c7086;
   --lf-cal-scrollbar-thumb:  #45475a;
 }
@@ -47,7 +43,6 @@
   :root:not([data-theme="light"]) {
     --lf-cal-today-bg:         rgba(137, 180, 250, 0.1);
     --lf-cal-weekend-bg:       var(--lf-color-bg-subtle, #181825);
-    --lf-cal-blocked-bg:       var(--lf-color-bg, #11111b);
     --lf-cal-time-color:       #6c7086;
     --lf-cal-scrollbar-thumb:  #45475a;
   }
@@ -57,16 +52,13 @@
 
 .lf-cal {
   background: var(--lf-cal-bg);
-  border: 1px solid var(--lf-cal-border);
-  border-radius: var(--lf-cal-border-radius);
-  overflow: hidden;
   font-family: var(--lf-font-sans, system-ui, -apple-system, sans-serif);
   font-size: var(--lf-text-base, 14px);
   /* Fill the parent container — set height on the parent to control calendar size */
   display: flex;
   flex-direction: column;
+  flex: 1;
   width: 100%;
-  height: 100%;
   min-height: 0;
 }
 
@@ -156,29 +148,148 @@
   position: relative;
 }
 
-/* Mobile toolbar — stack nav+title on first row, views on second */
-@media (max-width: 600px) {
-  .lf-cal-toolbar {
-    padding: 8px 10px;
-    gap: 6px 8px;
-  }
-
-  .lf-cal-toolbar-title {
-    text-align: left;
-    font-size: 13px;
-    min-width: 0;
-  }
-
-  .lf-cal-toolbar-views {
-    width: 100%;
-  }
-
-  .lf-cal-toolbar-views button {
-    flex: 1;
-    padding: 5px 4px;
-    font-size: 12px;
-  }
+/* Resource toggles in toolbar */
+.lf-cal-toolbar-resources {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
+
+.lf-cal-toolbar-resource {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border: 1px solid var(--lf-cal-border);
+  border-radius: var(--lf-radius-sm, 4px);
+  background: var(--lf-cal-bg);
+  cursor: pointer;
+  font-size: var(--lf-text-xs, 12px);
+  color: var(--lf-cal-header-color);
+  transition: opacity 0.15s;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.lf-cal-toolbar-resource:hover {
+  background: var(--lf-cal-today-bg);
+}
+
+.lf-cal-toolbar-resource--hidden {
+  opacity: 0.4;
+}
+
+.lf-cal-toolbar-resource-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Resource dropdown (toolbar: resourceDisplay: 'dropdown') */
+.lf-cal-toolbar-res-dropdown {
+  position: relative;
+}
+
+.lf-cal-toolbar-res-dropdown-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: 1px solid var(--lf-cal-border);
+  border-radius: var(--lf-radius-sm, 4px);
+  background: var(--lf-cal-bg);
+  color: var(--lf-cal-header-color);
+  font-size: var(--lf-text-xs, 12px);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.lf-cal-toolbar-res-dropdown-toggle:hover {
+  background: var(--lf-cal-today-bg);
+}
+
+.lf-cal-toolbar-res-dropdown-chevron {
+  font-size: 10px;
+  transition: transform 0.15s;
+  line-height: 1;
+}
+
+.lf-cal-toolbar-res-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 100;
+  min-width: 180px;
+  background: var(--lf-cal-bg);
+  border: 1px solid var(--lf-cal-border);
+  border-radius: var(--lf-radius-sm, 6px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  padding: 4px 0;
+  display: none;
+}
+
+.lf-cal-toolbar-res-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 12px;
+  border: none;
+  background: none;
+  color: var(--lf-cal-header-color);
+  font-size: var(--lf-text-sm, 13px);
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.lf-cal-toolbar-res-dropdown-item:hover {
+  background: var(--lf-cal-today-bg);
+}
+
+.lf-cal-toolbar-res-dropdown-check {
+  width: 14px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--lf-cal-today-text, #3b82f6);
+  flex-shrink: 0;
+}
+
+.lf-cal-toolbar-res-dropdown-item--hidden .lf-cal-toolbar-resource-dot {
+  opacity: 0.4;
+}
+
+.lf-cal-toolbar-res-dropdown-item--hidden span:last-child {
+  opacity: 0.5;
+}
+
+/* Weekend toggle button */
+.lf-cal-toolbar-weekend-toggle {
+  padding: 5px 10px;
+  border: 1px solid var(--lf-cal-border);
+  border-radius: var(--lf-radius-sm, 4px);
+  background: var(--lf-cal-bg);
+  color: var(--lf-cal-header-color);
+  font-size: var(--lf-text-xs, 12px);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.lf-cal-toolbar-weekend-toggle:hover {
+  background: var(--lf-cal-today-bg);
+}
+
+.lf-cal-toolbar-weekend-toggle--active {
+  background: var(--lf-cal-today-bg);
+  border-color: var(--lf-cal-selection-border);
+  color: var(--lf-cal-event-default-bg);
+}
+
 
 /* ─── Header ────────────────────────────────────────────── */
 
@@ -239,7 +350,6 @@
   display: flex;
   border-bottom: 1px solid var(--lf-cal-border);
   background: var(--lf-cal-header-bg);
-  min-height: 28px;
 }
 
 .lf-cal-allday-label {
@@ -250,6 +360,10 @@
   font-size: var(--lf-cal-time-font-size);
   color: var(--lf-cal-time-color);
   text-align: right;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .lf-cal-allday-cells {
@@ -260,9 +374,8 @@
 
 .lf-cal-allday-cell {
   flex: 1;
-  padding: 2px;
+  padding: 3px 2px;
   border-right: 1px solid var(--lf-cal-border);
-  min-height: 24px;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -270,6 +383,21 @@
 
 .lf-cal-allday-cell:last-child {
   border-right: none;
+}
+
+/* Compact chip style for all-day events */
+.lf-cal-event--allday {
+  position: static;
+  padding: 2px 6px;
+  font-size: 12px;
+  min-height: unset;
+  border-radius: 4px;
+  border-left: none;
+  line-height: 1.4;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 /* ─── Body / Grid ───────────────────────────────────────── */
@@ -348,6 +476,15 @@
   width: var(--lf-cal-time-width);
   flex-shrink: 0;
   border-right: 1px solid var(--lf-cal-border);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent calc(var(--lf-cal-slot-height) - 1px),
+    var(--lf-cal-border) calc(var(--lf-cal-slot-height) - 1px),
+    var(--lf-cal-border) var(--lf-cal-slot-height)
+  );
+  background-size: 100% var(--lf-cal-slot-height);
+  background-position: 0 0;
 }
 
 .lf-cal-time-label {
@@ -357,13 +494,11 @@
   color: var(--lf-cal-time-color);
   text-align: right;
   line-height: 1;
-  position: relative;
-  top: -6px;
-}
-
-.lf-cal-time-label:first-child {
-  top: 0;
-  padding-top: 2px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding-bottom: 3px;
+  box-sizing: border-box;
 }
 
 .lf-cal-grid {
@@ -375,8 +510,18 @@
 .lf-cal-day-column {
   flex: 1;
   min-width: var(--lf-cal-day-min-width, 80px);
+  min-height: 100%;
   position: relative;
   border-right: 1px solid var(--lf-cal-border);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent calc(var(--lf-cal-slot-height) - 1px),
+    var(--lf-cal-border) calc(var(--lf-cal-slot-height) - 1px),
+    var(--lf-cal-border) var(--lf-cal-slot-height)
+  );
+  background-size: 100% var(--lf-cal-slot-height);
+  background-position: 0 0;
 }
 
 .lf-cal-day-column:last-child {
@@ -384,17 +529,27 @@
 }
 
 .lf-cal-day-column--today {
-  background: var(--lf-cal-today-bg);
+  background-color: var(--lf-cal-today-bg);
 }
 
 .lf-cal-day-column--weekend {
-  background: var(--lf-cal-weekend-bg);
+  background-color: var(--lf-cal-weekend-bg);
 }
 
 .lf-cal-resource-column {
   flex: 1;
+  min-height: 100%;
   position: relative;
   border-right: 1px solid var(--lf-cal-border);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent calc(var(--lf-cal-slot-height) - 1px),
+    var(--lf-cal-border) calc(var(--lf-cal-slot-height) - 1px),
+    var(--lf-cal-border) var(--lf-cal-slot-height)
+  );
+  background-size: 100% var(--lf-cal-slot-height);
+  background-position: 0 0;
 }
 
 .lf-cal-resource-column:last-child {
@@ -413,11 +568,6 @@
   border-bottom: none;
 }
 
-.lf-cal-time-slot--blocked {
-  background: var(--lf-cal-blocked-bg);
-  background-image: var(--lf-cal-blocked-pattern);
-}
-
 .lf-cal-time-slot--selected {
   background: var(--lf-cal-selection-bg);
 }
@@ -432,6 +582,7 @@
   position: absolute;
   left: 2px;
   right: 2px;
+  min-width: 80px;
   padding: var(--lf-cal-event-padding);
   border-radius: var(--lf-cal-event-radius);
   font-size: var(--lf-cal-event-font-size);
@@ -448,18 +599,13 @@
 .lf-cal-event:hover {
   box-shadow: var(--lf-shadow-md, 0 4px 12px rgba(0,0,0,0.2));
   z-index: 50;
-  min-width: 150px;
-  max-width: 250px;
-  width: max-content;
-}
-
-.lf-cal-event:hover .lf-cal-event-title {
-  white-space: normal;
-  word-break: break-word;
+  /* No size changes on hover — they cause flickering because the element
+     grows, the cursor leaves the new boundary, hover ends, it shrinks back,
+     cursor re-enters → infinite loop. Only safe properties: box-shadow, z-index,
+     opacity, filter. */
 }
 
 .lf-cal-event--dragging {
-  opacity: var(--lf-cal-drag-opacity);
   box-shadow: var(--lf-shadow-md, 0 4px 12px rgba(0,0,0,0.2));
   z-index: 100;
   cursor: grabbing;
@@ -489,7 +635,9 @@
 }
 
 .lf-cal-event--selected {
-  box-shadow: 0 0 0 2px var(--lf-cal-selection-border);
+  box-shadow: 0 0 0 2px var(--lf-cal-selection-border), 0 4px 16px rgba(0,0,0,0.25);
+  z-index: 60;
+  filter: brightness(1.1);
 }
 
 .lf-cal-event--allday {
@@ -533,22 +681,21 @@
   position: absolute;
   left: 0;
   right: 0;
-  height: var(--lf-cal-now-width, 2px);
+  height: var(--lf-cal-now-width, 1px);
   background: var(--lf-cal-now-color);
   z-index: 100;
   pointer-events: none;
-  box-shadow: 0 0 3px var(--lf-cal-now-color);
 }
 
 .lf-cal-now-indicator::before {
   content: '';
   position: absolute;
-  left: -5px;
-  top: -4px;
-  width: 10px;
-  height: 10px;
+  left: -3px;
+  top: -3px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: var(--lf-cal-now-color);
+  background: var(--lf-cal-now-dot-color, var(--lf-cal-now-color));
 }
 
 .lf-cal-now-indicator--no-dot::before {
@@ -688,6 +835,8 @@
 .lf-cal-agenda-day-header--today {
   background: var(--lf-cal-today-bg);
   color: var(--lf-cal-event-default-bg);
+  border-left: 3px solid var(--lf-cal-event-default-bg);
+  font-weight: var(--lf-font-semibold, 600);
 }
 
 .lf-cal-agenda-item {
@@ -739,4 +888,339 @@
   padding: 40px;
   text-align: center;
   color: var(--lf-cal-time-color);
+}
+
+/* ─── Mini Calendar ──────────────────────────────────────────────────────── */
+
+.lf-mini-cal {
+  width: 100%;
+  font-size: 12px;
+  color: var(--lf-cal-header-color, #1e293b);
+  user-select: none;
+}
+
+.lf-mini-cal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  gap: 4px;
+}
+
+.lf-mini-cal__title {
+  font-size: 12px;
+  font-weight: 600;
+  flex: 1;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lf-mini-cal__nav {
+  background: none;
+  border: none;
+  padding: 2px 5px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--lf-cal-header-color, #1e293b);
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.lf-mini-cal__nav:hover {
+  background: var(--lf-cal-slot-hover, rgba(59,130,246,0.08));
+}
+
+.lf-mini-cal__row {
+  display: grid;
+  grid-template-columns: 22px repeat(7, 1fr);
+  gap: 1px;
+  margin-bottom: 1px;
+}
+
+.lf-mini-cal__row--head {
+  margin-bottom: 3px;
+}
+
+.lf-mini-cal__day-head {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--lf-cal-time-color, #94a3b8);
+  padding: 2px 0;
+}
+
+.lf-mini-cal__kw {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 10px;
+  color: var(--lf-cal-time-color, #94a3b8);
+  text-align: center;
+  cursor: pointer;
+  border-radius: 3px;
+  line-height: 22px;
+  height: 22px;
+}
+.lf-mini-cal__kw--head {
+  cursor: default;
+  font-weight: 600;
+}
+.lf-mini-cal__kw:not(.lf-mini-cal__kw--head):hover {
+  background: var(--lf-cal-slot-hover, rgba(59,130,246,0.08));
+  color: var(--lf-color-primary, #3b82f6);
+}
+.lf-mini-cal__kw--active {
+  color: var(--lf-color-primary, #3b82f6);
+  font-weight: 700;
+}
+
+.lf-mini-cal__day {
+  background: none;
+  border: none;
+  padding: 0;
+  width: 100%;
+  height: 22px;
+  line-height: 22px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 50%;
+  font-size: 11px;
+  color: inherit;
+  transition: background 0.1s;
+}
+.lf-mini-cal__day:hover {
+  background: var(--lf-cal-slot-hover, rgba(59,130,246,0.08));
+}
+
+.lf-mini-cal__day--outside {
+  color: var(--lf-cal-time-color, #94a3b8);
+  opacity: 0.5;
+}
+
+.lf-mini-cal__day--today {
+  background: var(--lf-color-primary, #3b82f6);
+  color: #fff;
+  font-weight: 700;
+}
+.lf-mini-cal__day--today:hover {
+  background: var(--lf-color-primary, #3b82f6);
+  opacity: 0.9;
+}
+
+.lf-mini-cal__day--selected {
+  background: var(--lf-cal-header-bg, #f1f5f9);
+  color: var(--lf-color-primary, #3b82f6);
+  font-weight: 700;
+  outline: 2px solid var(--lf-color-primary, #3b82f6);
+  outline-offset: -2px;
+}
+
+.lf-mini-cal__day--in-week {
+  background: var(--lf-cal-slot-hover, rgba(59,130,246,0.1));
+  border-radius: 0;
+}
+/* Round the first and last day of the week highlight */
+.lf-mini-cal__row .lf-mini-cal__day--in-week:first-of-type {
+  border-radius: 50% 0 0 50%;
+}
+.lf-mini-cal__row .lf-mini-cal__day--in-week:last-of-type {
+  border-radius: 0 50% 50% 0;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .lf-mini-cal__day--selected {
+    background: rgba(59,130,246,0.2);
+  }
+}
+[data-theme="dark"] .lf-mini-cal__day--selected {
+  background: rgba(59,130,246,0.2);
+}
+
+/* ─── Snap Indicator Badge ───────────────────────────────── */
+
+.lf-cal-snap-badge {
+  position: fixed;
+  z-index: 10001;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transform: translateY(-50%);
+  transition: background 0.1s;
+}
+
+/* ─── Mobile View Selector Dropdown ─────────────────────── */
+
+.lf-cal-toolbar-mobile-view-sel {
+  position: relative;
+  display: none;
+}
+
+.lf-cal-toolbar-mobile-view-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: 1px solid var(--lf-cal-border);
+  border-radius: var(--lf-radius-sm, 4px);
+  background: var(--lf-cal-bg);
+  color: var(--lf-cal-header-color);
+  font-size: var(--lf-text-sm, 13px);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.lf-cal-toolbar-mobile-view-btn:hover { opacity: 0.8; }
+
+.lf-cal-toolbar-mobile-view-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  left: auto;
+  z-index: 200;
+  min-width: 160px;
+  background: var(--lf-cal-bg);
+  border: 1px solid var(--lf-cal-border);
+  border-radius: var(--lf-radius-sm, 6px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  padding: 4px 0;
+}
+
+.lf-cal-toolbar-mobile-view-item {
+  display: block;
+  width: 100%;
+  padding: 9px 14px;
+  border: none;
+  background: none;
+  color: var(--lf-cal-header-color);
+  font-size: var(--lf-text-sm, 13px);
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.lf-cal-toolbar-mobile-view-item:hover { background: var(--lf-cal-today-bg); }
+
+/* ─── Responsive: Mobile (< 768px container) ─────────────── */
+
+.lf-cal[data-size="mobile"] {
+  --lf-cal-time-width: 44px;
+  font-size: 13px;
+}
+
+.lf-cal-toolbar[data-size="mobile"] {
+  padding: 8px 10px;
+  gap: 6px 8px;
+}
+
+.lf-cal-toolbar[data-size="mobile"] .lf-cal-toolbar-mobile-view-sel { display: block; }
+.lf-cal-toolbar[data-size="mobile"] .lf-cal-toolbar-views { display: none; }
+.lf-cal-toolbar[data-size="mobile"] .lf-cal-toolbar-weekend-toggle { display: none; }
+.lf-cal-toolbar[data-size="mobile"] .lf-cal-toolbar-resources { display: none; }
+.lf-cal-toolbar[data-size="mobile"] .lf-cal-toolbar-res-dropdown { display: none; }
+
+.lf-cal-toolbar[data-size="mobile"] .lf-cal-toolbar-title {
+  font-size: 13px;
+  min-width: 0;
+}
+
+.lf-cal[data-size="mobile"] .lf-cal-event:not(.lf-cal-event--allday) {
+  min-height: 44px;
+}
+
+.lf-cal[data-size="mobile"] .lf-cal-event--allday {
+  min-height: unset;
+}
+
+/* Hide allday label text on mobile — just keep the spacer width */
+.lf-cal[data-size="mobile"] .lf-cal-allday-label {
+  font-size: 0;
+  overflow: hidden;
+}
+
+/* Resource label inside event chip */
+.lf-cal-event-resource-label {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-bottom: 2px;
+  line-height: 1.4;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Mobile resource tab-bar */
+.lf-cal-mobile-res-bar {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 0;
+  background: var(--lf-cal-header-bg);
+  border-bottom: 1px solid var(--lf-cal-border);
+  padding: 0 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.lf-cal-mobile-res-bar::-webkit-scrollbar { display: none; }
+
+.lf-cal-mobile-res-tab {
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--lf-cal-header-color);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+  opacity: 0.7;
+}
+.lf-cal-mobile-res-tab--active {
+  opacity: 1;
+  border-bottom-color: var(--lf-cal-today-border, #3b82f6);
+  color: var(--lf-cal-today-border, #3b82f6);
+}
+.lf-cal-mobile-res-tab:hover { opacity: 0.9; }
+
+.lf-cal-allday-more {
+  display: inline-block;
+  margin: 2px 0 0 2px;
+  padding: 1px 5px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 10px;
+  background: var(--lf-cal-border);
+  color: var(--lf-cal-header-color);
+  cursor: default;
+  line-height: 1.6;
+}
+
+/* ─── Responsive: Tablet (768–1023px container) ──────────── */
+
+.lf-cal-toolbar[data-size="tablet"] {
+  padding: 9px 12px;
+  gap: 6px 10px;
+}
+
+.lf-cal-toolbar[data-size="tablet"] .lf-cal-toolbar-views button {
+  padding: 5px 8px;
+  font-size: 12px;
+}
+
+.lf-cal-toolbar[data-size="tablet"] .lf-cal-toolbar-title {
+  font-size: 14px;
 }

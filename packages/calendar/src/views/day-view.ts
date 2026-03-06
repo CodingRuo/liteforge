@@ -9,9 +9,11 @@
 import { effect } from '@liteforge/core'
 import type {
   CalendarEvent,
+  CalendarTranslations,
   Resource,
   ResolvedTimeConfig,
   CalendarClasses,
+  SelectionConfig,
 } from '../types.js'
 import {
   getTimeSlots,
@@ -45,6 +47,8 @@ interface DayViewOptions<T extends CalendarEvent> {
   eventContent: ((event: T) => Node) | undefined
   slotContent: ((date: Date, resourceId?: string) => Node | null) | undefined
   dayHeaderContent: ((date: Date) => Node) | undefined
+  translations: CalendarTranslations
+  selectedEvent?: () => T | null
   onEventClick: ((event: T) => void) | undefined
   onSlotClick: ((start: Date, end: Date, resourceId?: string) => void) | undefined
   onSlotSelect: ((start: Date, end: Date, resourceId?: string) => void) | undefined
@@ -52,6 +56,14 @@ interface DayViewOptions<T extends CalendarEvent> {
   onEventResize: ((event: T, newEnd: Date) => void) | undefined
   editable: boolean | undefined
   selectable: boolean | undefined
+  selectionConfig?: SelectionConfig | undefined
+  maxAllDayVisible?: () => number | undefined
+  /** When 'mobile': merge all resource columns into one */
+  sizeClass?: () => string
+  /** Mobile resource filter: null = all, string = one resource id */
+  activeResource?: () => string | null
+  /** All resources for mobile merged-column label lookup */
+  allResources?: Resource[]
 }
 
 export function renderDayView<T extends CalendarEvent>(
@@ -67,6 +79,8 @@ export function renderDayView<T extends CalendarEvent>(
     classes,
     eventContent,
     slotContent,
+    translations: t,
+    selectedEvent,
     onEventClick,
     onSlotClick,
     onSlotSelect,
@@ -74,10 +88,16 @@ export function renderDayView<T extends CalendarEvent>(
     onEventResize,
     editable,
     selectable,
+    selectionConfig,
+    maxAllDayVisible,
+    sizeClass,
+    activeResource,
+    allResources: allResourcesList = [],
   } = options
 
   const container = document.createElement('div')
   container.className = getClass('root', classes, 'lf-cal-day-view')
+  container.style.setProperty('--lf-cal-slot-height', `${Math.round((config.slotDuration / 30) * 40)}px`)
 
   // Header
   const header = document.createElement('div')
@@ -142,6 +162,10 @@ export function renderDayView<T extends CalendarEvent>(
     const allDayEvents = allEvents.filter((e) => isAllDayEvent(e))
     const timedEvents = allEvents.filter((e) => !isAllDayEvent(e))
 
+    // On mobile, merge all resource columns into one
+    const isMobile = sizeClass?.() === 'mobile'
+    const activeRes = activeResource?.() ?? null
+
     // Get resources to display
     const displayResources = allResources.length > 0
       ? allResources.filter((r) => visible.includes(r.id))
@@ -150,8 +174,22 @@ export function renderDayView<T extends CalendarEvent>(
     // Update headers
     headersContainer.innerHTML = ''
 
-    if (displayResources && displayResources.length > 0) {
-      // Resource columns
+    if (displayResources && displayResources.length > 0 && isMobile) {
+      // Mobile: single header showing the date (or active resource name)
+      const headerCell = document.createElement('div')
+      let headerClass = getClass('headerCell', classes, 'lf-cal-header-cell')
+      if (isToday(currentDate)) headerClass += ' lf-cal-header-cell--today'
+      headerCell.className = headerClass
+      if (activeRes !== null) {
+        const res = allResourcesList.find((r) => r.id === activeRes)
+        headerCell.textContent = res ? res.name : formatFullDate(currentDate, locale)
+        if (res?.color) headerCell.style.borderBottom = `2px solid ${res.color}`
+      } else {
+        headerCell.textContent = formatFullDate(currentDate, locale)
+      }
+      headersContainer.appendChild(headerCell)
+    } else if (displayResources && displayResources.length > 0) {
+      // Desktop: one header per resource
       for (const resource of displayResources) {
         const headerCell = document.createElement('div')
         headerCell.className = getClass('headerCell', classes, 'lf-cal-header-cell')
@@ -188,12 +226,15 @@ export function renderDayView<T extends CalendarEvent>(
     if (allDayRow) {
       allDayRow.remove()
     }
+    const _maxAllDay = maxAllDayVisible?.()
     allDayRow = renderAllDayRow({
       days: [currentDate],
       events: allDayEvents,
       classes,
       onEventClick,
       hasTimeColumnSpacer: true,
+      allDayLabel: t.allDay,
+      ...(_maxAllDay !== undefined ? { maxVisible: _maxAllDay } : {}),
     })
     container.insertBefore(allDayRow, body)
 
@@ -220,14 +261,101 @@ export function renderDayView<T extends CalendarEvent>(
     slotSelectionCleanups = []
     currentDateRef = currentDate
 
-    if (displayResources && displayResources.length > 0) {
-      // Render resource columns
+    if (displayResources && displayResources.length > 0 && isMobile) {
+      // ── Mobile: single merged column ──────────────────────────────────────
+      // Filter to active resource if set
+      const mobileResources = activeRes !== null
+        ? displayResources.filter((r) => r.id === activeRes)
+        : displayResources
+
+      const dayColumn = document.createElement('div')
+      let columnClass = getClass('dayColumn', classes, 'lf-cal-day-column')
+      if (isToday(currentDate)) columnClass += ' lf-cal-day-column--today'
+      dayColumn.className = columnClass
+      dayColumnRef = dayColumn
+
+      const slotsContainer = renderTimeSlots(currentDate, config)
+      dayColumn.appendChild(slotsContainer)
+
+      if (selectable && (onSlotClick ?? onSlotSelect)) {
+        const slotState = setupSlotSelection({
+          slotsContainer,
+          day: currentDate,
+          config,
+          selection: selectionConfig,
+          onSlotClick,
+          onSlotSelect,
+        })
+        slotSelectionCleanups.push(slotState.cleanup)
+      }
+
+      // Gather all events from selected resources, merged into one column
+      const allResourceEvents = mobileResources.flatMap((res) =>
+        getTimedEventsForDay(timedEvents, currentDate).filter(
+          (ev) => ev.resourceId === res.id || (!ev.resourceId && mobileResources.length > 0)
+        )
+      )
+      const layouts = calculateOverlaps(allResourceEvents)
+
+      const eventsContainer = document.createElement('div')
+      eventsContainer.style.position = 'absolute'
+      eventsContainer.style.top = '0'
+      eventsContainer.style.left = '0'
+      eventsContainer.style.right = '0'
+      eventsContainer.style.bottom = '0'
+      eventsContainer.style.pointerEvents = 'none'
+
+      for (const layout of layouts) {
+        const resource = allResourcesList.find((r) => r.id === layout.event.resourceId)
+        const eventEl = renderEvent(
+          layout.event,
+          config,
+          layout,
+          eventContent,
+          onEventClick,
+          editable,
+          editable ? (event, element) => {
+            setupEventDragInteraction(event, element, currentDate, dayColumn, layout.event.resourceId)
+          } : undefined,
+          editable ? (event, element) => {
+            setupEventResizeInteraction(event, element, currentDate, dayColumn)
+          } : undefined,
+          selectedEvent ? () => selectedEvent()?.id ?? null : undefined
+        )
+        eventEl.style.pointerEvents = 'auto'
+
+        // Add resource label chip (show when multiple resources visible)
+        if (resource && mobileResources.length > 1) {
+          const resLabel = document.createElement('div')
+          resLabel.className = 'lf-cal-event-resource-label'
+          resLabel.textContent = resource.name.split(' ').pop() ?? resource.name
+          if (resource.color) {
+            resLabel.style.background = resource.color + '33'
+            resLabel.style.color = resource.color
+          }
+          eventEl.insertBefore(resLabel, eventEl.firstChild)
+        }
+
+        eventsContainer.appendChild(eventEl)
+      }
+
+      dayColumn.appendChild(eventsContainer)
+
+      if (isToday(currentDate) && config.nowIndicator) {
+        nowIndicator = createNowIndicator(config)
+        if (nowIndicator) eventsContainer.appendChild(nowIndicator)
+      }
+
+      grid.appendChild(dayColumn)
+
+    } else if (displayResources && displayResources.length > 0) {
+      // ── Desktop: separate resource columns ─────────────────────────────────
       for (const resource of displayResources) {
         const resourceColumn = document.createElement('div')
         resourceColumn.className = getClass('resourceColumn', classes, 'lf-cal-resource-column')
 
         // Time slots
-        const slotsContainer = renderTimeSlots(currentDate, config, resource)
+        const slotsContainer = renderTimeSlots(currentDate, config)
         resourceColumn.appendChild(slotsContainer)
 
         // Custom slot content
@@ -254,6 +382,7 @@ export function renderDayView<T extends CalendarEvent>(
             day: currentDate,
             config,
             resourceId: resource.id,
+            selection: selectionConfig,
             onSlotClick,
             onSlotSelect,
           })
@@ -286,10 +415,11 @@ export function renderDayView<T extends CalendarEvent>(
             editable ? (event, element) => {
               setupEventDragInteraction(event, element, currentDate, resourceColumn, resource.id)
             } : undefined,
-            // Resize handler  
+            // Resize handler
             editable ? (event, element) => {
               setupEventResizeInteraction(event, element, currentDate, resourceColumn)
-            } : undefined
+            } : undefined,
+            selectedEvent ? () => selectedEvent()?.id ?? null : undefined
           )
           eventEl.style.pointerEvents = 'auto'
           if (resource.color) {
@@ -353,6 +483,7 @@ export function renderDayView<T extends CalendarEvent>(
           slotsContainer,
           day: currentDate,
           config,
+          selection: selectionConfig,
           onSlotClick,
           onSlotSelect,
         })
@@ -389,7 +520,8 @@ export function renderDayView<T extends CalendarEvent>(
           // Resize handler
           editable ? (event, element) => {
             setupEventResizeInteraction(event, element, currentDate, dayColumn)
-          } : undefined
+          } : undefined,
+          selectedEvent ? () => selectedEvent()?.id ?? null : undefined
         )
         eventEl.style.pointerEvents = 'auto'
         eventsContainer.appendChild(eventEl)
@@ -535,7 +667,7 @@ export function renderDayView<T extends CalendarEvent>(
       const clampedEnd = newEnd < minEnd ? minEnd : newEnd
 
       // Update visual height
-      const slotHeight = 40
+      const slotHeight = Math.round((config.slotDuration / 30) * 40)
       const startMinutes = (event.start.getHours() - config.dayStart) * 60 + event.start.getMinutes()
       const endMinutes = (clampedEnd.getHours() - config.dayStart) * 60 + clampedEnd.getMinutes()
       const durationMinutes = endMinutes - startMinutes
@@ -571,7 +703,7 @@ export function renderDayView<T extends CalendarEvent>(
   function calculateTimeFromY(y: number, day: Date, column: HTMLElement): Date {
     const rect = column.getBoundingClientRect()
     const relativeY = y - rect.top
-    const slotHeight = 40
+    const slotHeight = Math.round((config.slotDuration / 30) * 40)
     const totalSlots = (config.dayEnd - config.dayStart) * (60 / config.slotDuration)
 
     const slotIndex = Math.floor(relativeY / slotHeight)

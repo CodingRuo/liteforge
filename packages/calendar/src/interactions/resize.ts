@@ -35,7 +35,7 @@ function calculateNewEnd(
 ): Date {
   const rect = dayColumn.getBoundingClientRect()
   const relativeY = y - rect.top
-  const slotHeight = 40 // CSS variable --lf-cal-slot-height default
+  const slotHeight = Math.round((config.slotDuration / 30) * 40)
   const totalSlots = (config.dayEnd - config.dayStart) * (60 / config.slotDuration)
 
   // Calculate which slot index we're in

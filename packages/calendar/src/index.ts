@@ -19,6 +19,16 @@ export type {
   Resource,
   WorkingHours,
 
+  // Toolbar config
+  ToolbarConfig,
+
+  // Responsive config
+  ResponsiveConfig,
+  CalendarSizeClass,
+
+  // Selection config
+  SelectionConfig,
+
   // Time config
   TimeConfig,
   ResolvedTimeConfig,
@@ -31,7 +41,12 @@ export type {
   SlotSelection,
   OverlapLayout,
   RenderedEvent,
+
+  // Translations
+  CalendarTranslations,
 } from './types.js'
+
+export { resolveTranslations } from './translations.js'
 
 // Date utilities (exported for advanced usage)
 export {

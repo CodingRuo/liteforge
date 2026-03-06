@@ -4,14 +4,15 @@
  * Enables selecting time ranges by clicking and dragging on empty slots.
  */
 
-import type { ResolvedTimeConfig } from '../types.js'
-import { addMinutes } from '../date-utils.js'
+import type { ResolvedTimeConfig, SelectionConfig } from '../types.js'
+import { addMinutes, diffInMinutes } from '../date-utils.js'
 
 export interface SlotSelectionOptions {
   slotsContainer: HTMLElement
   day: Date
   config: ResolvedTimeConfig
   resourceId?: string | undefined
+  selection?: SelectionConfig | undefined
   onSlotClick?: ((start: Date, end: Date, resourceId?: string) => void) | undefined
   onSlotSelect?: ((start: Date, end: Date, resourceId?: string) => void) | undefined
 }
@@ -33,7 +34,7 @@ function getSlotTimeFromY(
   config: ResolvedTimeConfig
 ): Date {
   const relativeY = y - containerRect.top
-  const slotHeight = 40 // CSS variable --lf-cal-slot-height default
+  const slotHeight = Math.round((config.slotDuration / 30) * 40)
   const totalSlots = (config.dayEnd - config.dayStart) * (60 / config.slotDuration)
 
   // Calculate which slot index we're in
@@ -90,11 +91,65 @@ function clearHighlights(slotsContainer: HTMLElement): void {
   })
 }
 
+// ─── Snap Indicator Badge ─────────────────────────────────
+
+const SNAP_COLORS = [
+  { minutes: 15,  bg: '#22c55e', color: '#fff' },  // green
+  { minutes: 30,  bg: '#3b82f6', color: '#fff' },  // blue
+  { minutes: 45,  bg: '#f97316', color: '#fff' },  // orange
+  { minutes: 60,  bg: '#ef4444', color: '#fff' },  // red
+  { minutes: Infinity, bg: '#7c3aed', color: '#fff' }, // purple (beyond 60)
+]
+
+function resolveStepColors(snapSteps?: number[]): { minutes: number; bg: string; color: string }[] {
+  if (!snapSteps || snapSteps.length === 0) return SNAP_COLORS
+  return [
+    ...snapSteps.map((m, i) => ({
+      minutes: m,
+      bg: SNAP_COLORS[Math.min(i, SNAP_COLORS.length - 1)]!.bg,
+      color: '#fff',
+    })),
+    { minutes: Infinity, bg: SNAP_COLORS[SNAP_COLORS.length - 1]!.bg, color: '#fff' },
+  ]
+}
+
+function createSnapBadge(): HTMLElement {
+  const badge = document.createElement('div')
+  badge.className = 'lf-cal-snap-badge'
+  badge.style.display = 'none'
+  document.body.appendChild(badge)
+  return badge
+}
+
+function updateSnapBadge(
+  badge: HTMLElement,
+  durationMinutes: number,
+  x: number,
+  y: number,
+  stepColors: { minutes: number; bg: string; color: string }[],
+): void {
+  const step = stepColors.find(s => durationMinutes <= s.minutes) ?? stepColors[stepColors.length - 1]!
+  badge.textContent = `${durationMinutes} min`
+  badge.style.background = step.bg
+  badge.style.color = step.color
+  badge.style.left = `${x + 14}px`
+  badge.style.top = `${y - 24}px`
+  badge.style.display = 'block'
+}
+
+function hideSnapBadge(badge: HTMLElement): void {
+  badge.style.display = 'none'
+}
+
 /**
  * Set up slot selection interaction on a slots container.
  */
 export function setupSlotSelection(options: SlotSelectionOptions): SlotSelectionState {
-  const { slotsContainer, day, config, resourceId, onSlotClick, onSlotSelect } = options
+  const { slotsContainer, day, config, resourceId, selection, onSlotClick, onSlotSelect } = options
+
+  const useIndicator = selection?.snapIndicator ?? false
+  const maxDuration = selection?.maxDuration ?? Infinity
+  const stepColors = resolveStepColors(selection?.snapSteps)
 
   const state: SlotSelectionState = {
     isSelecting: false,
@@ -104,6 +159,7 @@ export function setupSlotSelection(options: SlotSelectionOptions): SlotSelection
   }
 
   let containerRect: DOMRect | null = null
+  let snapBadge: HTMLElement | null = useIndicator ? createSnapBadge() : null
 
   const handlePointerDown = (e: PointerEvent) => {
     // Only handle left click
@@ -135,11 +191,33 @@ export function setupSlotSelection(options: SlotSelectionOptions): SlotSelection
   const handlePointerMove = (e: PointerEvent) => {
     if (!state.isSelecting || !state.startSlot || !containerRect) return
 
-    const currentTime = getSlotTimeFromY(e.clientY, containerRect, day, config)
+    let currentTime = getSlotTimeFromY(e.clientY, containerRect, day, config)
+
+    // Apply maxDuration cap (forward drag only).
+    // finalEnd = currentTime + slotDuration, so cap currentTime at startSlot + (maxDuration - slotDuration).
+    if (currentTime > state.startSlot && isFinite(maxDuration)) {
+      const maxCurrentTime = addMinutes(state.startSlot, maxDuration - config.slotDuration)
+      if (currentTime >= maxCurrentTime) {
+        currentTime = maxCurrentTime
+      }
+    }
+
     state.currentSlot = currentTime
 
     // Update highlight
     highlightSlots(slotsContainer, state.startSlot, currentTime, config)
+
+    // Update snap badge
+    if (snapBadge) {
+      const endTime = currentTime >= state.startSlot ? currentTime : state.startSlot
+      const startTime = currentTime >= state.startSlot ? state.startSlot : currentTime
+      const duration = diffInMinutes(startTime, addMinutes(endTime, config.slotDuration))
+      if (duration > config.slotDuration) {
+        updateSnapBadge(snapBadge, duration, e.clientX, e.clientY, stepColors)
+      } else {
+        hideSnapBadge(snapBadge)
+      }
+    }
   }
 
   const handlePointerUp = (_e: PointerEvent) => {
@@ -147,6 +225,8 @@ export function setupSlotSelection(options: SlotSelectionOptions): SlotSelection
       state.isSelecting = false
       return
     }
+
+    if (snapBadge) hideSnapBadge(snapBadge)
 
     const endTime = state.currentSlot ?? state.startSlot
 
@@ -187,6 +267,7 @@ export function setupSlotSelection(options: SlotSelectionOptions): SlotSelection
     state.currentSlot = null
     document.body.style.userSelect = ''
     clearHighlights(slotsContainer)
+    if (snapBadge) hideSnapBadge(snapBadge)
   }
 
   // Attach listeners
@@ -202,6 +283,10 @@ export function setupSlotSelection(options: SlotSelectionOptions): SlotSelection
     slotsContainer.removeEventListener('pointerup', handlePointerUp)
     slotsContainer.removeEventListener('pointercancel', handlePointerCancel)
     clearHighlights(slotsContainer)
+    if (snapBadge) {
+      snapBadge.remove()
+      snapBadge = null
+    }
   }
 
   return state

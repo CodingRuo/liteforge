@@ -5,8 +5,10 @@
 import { effect } from '@liteforge/core'
 import type {
   CalendarEvent,
+  CalendarTranslations,
   ResolvedTimeConfig,
   CalendarClasses,
+  SelectionConfig,
 } from '../types.js'
 import {
   getWeekDays,
@@ -38,6 +40,8 @@ interface WeekViewOptions<T extends CalendarEvent> {
   eventContent: ((event: T) => Node) | undefined
   slotContent: ((date: Date, resourceId?: string) => Node | null) | undefined
   dayHeaderContent: ((date: Date) => Node) | undefined
+  translations: CalendarTranslations
+  selectedEvent?: () => T | null
   onEventClick: ((event: T) => void) | undefined
   onSlotClick: ((start: Date, end: Date, resourceId?: string) => void) | undefined
   onSlotSelect: ((start: Date, end: Date, resourceId?: string) => void) | undefined
@@ -45,6 +49,8 @@ interface WeekViewOptions<T extends CalendarEvent> {
   onEventResize: ((event: T, newEnd: Date) => void) | undefined
   editable: boolean | undefined
   selectable: boolean | undefined
+  selectionConfig?: SelectionConfig | undefined
+  maxAllDayVisible?: () => number | undefined
 }
 
 export function renderWeekView<T extends CalendarEvent>(
@@ -59,6 +65,8 @@ export function renderWeekView<T extends CalendarEvent>(
     eventContent,
     slotContent,
     dayHeaderContent,
+    translations: t,
+    selectedEvent,
     onEventClick,
     onSlotClick,
     onSlotSelect,
@@ -66,10 +74,13 @@ export function renderWeekView<T extends CalendarEvent>(
     onEventResize,
     editable,
     selectable,
+    selectionConfig,
+    maxAllDayVisible,
   } = options
 
   const container = document.createElement('div')
   container.className = getClass('root', classes, 'lf-cal-week-view')
+  container.style.setProperty('--lf-cal-slot-height', `${Math.round((config.slotDuration / 30) * 40)}px`)
 
   // Header
   const header = document.createElement('div')
@@ -128,7 +139,7 @@ export function renderWeekView<T extends CalendarEvent>(
   // Reactive rendering
   effect(() => {
     const currentDate = date()
-    const days = getWeekDays(currentDate, config.weekStart, config.hiddenDays)
+    const days = getWeekDays(currentDate, config.weekStart, config.hiddenDays())
     const allEvents = events()
 
     // Separate all-day and timed events
@@ -166,12 +177,15 @@ export function renderWeekView<T extends CalendarEvent>(
     if (allDayRow) {
       allDayRow.remove()
     }
+    const _maxAllDay = maxAllDayVisible?.()
     allDayRow = renderAllDayRow({
       days,
       events: allDayEvents,
       classes,
       onEventClick,
       hasTimeColumnSpacer: true,
+      allDayLabel: t.allDay,
+      ...(_maxAllDay !== undefined ? { maxVisible: _maxAllDay } : {}),
     })
     // Insert after header, before body
     container.insertBefore(allDayRow, body)
@@ -235,6 +249,7 @@ export function renderWeekView<T extends CalendarEvent>(
           slotsContainer,
           day,
           config,
+          selection: selectionConfig,
           onSlotClick,
           onSlotSelect,
         })
@@ -269,7 +284,8 @@ export function renderWeekView<T extends CalendarEvent>(
           // Resize handler - set up resize interaction
           editable ? (event, element) => {
             setupEventResizeInteraction(event, element, day, dayColumn)
-          } : undefined
+          } : undefined,
+          selectedEvent ? () => selectedEvent()?.id ?? null : undefined
         )
         eventEl.style.pointerEvents = 'auto'
         eventsContainer.appendChild(eventEl)
@@ -435,7 +451,7 @@ export function renderWeekView<T extends CalendarEvent>(
       const clampedEnd = newEnd < minEnd ? minEnd : newEnd
 
       // Update visual height
-      const slotHeight = 40
+      const slotHeight = Math.round((config.slotDuration / 30) * 40)
       const startMinutes = (event.start.getHours() - config.dayStart) * 60 + event.start.getMinutes()
       const endMinutes = (clampedEnd.getHours() - config.dayStart) * 60 + clampedEnd.getMinutes()
       const durationMinutes = endMinutes - startMinutes
@@ -496,7 +512,7 @@ export function renderWeekView<T extends CalendarEvent>(
 
     const rect = column.getBoundingClientRect()
     const relativeY = y - rect.top
-    const slotHeight = 40
+    const slotHeight = Math.round((config.slotDuration / 30) * 40)
     const totalSlots = (config.dayEnd - config.dayStart) * (60 / config.slotDuration)
 
     const slotIndex = Math.floor(relativeY / slotHeight)

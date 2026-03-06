@@ -530,9 +530,8 @@ export const CalendarPage = createComponent({
 
           .calendar-container {
             flex: 1;
-            min-height: 500px;
-            border: 1px solid var(--lf-color-border, #e2e8f0);
-            border-radius: var(--lf-radius-lg, 8px);
+            height: 680px;
+            min-height: 0;
             overflow: hidden;
           }
 

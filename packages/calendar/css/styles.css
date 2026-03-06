@@ -27,23 +27,29 @@
   --lf-cal-time-color:       var(--lf-color-text-subtle, #94a3b8);
   --lf-cal-time-font-size:   var(--lf-text-xs, 11px);
   --lf-cal-time-width:       60px;
+  /* Scrollbar */
+  --lf-cal-scrollbar-size:   6px;
+  --lf-cal-scrollbar-thumb:  var(--lf-color-border-strong, #cbd5e1);
+  --lf-cal-scrollbar-track:  transparent;
 }
 
 /* Dark mode overrides */
 [data-theme="dark"],
 .dark {
-  --lf-cal-today-bg:    rgba(137, 180, 250, 0.1);
-  --lf-cal-weekend-bg:  var(--lf-color-bg-subtle, #181825);
-  --lf-cal-blocked-bg:  var(--lf-color-bg, #11111b);
-  --lf-cal-time-color:  #6c7086;
+  --lf-cal-today-bg:         rgba(137, 180, 250, 0.1);
+  --lf-cal-weekend-bg:       var(--lf-color-bg-subtle, #181825);
+  --lf-cal-blocked-bg:       var(--lf-color-bg, #11111b);
+  --lf-cal-time-color:       #6c7086;
+  --lf-cal-scrollbar-thumb:  #45475a;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --lf-cal-today-bg:    rgba(137, 180, 250, 0.1);
-    --lf-cal-weekend-bg:  var(--lf-color-bg-subtle, #181825);
-    --lf-cal-blocked-bg:  var(--lf-color-bg, #11111b);
-    --lf-cal-time-color:  #6c7086;
+    --lf-cal-today-bg:         rgba(137, 180, 250, 0.1);
+    --lf-cal-weekend-bg:       var(--lf-color-bg-subtle, #181825);
+    --lf-cal-blocked-bg:       var(--lf-color-bg, #11111b);
+    --lf-cal-time-color:       #6c7086;
+    --lf-cal-scrollbar-thumb:  #45475a;
   }
 }
 
@@ -56,6 +62,12 @@
   overflow: hidden;
   font-family: var(--lf-font-sans, system-ui, -apple-system, sans-serif);
   font-size: var(--lf-text-base, 14px);
+  /* Fill the parent container — set height on the parent to control calendar size */
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
 }
 
 /* ─── Toolbar ───────────────────────────────────────────── */
@@ -267,6 +279,11 @@
 .lf-cal-day-view {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  /* Fill remaining height inside .lf-cal */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .lf-cal-week-view .lf-cal-header,
@@ -278,7 +295,52 @@
 .lf-cal-body {
   display: flex;
   overflow-y: scroll;
-  max-height: 600px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Styled scrollbars — Webkit + Firefox */
+.lf-cal-body,
+.lf-cal-agenda,
+.lf-cal-month-view,
+.lf-cal-week-view,
+.lf-cal-day-view {
+  scrollbar-width: thin;
+  scrollbar-color: var(--lf-cal-scrollbar-thumb) var(--lf-cal-scrollbar-track);
+}
+
+.lf-cal-body::-webkit-scrollbar,
+.lf-cal-agenda::-webkit-scrollbar,
+.lf-cal-month-view::-webkit-scrollbar,
+.lf-cal-week-view::-webkit-scrollbar,
+.lf-cal-day-view::-webkit-scrollbar {
+  width: var(--lf-cal-scrollbar-size);
+  height: var(--lf-cal-scrollbar-size);
+}
+
+.lf-cal-body::-webkit-scrollbar-track,
+.lf-cal-agenda::-webkit-scrollbar-track,
+.lf-cal-month-view::-webkit-scrollbar-track,
+.lf-cal-week-view::-webkit-scrollbar-track,
+.lf-cal-day-view::-webkit-scrollbar-track {
+  background: var(--lf-cal-scrollbar-track);
+}
+
+.lf-cal-body::-webkit-scrollbar-thumb,
+.lf-cal-agenda::-webkit-scrollbar-thumb,
+.lf-cal-month-view::-webkit-scrollbar-thumb,
+.lf-cal-week-view::-webkit-scrollbar-thumb,
+.lf-cal-day-view::-webkit-scrollbar-thumb {
+  background: var(--lf-cal-scrollbar-thumb);
+  border-radius: var(--lf-cal-scrollbar-size);
+}
+
+.lf-cal-body::-webkit-scrollbar-thumb:hover,
+.lf-cal-agenda::-webkit-scrollbar-thumb:hover,
+.lf-cal-month-view::-webkit-scrollbar-thumb:hover,
+.lf-cal-week-view::-webkit-scrollbar-thumb:hover,
+.lf-cal-day-view::-webkit-scrollbar-thumb:hover {
+  background: var(--lf-cal-selection-border);
 }
 
 .lf-cal-time-column {
@@ -494,9 +556,18 @@
 
 /* ─── Month View ────────────────────────────────────────── */
 
+.lf-cal-month-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+}
+
 .lf-cal-month-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  flex: 1;
 }
 
 .lf-cal-month-header {
@@ -591,7 +662,8 @@
 .lf-cal-agenda {
   padding: 0;
   overflow-y: auto;
-  max-height: 600px;
+  flex: 1;
+  min-height: 0;
 }
 
 .lf-cal-agenda-day {

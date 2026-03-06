@@ -321,7 +321,6 @@ async function installAndMount(
     const hmrHandler = getHMRHandler();
     if (hmrHandler) {
       hmrHandler.fullRerender = () => {
-        console.log('[LiteForge HMR] 🔄 Full app re-render (stores + router preserved)');
         if (typeof window !== 'undefined') {
           if (window.__LITEFORGE_HMR_COOLDOWN__ !== undefined) {
             clearTimeout(window.__LITEFORGE_HMR_COOLDOWN__);

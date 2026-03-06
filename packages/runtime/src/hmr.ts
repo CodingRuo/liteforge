@@ -77,31 +77,7 @@ export function getLatestDefinition(
  * survive, while all factories read fresh definitions from the registry.
  */
 function handleHMRUpdate(moduleUrl: string, newModule: Record<string, unknown> | null): void {
-  console.log('[LiteForge HMR] 🔄 Module updated:', moduleUrl);
-
-  if (!newModule) {
-    console.warn('[LiteForge HMR] No new module received, skipping update for:', moduleUrl);
-    return;
-  }
-
-  // Walk exports to log what changed
-  let hasComponents = false;
-  for (const exportValue of Object.values(newModule)) {
-    if (
-      exportValue &&
-      typeof exportValue === 'function' &&
-      (exportValue as { __liteforge_component?: boolean }).__liteforge_component
-    ) {
-      hasComponents = true;
-      break;
-    }
-  }
-
-  if (hasComponents) {
-    console.log(`[LiteForge HMR] 🧩 Component(s) updated in ${moduleUrl}`);
-  } else {
-    console.log(`[LiteForge HMR] ⚡ Non-component module updated: ${moduleUrl}`);
-  }
+  if (!newModule) return;
 
   // Guard on window so state survives module re-evaluation.
   // Vite sends hot-update twice for the same file when it is accepted both
@@ -112,14 +88,14 @@ function handleHMRUpdate(moduleUrl: string, newModule: Record<string, unknown> |
     return;
   }
 
+  // suppress unused variable warning
+  void moduleUrl;
+
   window.__LITEFORGE_HMR_TIMER__ = setTimeout(() => {
     delete window.__LITEFORGE_HMR_TIMER__;
     const handler = window.__LITEFORGE_HMR__;
     if (handler?.fullRerender) {
-      console.log('[LiteForge HMR] 🔄 Triggering full app re-render (stores + router preserved)...');
       handler.fullRerender();
-    } else {
-      console.warn('[LiteForge HMR] ⚠️ No fullRerender registered, skipping update');
     }
   }, 50);
 }
@@ -151,7 +127,6 @@ export function initHMR(): HMRHandler {
   };
 
   window.__LITEFORGE_HMR__ = handler;
-  console.log('[LiteForge HMR] 🔥 Component registry HMR initialized');
 
   return handler;
 }

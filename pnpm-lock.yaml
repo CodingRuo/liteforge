@@ -193,6 +193,9 @@ importers:
       '@liteforge/table':
         specifier: workspace:*
         version: link:../table
+      '@liteforge/toast':
+        specifier: workspace:*
+        version: link:../toast
       '@liteforge/vite-plugin':
         specifier: workspace:*
         version: link:../vite-plugin
@@ -241,6 +244,17 @@ importers:
       '@liteforge/core':
         specifier: workspace:*
         version: link:../core
+
+  packages/theme: {}
+
+  packages/toast:
+    devDependencies:
+      '@liteforge/core':
+        specifier: workspace:*
+        version: link:../core
+      '@liteforge/runtime':
+        specifier: workspace:*
+        version: link:../runtime
 
   packages/vite-plugin:
     dependencies:

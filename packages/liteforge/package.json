@@ -75,6 +75,10 @@
     "./admin": {
       "types": "./dist/admin.d.ts",
       "import": "./dist/admin.js"
+    },
+    "./toast": {
+      "types": "./dist/toast.d.ts",
+      "import": "./dist/toast.js"
     }
   },
   "files": [
@@ -109,6 +113,7 @@
     "@liteforge/devtools": "workspace:*",
     "@liteforge/vite-plugin": "workspace:*",
     "@liteforge/i18n": "workspace:*",
-    "@liteforge/admin": "workspace:*"
+    "@liteforge/admin": "workspace:*",
+    "@liteforge/toast": "workspace:*"
   }
 }

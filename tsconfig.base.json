@@ -32,7 +32,9 @@
       "@liteforge/calendar": ["./packages/calendar/src/index.ts"],
       "@liteforge/calendar/*": ["./packages/calendar/src/*"],
       "@liteforge/theme": ["./packages/theme/src/index.ts"],
-      "@liteforge/theme/*": ["./packages/theme/src/*"]
+      "@liteforge/theme/*": ["./packages/theme/src/*"],
+      "@liteforge/toast": ["./packages/toast/src/index.ts"],
+      "@liteforge/toast/*": ["./packages/toast/src/*"]
     },
     "noUncheckedIndexedAccess": true,
     "noEmit": false,

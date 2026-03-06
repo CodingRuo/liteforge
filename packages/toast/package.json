@@ -1,0 +1,69 @@
+{
+  "name": "@liteforge/toast",
+  "version": "0.1.0",
+  "description": "Signal-based toast notification system. Imperative API, multiple positions, promise support.",
+  "author": "SchildW3rk <contact@schildw3rk.dev>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/schildw3rk/liteforge",
+    "directory": "packages/toast"
+  },
+  "homepage": "https://github.com/schildw3rk/liteforge#readme",
+  "bugs": {
+    "url": "https://github.com/schildw3rk/liteforge/issues"
+  },
+  "keywords": [
+    "liteforge",
+    "toast",
+    "notification",
+    "alert",
+    "signals",
+    "reactive"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles": "./css/styles.css"
+  },
+  "files": [
+    "dist",
+    "css",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "css/*.css"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "peerDependencies": {
+    "@liteforge/core": ">=0.1.0",
+    "@liteforge/runtime": ">=0.4.3"
+  },
+  "peerDependenciesMeta": {
+    "@liteforge/runtime": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@liteforge/core": "workspace:*",
+    "@liteforge/runtime": "workspace:*"
+  }
+}

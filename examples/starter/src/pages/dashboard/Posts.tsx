@@ -114,9 +114,9 @@ export const PostsPage = createComponent({
             <h1>Posts</h1>
             <p class="subtitle">Data fetched from JSONPlaceholder API with @liteforge/query</p>
           </div>
-          <button 
+          <button
             type="button"
-            class="btn btn-primary" 
+            class="btn btn-primary"
             onClick={() => showForm.set(!showForm())}
           >
             {() => showForm() ? 'Cancel' : 'Add Post'}

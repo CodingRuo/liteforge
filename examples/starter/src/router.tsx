@@ -29,20 +29,19 @@ import { NotFoundPage } from './pages/NotFound.js';
 
 // Admin panel (liteforge/admin demo) — loaded lazily on first visit to /lf-admin
 // This keeps the initial bundle free of admin-panel code (~@liteforge/admin + resources)
-function loadAdminRoutes() {
-  return Promise.all([
-    import('liteforge/admin'),
-    import('./pages/admin-panel/resources.js'),
-  ]).then(([{ buildAdminRoutes }, { postsResource, usersResource, adminDashboard, createMockClient }]) =>
-    buildAdminRoutes({
-      resources: [postsResource, usersResource],
-      basePath: '/lf-admin',
-      client: createMockClient(),
-      title: 'LiteForge Admin',
-      dashboard: adminDashboard,
-      showActivityLog: true,
-    })
-  );
+async function loadAdminRoutes() {
+  const { buildAdminRoutes } = await import('liteforge/admin');
+  const { postsResource, usersResource, adminDashboard, createMockClient } = 
+    await import('./pages/admin-panel/resources.js');
+
+  return buildAdminRoutes({
+    resources: [postsResource, usersResource],
+    basePath: '/lf-admin',
+    client: createMockClient(),
+    title: 'LiteForge Admin',
+    dashboard: adminDashboard,
+    showActivityLog: true,
+  });
 }
 
 // =============================================================================

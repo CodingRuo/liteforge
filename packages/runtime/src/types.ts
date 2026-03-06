@@ -380,6 +380,41 @@ export interface ComponentInstance {
 }
 
 // ============================================================================
+// Error Boundary Types
+// ============================================================================
+
+/**
+ * Category of error captured by the error boundary.
+ */
+export type ErrorType = 'render' | 'navigation' | 'lazy' | 'unhandled';
+
+/**
+ * Contextual information attached to every captured error.
+ */
+export interface ErrorInfo {
+  /** Category of error */
+  type: ErrorType;
+  /** Full path of the route where the error occurred, if applicable */
+  route?: string;
+  /** Name of the component that threw, if applicable */
+  componentName?: string;
+  /** The original error value (may not be an Error instance) */
+  originalError: unknown;
+}
+
+/**
+ * Observer hook called before the error UI is rendered.
+ * Use for logging, Sentry, etc.
+ */
+export type ErrorHandler = (error: unknown, info: ErrorInfo) => void;
+
+/**
+ * Renders a fallback UI element when an error is captured.
+ * Receives the raw error and its context.
+ */
+export type ErrorComponent = (error: unknown, info: ErrorInfo) => Element | DocumentFragment;
+
+// ============================================================================
 // App Types
 // ============================================================================
 
@@ -439,8 +474,18 @@ export interface AppConfig {
   /** Callback when app is successfully mounted */
   onReady?: (app: AppInstance) => void;
 
-  /** Callback when an error occurs during bootstrap */
-  onError?: (error: Error) => void;
+  /**
+   * Global fallback UI rendered when an unhandled error is caught.
+   * Per-route errorComponent (on RouteDefinition) takes priority.
+   */
+  errorComponent?: ErrorComponent;
+
+  /**
+   * Observer hook fired before the error UI renders.
+   * Use for Sentry, logging, etc.
+   * If omitted, errors are still caught and displayed.
+   */
+  onError?: ErrorHandler;
 }
 
 /**

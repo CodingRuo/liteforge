@@ -1,5 +1,23 @@
 # @liteforge/runtime
 
+## 0.5.0
+
+### Minor Changes
+
+- feat(runtime): Global Error Boundary
+
+  New `createErrorBoundary()` system for centralized error capture and display:
+
+  - `AppConfig.errorComponent` — custom fallback UI for all unhandled errors
+  - `AppConfig.onError` — observer hook (Sentry, logging) called before any UI
+  - `RouteDefinition.errorComponent` — per-route fallback rendered inside the outlet
+  - Built-in DEV error page: error type badge, message, stack trace with highlighted first non-internal frame, Retry (reload) + Go Home buttons
+  - Built-in PROD error page: minimal "Something went wrong." — no stack, no internals
+  - Stack trace parser: V8 + Firefox/Safari formats, strips Vite `?t=` HMR timestamps
+  - Global listeners: `unhandledrejection` + `window.error` caught after mount
+
+  router: per-route `errorComponent` wired into RouterOutlet for render and lazy-load errors.
+
 ## 0.4.3
 
 ### Patch Changes

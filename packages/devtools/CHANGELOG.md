@@ -1,5 +1,12 @@
 # @liteforge/devtools
 
+## 2.0.0
+
+### Patch Changes
+
+- Updated dependencies
+  - @liteforge/runtime@0.5.0
+
 ## 1.0.0
 
 ### Minor Changes

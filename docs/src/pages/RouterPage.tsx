@@ -239,6 +239,97 @@ const router = createRouter({
   middleware: [titleMiddleware],
 });`;
 
+const TYPED_ROUTES_PHASE1_CODE = `// Pass routes as const to activate typed navigation
+const routes = [
+  { path: '/',             component: Home },
+  { path: '/patients',     component: PatientList },
+  { path: '/patients/:id', component: PatientDetail },
+] as const
+
+const router = createRouter({ routes, history })
+
+// ✓ Valid paths
+router.navigate('/')
+router.navigate('/patients')
+router.navigate('/patients/42')   // Phase 1: fill params manually
+
+// ✗ TypeScript errors
+router.navigate('/patiants')      // typo → TS Error
+router.navigate('/unknown')       // not in routes → TS Error`;
+
+const TYPED_ROUTES_PHASE2_CODE = `// Phase 2 — navigate with pattern + typed params object
+router.navigate('/patients/:id', { id: '42' })      // ✓ correct key
+router.navigate('/patients/:id', { ix: '42' })      // ✗ wrong key → TS Error
+router.navigate('/patients/:id')                    // ✗ params required → TS Error
+router.navigate('/', { id: '42' })                  // ✗ no params on '/' → TS Error
+
+// Params are encodeURIComponent-encoded automatically
+router.navigate('/search/:query', { query: 'hello world' })
+// → navigates to /search/hello%20world
+
+// Type utilities are exported for advanced use
+import type { FillParams, ExtractRoutePaths, TypedNavigationTarget, ExtractParamPaths } from 'liteforge/router';`;
+
+const VIEW_TRANSITIONS_CODE = `// Option 1 — Native View Transitions API (CSS-driven, browser-native)
+const router = createRouter({
+  routes,
+  history,
+  useViewTransitions: true,   // wraps DOM commit in document.startViewTransition()
+})
+
+// Add CSS for the transition (in your stylesheet):
+// ::view-transition-old(root) { animation: fade-out 150ms ease; }
+// ::view-transition-new(root) { animation: fade-in  150ms ease; }
+
+// Option 2 — Custom hooks (JS-driven, full control)
+const router = createRouter({
+  routes,
+  history,
+  transitions: {
+    onBeforeLeave: async (el, ctx) => {
+      await el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150 }).finished
+    },
+    onAfterEnter: (el, ctx) => {
+      el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150 })
+    },
+  },
+})
+
+// ctx carries: { to: Location, from: Location | null, direction: 'forward' | 'replace' }
+
+// Option 3 — Both together (hooks fire around the view transition)
+const router = createRouter({
+  routes,
+  history,
+  useViewTransitions: true,
+  transitions: {
+    onBeforeLeave: async (el, ctx) => { /* runs before startViewTransition */ },
+    onAfterEnter:  (el, ctx) => { /* runs after DOM commit */ },
+  },
+})`;
+
+const LAZY_WRAPPER_CODE = `import { lazy } from 'liteforge/router';
+
+{
+  path: '/reports',
+  component: lazy(() => import('./pages/Reports.js'), {
+    delay:       150,     // ms before showing loading state
+    timeout:     8000,    // ms before showing error state
+    minLoadTime: 300,     // minimum time to show loading (prevents flash)
+    loading: () => <Spinner />,
+    error:   (err, retry) => <button onclick={retry}>Retry</button>,
+  }),
+}`;
+
+const LAZY_CHILDREN_CODE = `// Load entire route subtrees on demand
+{
+  path: '/admin',
+  component: AdminLayout,
+  lazyChildren: () => import('./admin-routes.js').then(m => m.adminRoutes),
+  // adminRoutes is a RouteDefinition[] exported from admin-routes.js
+  // Loaded once on first match, then cached
+}`;
+
 const ROUTER_DEMO_CODE = `type Tab = 'home' | 'patients' | 'settings';
 
 const RouterDemo = ${_cc}({
@@ -329,7 +420,15 @@ export const RouterPage = createComponent({
           id="lazy"
           description={() => t('router.lazyDesc')}
         >
-          <CodeBlock code={LAZY_CODE} language="typescript" />
+          <div>
+            <CodeBlock code={LAZY_CODE} language="typescript" />
+            <p class="text-sm font-medium text-[var(--content-secondary)] mt-4 mb-1">{() => t('router.lazyWrapper')}</p>
+            <p class="text-sm text-[var(--content-muted)] mb-2">{() => t('router.lazyWrapperDesc')}</p>
+            <CodeBlock code={LAZY_WRAPPER_CODE} language="tsx" />
+            <p class="text-sm font-medium text-[var(--content-secondary)] mt-4 mb-1">{() => t('router.lazyChildren')}</p>
+            <p class="text-sm text-[var(--content-muted)] mb-2">{() => t('router.lazyChildrenDesc')}</p>
+            <CodeBlock code={LAZY_CHILDREN_CODE} language="typescript" />
+          </div>
         </DocSection>
 
         <DocSection
@@ -370,6 +469,33 @@ export const RouterPage = createComponent({
           description={() => t('router.middlewareDesc')}
         >
           <CodeBlock code={MIDDLEWARE_CODE} language="typescript" />
+        </DocSection>
+
+        <DocSection
+          title={() => t('router.typedRoutes')}
+          id="typed-routes"
+          description={() => t('router.typedRoutesDesc')}
+        >
+          <div>
+            <p class="text-sm font-medium text-[var(--content-secondary)] mb-2">{() => t('router.typedRoutesPhase1')}</p>
+            <p class="text-sm text-[var(--content-muted)] mb-2">{() => t('router.typedRoutesPhase1Desc')}</p>
+            <CodeBlock code={TYPED_ROUTES_PHASE1_CODE} language="typescript" />
+            <p class="text-sm font-medium text-[var(--content-secondary)] mt-4 mb-2">{() => t('router.typedRoutesPhase2')}</p>
+            <p class="text-sm text-[var(--content-muted)] mb-2">{() => t('router.typedRoutesPhase2Desc')}</p>
+            <CodeBlock code={TYPED_ROUTES_PHASE2_CODE} language="typescript" />
+            <p class="text-xs text-[var(--content-subtle)] mt-3 italic">{() => t('router.typedRoutesNote')}</p>
+          </div>
+        </DocSection>
+
+        <DocSection
+          title={() => t('router.viewTransitions')}
+          id="view-transitions"
+          description={() => t('router.viewTransitionsDesc')}
+        >
+          <div>
+            <CodeBlock code={VIEW_TRANSITIONS_CODE} language="typescript" />
+            <p class="text-xs text-[var(--content-subtle)] mt-1 italic">{() => t('router.viewTransitionsNote')}</p>
+          </div>
         </DocSection>
       </div>
     );

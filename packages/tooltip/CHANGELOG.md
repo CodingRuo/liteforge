@@ -1,5 +1,13 @@
 # @liteforge/tooltip
 
+## 0.2.1
+
+### Patch Changes
+
+- Tooltip now fades out gracefully on hide instead of being removed immediately.
+  The element is nulled right away (preventing re-show during transition) and
+  removed from the DOM after the 150ms CSS opacity transition completes.
+
 ## 0.2.0
 
 ### Minor Changes

@@ -1,5 +1,13 @@
 # @liteforge/router
 
+## 0.5.0
+
+### Minor Changes
+
+- `Link` now accepts `() => string` as `children` for reactive i18n labels.
+  The anchor text updates automatically via `effect()` when the getter's
+  dependencies change — no re-mount required.
+
 ## 0.4.2
 
 ### Patch Changes

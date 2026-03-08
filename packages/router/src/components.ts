@@ -493,8 +493,8 @@ export function RouterOutlet(config: RouterOutletConfig = {}): Node {
 export interface LinkConfig {
   /** Target path or URL */
   href: string;
-  /** Link content - string or Node */
-  children: string | Node;
+  /** Link content — string, Node, or reactive getter () => string for i18n */
+  children: string | Node | (() => string);
   /** Class added when path matches (prefix match by default, exact match if `exact` is true) */
   activeClass?: string;
   /** Class added when path matches exactly */
@@ -559,8 +559,10 @@ export function Link(config: LinkConfig): HTMLAnchorElement {
   const anchor = document.createElement('a');
   anchor.href = href;
 
-  // Set children
-  if (typeof children === 'string') {
+  // Set children — string (static), Node, or () => string (reactive, e.g. i18n)
+  if (typeof children === 'function') {
+    effect(() => { anchor.textContent = (children as () => string)(); });
+  } else if (typeof children === 'string') {
     anchor.textContent = children;
   } else {
     anchor.appendChild(children);

@@ -137,8 +137,11 @@ export function tooltip(el: HTMLElement, input: TooltipInput): () => void {
       clearTimeout(timer);
       timer = null;
     }
-    tooltipEl?.remove();
-    tooltipEl = null;
+    if (!tooltipEl) return;
+    const dying = tooltipEl;
+    tooltipEl = null; // null immediately so show() can't re-show during fade-out
+    dying.classList.remove('lf-tooltip--visible');
+    setTimeout(() => dying.remove(), 160); // wait for CSS opacity transition (150ms)
   };
 
   el.addEventListener('pointerenter', show);

@@ -48,9 +48,15 @@ importers:
         specifier: ^3.24.0
         version: 3.25.76
     devDependencies:
+      '@liteforge/vite-plugin':
+        specifier: workspace:*
+        version: link:../packages/vite-plugin
       '@tailwindcss/vite':
         specifier: ^4.1.0
         version: 4.2.1(vite@6.4.1(@types/node@25.3.2)(jiti@2.6.1)(lightningcss@1.31.1))
+      lucide:
+        specifier: ^0.577.0
+        version: 0.577.0
       tailwindcss:
         specifier: ^4.1.0
         version: 4.2.1
@@ -70,6 +76,9 @@ importers:
         specifier: ^3.24.0
         version: 3.25.76
     devDependencies:
+      '@liteforge/vite-plugin':
+        specifier: workspace:*
+        version: link:../../packages/vite-plugin
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
@@ -154,51 +163,12 @@ importers:
 
   packages/liteforge:
     dependencies:
-      '@liteforge/admin':
-        specifier: workspace:*
-        version: link:../admin
-      '@liteforge/calendar':
-        specifier: workspace:*
-        version: link:../calendar
-      '@liteforge/client':
-        specifier: workspace:*
-        version: link:../client
       '@liteforge/core':
         specifier: workspace:*
         version: link:../core
-      '@liteforge/devtools':
-        specifier: workspace:*
-        version: link:../devtools
-      '@liteforge/form':
-        specifier: workspace:*
-        version: link:../form
-      '@liteforge/i18n':
-        specifier: workspace:*
-        version: link:../i18n
-      '@liteforge/modal':
-        specifier: workspace:*
-        version: link:../modal
-      '@liteforge/query':
-        specifier: workspace:*
-        version: link:../query
-      '@liteforge/router':
-        specifier: workspace:*
-        version: link:../router
       '@liteforge/runtime':
         specifier: workspace:*
         version: link:../runtime
-      '@liteforge/store':
-        specifier: workspace:*
-        version: link:../store
-      '@liteforge/table':
-        specifier: workspace:*
-        version: link:../table
-      '@liteforge/toast':
-        specifier: workspace:*
-        version: link:../toast
-      '@liteforge/vite-plugin':
-        specifier: workspace:*
-        version: link:../vite-plugin
 
   packages/modal:
     devDependencies:
@@ -1643,6 +1613,9 @@ packages:
 
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
+
+  lucide@0.577.0:
+    resolution: {integrity: sha512-PpC/m5eOItp/WU/GlQPFBXDOhq6HibL73KzYP37OX3LM7VmzWQF8voEj8QRWUFvy9FIKfeDQkWYoyS1D/MdWFA==}
 
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
@@ -3492,6 +3465,8 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
+
+  lucide@0.577.0: {}
 
   magic-string@0.30.21:
     dependencies:

@@ -82,6 +82,7 @@ describe('tooltip()', () => {
     pointerEnter(target);
     expect(document.querySelector('.lf-tooltip')).not.toBeNull();
     pointerLeave(target);
+    vi.runAllTimers();
     expect(document.querySelector('.lf-tooltip')).toBeNull();
   });
 
@@ -91,6 +92,23 @@ describe('tooltip()', () => {
     pointerEnter(target);
     expect(document.querySelector('.lf-tooltip')).not.toBeNull();
     target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    vi.runAllTimers();
+    expect(document.querySelector('.lf-tooltip')).toBeNull();
+  });
+
+  it('hide: removes lf-tooltip--visible immediately, removes from DOM after transition', () => {
+    const target = makeTarget();
+    tooltip(target, 'Hello');
+    pointerEnter(target);
+    const el = document.querySelector('.lf-tooltip') as HTMLElement;
+    expect(el).not.toBeNull();
+    pointerLeave(target);
+    // --visible class removed immediately (fade-out starts)
+    expect(el.classList.contains('lf-tooltip--visible')).toBe(false);
+    // element still in DOM during transition
+    expect(document.querySelector('.lf-tooltip')).not.toBeNull();
+    // after 160ms timeout: removed from DOM
+    vi.advanceTimersByTime(160);
     expect(document.querySelector('.lf-tooltip')).toBeNull();
   });
 
@@ -106,6 +124,7 @@ describe('tooltip()', () => {
     tooltip(target, 'Focus tooltip');
     focus(target);
     blur(target);
+    vi.runAllTimers();
     expect(document.querySelector('.lf-tooltip')).toBeNull();
   });
 
@@ -158,6 +177,7 @@ describe('tooltip()', () => {
     pointerEnter(target);
     expect(document.querySelector('.lf-tooltip')).not.toBeNull();
     cleanup();
+    vi.runAllTimers();
     expect(document.querySelector('.lf-tooltip')).toBeNull();
   });
 
@@ -226,6 +246,7 @@ describe('tooltip() — unhappy path', () => {
 
     // Dispatching pointerleave on a detached element should not throw
     expect(() => pointerLeave(target)).not.toThrow();
+    vi.runAllTimers();
     // Tooltip should no longer be in the document
     expect(document.querySelector('.lf-tooltip')).toBeNull();
   });
@@ -240,6 +261,7 @@ describe('tooltip() — unhappy path', () => {
     // Both are registered — two tooltips visible. Cleanup both.
     cleanup1();
     cleanup2();
+    vi.runAllTimers();
     pointerEnter(target);
     expect(document.querySelectorAll('.lf-tooltip').length).toBe(0);
   });

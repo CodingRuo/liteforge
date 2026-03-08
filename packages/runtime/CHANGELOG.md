@@ -1,5 +1,11 @@
 # @liteforge/runtime
 
+## 0.6.2
+
+### Patch Changes
+
+- Fix `ref` prop not being called in the template-compiler path (`_setProp`). When the Vite plugin's template extractor compiled JSX with `ref={el => ...}`, the callback was never invoked — it fell through to `setAttribute('ref', ...)`. The fix mirrors the existing `h.ts` behaviour: call the callback immediately with the DOM element. Regression tests added.
+
 ## 0.6.1
 
 ### Patch Changes

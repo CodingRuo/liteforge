@@ -1,7 +1,7 @@
 {
   "name": "liteforge",
-  "version": "0.6.8",
-  "description": "LiteForge — signals-based frontend framework. Single meta-package re-exporting all @liteforge/* packages.",
+  "version": "0.7.0",
+  "description": "LiteForge — signals-based frontend framework. Re-exports @liteforge/core and @liteforge/runtime.",
   "author": "SchildW3rk <contact@schildw3rk.dev>",
   "license": "MIT",
   "repository": {
@@ -27,58 +27,6 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    },
-    "./router": {
-      "types": "./dist/router.d.ts",
-      "import": "./dist/router.js"
-    },
-    "./query": {
-      "types": "./dist/query.d.ts",
-      "import": "./dist/query.js"
-    },
-    "./client": {
-      "types": "./dist/client.d.ts",
-      "import": "./dist/client.js"
-    },
-    "./modal": {
-      "types": "./dist/modal.d.ts",
-      "import": "./dist/modal.js"
-    },
-    "./form": {
-      "types": "./dist/form.d.ts",
-      "import": "./dist/form.js"
-    },
-    "./table": {
-      "types": "./dist/table.d.ts",
-      "import": "./dist/table.js"
-    },
-    "./calendar": {
-      "types": "./dist/calendar.d.ts",
-      "import": "./dist/calendar.js"
-    },
-    "./devtools": {
-      "types": "./dist/devtools.d.ts",
-      "import": "./dist/devtools.js"
-    },
-    "./vite-plugin": {
-      "types": "./dist/vite-plugin.d.ts",
-      "import": "./dist/vite-plugin.js"
-    },
-    "./store": {
-      "types": "./dist/store.d.ts",
-      "import": "./dist/store.js"
-    },
-    "./i18n": {
-      "types": "./dist/i18n.d.ts",
-      "import": "./dist/i18n.js"
-    },
-    "./admin": {
-      "types": "./dist/admin.d.ts",
-      "import": "./dist/admin.js"
-    },
-    "./toast": {
-      "types": "./dist/toast.d.ts",
-      "import": "./dist/toast.js"
     },
     "./jsx-runtime": {
       "types": "./dist/jsx-runtime.d.ts",
@@ -109,19 +57,6 @@
   },
   "dependencies": {
     "@liteforge/core": "workspace:*",
-    "@liteforge/runtime": "workspace:*",
-    "@liteforge/store": "workspace:*",
-    "@liteforge/router": "workspace:*",
-    "@liteforge/query": "workspace:*",
-    "@liteforge/client": "workspace:*",
-    "@liteforge/form": "workspace:*",
-    "@liteforge/table": "workspace:*",
-    "@liteforge/modal": "workspace:*",
-    "@liteforge/calendar": "workspace:*",
-    "@liteforge/devtools": "workspace:*",
-    "@liteforge/vite-plugin": "workspace:*",
-    "@liteforge/i18n": "workspace:*",
-    "@liteforge/admin": "workspace:*",
-    "@liteforge/toast": "workspace:*"
+    "@liteforge/runtime": "workspace:*"
   }
 }

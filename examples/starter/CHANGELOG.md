@@ -1,5 +1,12 @@
 # @liteforge/starter
 
+## 0.0.21
+
+### Patch Changes
+
+- Updated dependencies
+  - liteforge@0.7.0
+
 ## 0.0.20
 
 ### Patch Changes

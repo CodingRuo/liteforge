@@ -1,5 +1,23 @@
 # liteforge
 
+## 0.7.0
+
+### Minor Changes
+
+- Dissolve umbrella meta-package. `liteforge` now re-exports only `@liteforge/core` and `@liteforge/runtime` — the two foundational primitives needed in every app.
+
+  All other packages (`@liteforge/router`, `@liteforge/store`, `@liteforge/query`, `@liteforge/form`, `@liteforge/table`, `@liteforge/modal`, `@liteforge/toast`, `@liteforge/tooltip`, `@liteforge/calendar`, `@liteforge/i18n`, `@liteforge/client`, `@liteforge/admin`) are standalone and should be imported directly:
+
+  ```ts
+  // Before (still works via vite aliases):
+  import { createRouter } from "liteforge/router";
+
+  // Preferred going forward:
+  import { createRouter } from "@liteforge/router";
+  ```
+
+  The `liteforge/jsx-runtime` entry point is retained for the Vite JSX transform.
+
 ## 0.6.8
 
 ### Patch Changes

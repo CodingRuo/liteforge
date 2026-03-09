@@ -35,6 +35,9 @@ export type {
 
   // Recurring
   RecurringRule,
+  Frequency,
+  Weekday,
+  WeekdayRule,
 
   // State types
   DateRange,
@@ -97,7 +100,14 @@ export {
 } from './date-utils.js'
 
 // Recurring event expansion
-export { expandRecurring, expandAllRecurring } from './recurring.js'
+export {
+  expandRecurring,
+  expandAllRecurring,
+  parseRRule,
+  serializeRRule,
+  getNthWeekdayInMonth,
+  isExcluded,
+} from './recurring.js'
 
 // Style injection (for advanced usage)
 export { injectCalendarStyles, resetCalendarStylesInjection } from './styles.js'

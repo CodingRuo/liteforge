@@ -15,12 +15,39 @@ export interface DateRange {
 
 // ─── Recurring Rule ────────────────────────────────────────
 
+export type Frequency = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly'
+
+export type Weekday = 'MO' | 'TU' | 'WE' | 'TH' | 'FR' | 'SA' | 'SU'
+
+export interface WeekdayRule {
+  day: Weekday
+  /** +1=first, -1=last, +2=second, etc. */
+  nth?: number
+}
+
 export interface RecurringRule {
-  frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly'
+  frequency: Frequency
+  /** Every N units, default 1 */
   interval?: number
+  /** End date (inclusive) — iCal UNTIL */
+  until?: Date
+  /** LEGACY alias for until (kept for backward compatibility) */
   endDate?: Date
+  /** Max occurrences */
   count?: number
+  /** iCal BYDAY — e.g. [{ day: 'MO' }, { day: 'FR' }] */
+  byDay?: WeekdayRule[]
+  /** LEGACY: JS day numbers 0–6 (kept for backward compatibility) */
   daysOfWeek?: number[]
+  /** iCal BYMONTHDAY — e.g. [1, 15] */
+  byMonthDay?: number[]
+  /** iCal BYMONTH — e.g. [1, 6, 12] (1-based) */
+  byMonth?: number[]
+  /** iCal BYSETPOS — e.g. [-1] = last occurrence in set */
+  bySetPos?: number[]
+  /** Week start day (default 'MO') */
+  weekStart?: Weekday
+  /** Excluded dates (iCal EXDATE) */
   exceptions?: Date[]
 }
 

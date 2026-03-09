@@ -12,6 +12,7 @@ export type {
   CalendarOptions,
   CalendarResult,
   CalendarEvent,
+  EventIndicator,
   CalendarView,
   CalendarClasses,
 
@@ -33,6 +34,10 @@ export type {
   TimeConfig,
   ResolvedTimeConfig,
 
+  // Timeline config
+  TimelineOptions,
+  TimelineColumnWidth,
+
   // Recurring
   RecurringRule,
   Frequency,
@@ -47,6 +52,14 @@ export type {
 
   // Translations
   CalendarTranslations,
+
+  // Print
+  PrintOptions,
+
+  // iCal
+  ICalExportOptions,
+  ICalImportResult,
+  ICalImportError,
 } from './types.js'
 
 export { resolveTranslations } from './translations.js'
@@ -109,8 +122,37 @@ export {
   isExcluded,
 } from './recurring.js'
 
+// iCal export/import
+export { exportToICal, downloadICal, importFromICal, importICalFile } from './ical.js'
+
 // Style injection (for advanced usage)
 export { injectCalendarStyles, resetCalendarStylesInjection } from './styles.js'
+
+// Utilities
+export { findConflicts } from './utils/conflict.js'
+export type { SnapResult } from './utils/snap.js'
+
+// Timeline drag-to-create helpers (exported for testing and advanced usage)
+export {
+  getTimeFromMouseX,
+  getResourceFromMouseY,
+  snapToGrid,
+} from './views/timeline-view.js'
+
+// Quarter view utilities
+export {
+  getQuarterBounds,
+  getQuarterLabel,
+  navigateQuarter,
+  getEventDotsForDay,
+} from './views/quarter-view.js'
+export type { EventDotInfo } from './views/quarter-view.js'
+
+// Year view utilities
+export {
+  getYearBounds,
+  navigateYear,
+} from './views/year-view.js'
 
 // Virtualization utilities (exported for advanced usage / testing)
 export {
@@ -120,5 +162,15 @@ export {
   shouldVirtualize,
   createScrollHandler,
   resolveVirtConfig,
+  // Timeline utilities
+  calculateTimelinePosition,
+  getNowIndicatorPosition,
+  filterResourcesByViewport,
+  createHorizontalScrollHandler,
 } from './virtualization.js'
-export type { VisibleTimeRange, VirtualizationConfig, EventBucket } from './virtualization.js'
+export type {
+  VisibleTimeRange,
+  VirtualizationConfig,
+  EventBucket,
+  HorizontalVisibleRange,
+} from './virtualization.js'

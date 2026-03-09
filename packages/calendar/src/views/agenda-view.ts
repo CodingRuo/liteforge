@@ -49,6 +49,7 @@ export function renderAgendaView<T extends CalendarEvent>(
 
   const container = document.createElement('div')
   container.className = getClass('root', classes, 'lf-cal-agenda')
+  container.setAttribute('role', 'list')
 
   // Reactive rendering
   effect(() => {
@@ -90,15 +91,18 @@ export function renderAgendaView<T extends CalendarEvent>(
       // Day group
       const dayGroup = document.createElement('div')
       dayGroup.className = getClass('agendaDay', classes, 'lf-cal-agenda-day')
+      dayGroup.setAttribute('role', 'listitem')
 
       // Day header
+      const dayGroup_dateLabel = formatFullDate(day, locale)
       const dayHeader = document.createElement('div')
       let headerClass = getClass('agendaDayHeader', classes, 'lf-cal-agenda-day-header')
       if (isToday(day)) {
         headerClass += ' lf-cal-agenda-day-header--today'
       }
       dayHeader.className = headerClass
-      dayHeader.textContent = formatFullDate(day, locale)
+      dayHeader.setAttribute('aria-hidden', 'true')
+      dayHeader.textContent = dayGroup_dateLabel
       dayGroup.appendChild(dayHeader)
 
       // Events list
@@ -107,14 +111,17 @@ export function renderAgendaView<T extends CalendarEvent>(
         item.className = getClass('agendaItem', classes, 'lf-cal-agenda-item')
 
         // Time
+        const timeText = `${formatTime(event.start, locale)} – ${formatTime(event.end, locale)}`
         const timeEl = document.createElement('div')
         timeEl.className = 'lf-cal-agenda-item-time'
-        timeEl.textContent = `${formatTime(event.start, locale)} - ${formatTime(event.end, locale)}`
+        timeEl.setAttribute('aria-hidden', 'true')
+        timeEl.textContent = timeText
         item.appendChild(timeEl)
 
         // Color indicator
         const indicator = document.createElement('div')
         indicator.className = 'lf-cal-agenda-item-indicator'
+        indicator.setAttribute('aria-hidden', 'true')
 
         // Find resource color
         const resource = event.resourceId
@@ -150,10 +157,23 @@ export function renderAgendaView<T extends CalendarEvent>(
 
         item.appendChild(content)
 
+        // Build accessible label: "Event Title, time, date, resource"
+        const ariaLabelParts = [event.title, timeText, dayGroup_dateLabel]
+        if (resource) ariaLabelParts.push(resource.name)
+        item.setAttribute('aria-label', ariaLabelParts.join(', '))
+
         // Click handler
         if (onEventClick) {
+          item.setAttribute('role', 'button')
+          item.setAttribute('tabindex', '0')
           item.addEventListener('click', () => {
             onEventClick(event)
+          })
+          item.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              onEventClick(event)
+            }
           })
         }
 

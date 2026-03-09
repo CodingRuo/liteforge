@@ -12,7 +12,16 @@ import type {
   ResolvedTimeConfig,
   DateRange,
   SlotSelection,
+  PrintOptions,
+  ICalExportOptions,
+  ICalImportResult,
 } from './types.js'
+import {
+  exportToICal,
+  downloadICal as downloadICalFn,
+  importFromICal,
+  importICalFile as importICalFileFn,
+} from './ical.js'
 import {
   startOfDay,
   addDays,
@@ -21,6 +30,8 @@ import {
   getDayRange,
   getWeekRange,
   getMonthRange,
+  startOfMonth,
+  endOfMonth,
 } from './date-utils.js'
 import { expandAllRecurring } from './recurring.js'
 import { injectCalendarStyles } from './styles.js'
@@ -31,6 +42,10 @@ import { renderMonthView } from './views/month-view.js'
 import { renderAgendaView } from './views/agenda-view.js'
 import { renderToolbar } from './components/toolbar.js'
 import { renderMiniCalendar } from './components/mini-calendar.js'
+import { renderTimelineView } from './views/timeline-view.js'
+import { renderQuarterView, navigateQuarter } from './views/quarter-view.js'
+import { renderYearView, navigateYear } from './views/year-view.js'
+import { checkConflict } from './utils/conflict.js'
 
 // ─── Resolve Time Config ───────────────────────────────────
 
@@ -54,6 +69,7 @@ function calculateDateRange(date: Date, view: CalendarView, weekStart: number): 
   switch (view) {
     case 'day':
     case 'resource-day':
+    case 'timeline':
       return getDayRange(date)
     case 'week':
       return getWeekRange(date, weekStart)
@@ -68,6 +84,22 @@ function calculateDateRange(date: Date, view: CalendarView, weekStart: number): 
     case 'agenda':
       // Show current month for agenda
       return getMonthRange(date)
+    case 'quarter': {
+      const quarterIndex = Math.floor(date.getMonth() / 3)
+      const startMonth = quarterIndex * 3
+      const endMonth = startMonth + 2
+      return {
+        start: startOfMonth(new Date(date.getFullYear(), startMonth, 1)),
+        end: endOfMonth(new Date(date.getFullYear(), endMonth, 1)),
+      }
+    }
+    case 'year': {
+      const year = date.getFullYear()
+      return {
+        start: startOfMonth(new Date(year, 0, 1)),
+        end: endOfMonth(new Date(year, 11, 1)),
+      }
+    }
     default:
       return getWeekRange(date, weekStart)
   }
@@ -90,10 +122,13 @@ export function createCalendar<T extends CalendarEvent>(
     onEventClick,
     onEventDrop,
     onEventResize,
+    onEventConflict,
     onSlotClick,
     onSlotSelect,
     onViewChange,
     onDateChange,
+    mapImportedEvent,
+    eventTooltip,
     eventContent,
     slotContent,
     dayHeaderContent,
@@ -103,6 +138,7 @@ export function createCalendar<T extends CalendarEvent>(
     translations: translationsInput,
     toolbar: toolbarConfig,
     responsive: responsiveOptions,
+    timelineOptions: timelineOpts,
     virtualization: virtualizationCfg,
   } = options
 
@@ -115,7 +151,7 @@ export function createCalendar<T extends CalendarEvent>(
 
   // ─── localStorage Helpers ────────────────────────────────
 
-  const VALID_VIEWS: CalendarView[] = ['day', 'week', 'month', 'agenda', 'resource-day']
+  const VALID_VIEWS: CalendarView[] = ['day', 'week', 'month', 'agenda', 'resource-day', 'timeline', 'quarter', 'year']
 
   function readStoredView(): CalendarView | null {
     try {
@@ -211,6 +247,7 @@ export function createCalendar<T extends CalendarEvent>(
     switch (view) {
       case 'day':
       case 'resource-day':
+      case 'timeline':
         newDate = addDays(current, 1)
         break
       case 'week':
@@ -219,6 +256,12 @@ export function createCalendar<T extends CalendarEvent>(
       case 'month':
       case 'agenda':
         newDate = addMonths(current, 1)
+        break
+      case 'quarter':
+        newDate = navigateQuarter(current, 1)
+        break
+      case 'year':
+        newDate = navigateYear(current, 1)
         break
       default:
         newDate = addWeeks(current, 1)
@@ -236,6 +279,7 @@ export function createCalendar<T extends CalendarEvent>(
     switch (view) {
       case 'day':
       case 'resource-day':
+      case 'timeline':
         newDate = addDays(current, -1)
         break
       case 'week':
@@ -244,6 +288,12 @@ export function createCalendar<T extends CalendarEvent>(
       case 'month':
       case 'agenda':
         newDate = addMonths(current, -1)
+        break
+      case 'quarter':
+        newDate = navigateQuarter(current, -1)
+        break
+      case 'year':
+        newDate = navigateYear(current, -1)
         break
       default:
         newDate = addWeeks(current, -1)
@@ -319,6 +369,12 @@ export function createCalendar<T extends CalendarEvent>(
     })
   }
 
+  // ─── Mini-Calendar Visibility ─────────────────────────────
+
+  const miniCalendarVisibleSignal = signal(true)
+  const miniCalendarVisible = () => miniCalendarVisibleSignal()
+  const toggleMiniCalendar = () => miniCalendarVisibleSignal.update((v) => !v)
+
   // ─── Resource Management ─────────────────────────────────
 
   const showResource = (id: string) => {
@@ -340,6 +396,8 @@ export function createCalendar<T extends CalendarEvent>(
     onEventClick?.(event)
   }
 
+  const clearSelectedEvent = () => selectedEventSignal.set(null)
+
   const handleSlotClick = (start: Date, end: Date, resourceId?: string) => {
     selectedSlotSignal.set({ start, end, resourceId })
     onSlotClick?.(start, end, resourceId)
@@ -351,11 +409,125 @@ export function createCalendar<T extends CalendarEvent>(
   }
 
   const handleEventDrop = (event: T, newStart: Date, newEnd: Date, newResourceId?: string) => {
+    const updated = { ...event, start: newStart, end: newEnd, resourceId: newResourceId ?? event.resourceId } as T
+    const outcome = checkConflict(updated, visibleEvents(), event.id, onEventConflict)
+    if (outcome === 'prevent') return
+    if (outcome === 'warn') {
+      const el = rootContainer?.querySelector<HTMLElement>(`[data-event-id="${event.id}"]`)
+      el?.setAttribute('data-conflict', 'true')
+    }
     onEventDrop?.(event, newStart, newEnd, newResourceId)
   }
 
   const handleEventResize = (event: T, newEnd: Date) => {
+    const updated = { ...event, end: newEnd } as T
+    const outcome = checkConflict(updated, visibleEvents(), event.id, onEventConflict)
+    if (outcome === 'prevent') return
+    if (outcome === 'warn') {
+      const el = rootContainer?.querySelector<HTMLElement>(`[data-event-id="${event.id}"]`)
+      el?.setAttribute('data-conflict', 'true')
+    }
     onEventResize?.(event, newEnd)
+  }
+
+  // ─── Print API ───────────────────────────────────────────
+
+  // Holds the most-recently rendered Root container (set inside Root())
+  let rootContainer: HTMLElement | null = null
+  let printPending = false
+
+  /** Build a human-readable date-range label for the print title */
+  function buildPrintTitle(): string {
+    const range = dateRangeComputed()
+    const view = currentViewSignal()
+    const fmt = new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'long' })
+    switch (view) {
+      case 'day':
+      case 'resource-day':
+      case 'timeline': {
+        const dayFmt = new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+        return dayFmt.format(currentDateSignal())
+      }
+      case 'week': {
+        const startFmt = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' })
+        const endFmt   = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' })
+        return `${startFmt.format(range.start)} – ${endFmt.format(range.end)}`
+      }
+      case 'month':
+      case 'agenda':
+        return fmt.format(currentDateSignal())
+      case 'quarter': {
+        const q = Math.floor(currentDateSignal().getMonth() / 3) + 1
+        return `Q${q} ${currentDateSignal().getFullYear()}`
+      }
+      case 'year':
+        return String(currentDateSignal().getFullYear())
+    }
+  }
+
+  const print = (options: PrintOptions = {}): void => {
+    if (printPending) return
+    printPending = true
+
+    const container = rootContainer
+    if (!container) {
+      printPending = false
+      return
+    }
+
+    // Switch view if requested
+    const prevView = currentViewSignal()
+    if (options.view !== undefined && options.view !== prevView) {
+      currentViewSignal.set(options.view)
+    }
+
+    // Apply weekends override
+    const prevHidden = hiddenDaysSignal()
+    if (options.showWeekends !== undefined) {
+      const WEEKEND_DAYS_LOCAL = [0, 6]
+      if (options.showWeekends) {
+        hiddenDaysSignal.update(h => h.filter(d => !WEEKEND_DAYS_LOCAL.includes(d)))
+      } else {
+        hiddenDaysSignal.update(h => [...h.filter(d => !WEEKEND_DAYS_LOCAL.includes(d)), ...WEEKEND_DAYS_LOCAL])
+      }
+    }
+
+    // Set print title
+    let printTitleEl = container.querySelector<HTMLElement>('.lf-cal-print-title')
+    if (!printTitleEl) {
+      printTitleEl = document.createElement('div')
+      printTitleEl.className = 'lf-cal-print-title'
+      container.prepend(printTitleEl)
+    }
+    printTitleEl.textContent = options.title ?? buildPrintTitle()
+
+    container.classList.add('lf-cal-printing')
+
+    const cleanup = () => {
+      container.classList.remove('lf-cal-printing')
+      // Restore view
+      if (options.view !== undefined && options.view !== prevView) {
+        currentViewSignal.set(prevView)
+      }
+      // Restore hidden days
+      if (options.showWeekends !== undefined) {
+        hiddenDaysSignal.set(prevHidden)
+      }
+      printPending = false
+    }
+
+    const onAfterPrint = () => {
+      window.removeEventListener('afterprint', onAfterPrint)
+      cleanup()
+    }
+    window.addEventListener('afterprint', onAfterPrint)
+
+    try {
+      window.print()
+    } catch {
+      window.removeEventListener('afterprint', onAfterPrint)
+      cleanup()
+    }
   }
 
   // ─── Root Component ──────────────────────────────────────
@@ -363,9 +535,53 @@ export function createCalendar<T extends CalendarEvent>(
   const Root = (): Node => {
     const container = document.createElement('div')
     container.className = classes?.root ?? 'lf-cal'
+    container.setAttribute('role', 'application')
+    container.setAttribute('aria-label', t.calendar)
+    rootContainer = container
+
+    // Live region for screen-reader announcements
+    const liveRegion = document.createElement('div')
+    liveRegion.setAttribute('aria-live', 'polite')
+    liveRegion.setAttribute('aria-atomic', 'true')
+    liveRegion.className = 'lf-cal-sr-only'
+    container.appendChild(liveRegion)
 
     // Set data-size attribute reactively
     effect(() => { container.dataset.size = sizeClass() })
+
+    // Announce view/date changes to screen readers
+    effect(() => {
+      const view = currentViewSignal()
+      const date = currentDateSignal()
+      const range = dateRangeComputed()
+
+      let announcement: string
+      switch (view) {
+        case 'day':
+        case 'resource-day':
+        case 'timeline':
+          announcement = new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(date)
+          break
+        case 'week':
+          announcement = `${new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(range.start)} – ${new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(range.end)}`
+          break
+        case 'month':
+        case 'agenda':
+          announcement = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(date)
+          break
+        case 'quarter': {
+          const q = Math.floor(date.getMonth() / 3) + 1
+          announcement = `Q${q} ${date.getFullYear()}`
+          break
+        }
+        case 'year':
+          announcement = String(date.getFullYear())
+          break
+        default:
+          announcement = ''
+      }
+      liveRegion.textContent = announcement
+    })
 
     // Attach ResizeObserver after element is in DOM
     // Note: cleanup is not captured (same acceptable pattern as toolbar click-away listeners)
@@ -425,6 +641,7 @@ export function createCalendar<T extends CalendarEvent>(
             activeResource: () => activeResourceSignal(),
             allResources: resourcesInput,
             ...(virtualizationCfg !== undefined ? { virtualizationCfg } : {}),
+            ...(eventTooltip !== undefined ? { eventTooltip } : {}),
           })
           break
 
@@ -456,6 +673,7 @@ export function createCalendar<T extends CalendarEvent>(
             activeResource: () => activeResourceSignal(),
             allResources: resourcesInput,
             ...(virtualizationCfg !== undefined ? { virtualizationCfg } : {}),
+            ...(eventTooltip !== undefined ? { eventTooltip } : {}),
           })
           break
 
@@ -481,6 +699,7 @@ export function createCalendar<T extends CalendarEvent>(
             selectionConfig,
             maxAllDayVisible: () => sizeClass() === 'mobile' ? 2 : undefined,
             ...(virtualizationCfg !== undefined ? { virtualizationCfg } : {}),
+            ...(eventTooltip !== undefined ? { eventTooltip } : {}),
           })
           break
 
@@ -514,6 +733,69 @@ export function createCalendar<T extends CalendarEvent>(
             onEventClick: handleEventClick,
           })
           break
+
+        case 'timeline':
+          currentViewEl = renderTimelineView({
+            date: () => currentDateSignal(),
+            events: () => visibleEvents(),
+            resources: resourcesInput,
+            config,
+            locale,
+            classes: classes ?? {},
+            translations: t,
+            ...(timelineOpts !== undefined ? { timelineOptions: timelineOpts } : {}),
+            ...(eventContent !== undefined ? { eventContent } : {}),
+            selectedEvent: () => selectedEventSignal(),
+            onEventClick: handleEventClick,
+            ...(editable ? { onEventDrop: handleEventDrop } : {}),
+            ...(editable ? { onEventResize: handleEventResize } : {}),
+            ...(selectable ? { onSlotClick: handleSlotClick } : {}),
+            ...(selectable ? { onSlotSelect: handleSlotSelect } : {}),
+            ...(selectionConfig !== undefined ? { selection: selectionConfig } : {}),
+            editable,
+            selectable,
+            ...(virtualizationCfg !== undefined ? { virtualizationCfg } : {}),
+            ...(eventTooltip !== undefined ? { eventTooltip } : {}),
+          })
+          break
+
+        case 'quarter':
+          currentViewEl = renderQuarterView({
+            date: () => currentDateSignal(),
+            events: () => visibleEvents(),
+            config,
+            locale,
+            classes: classes ?? {},
+            translations: t,
+            onDateClick: (date: Date) => {
+              currentDateSignal.set(date)
+              currentViewSignal.set('day')
+            },
+            onMonthClick: (date: Date) => {
+              currentDateSignal.set(date)
+              currentViewSignal.set('month')
+            },
+          })
+          break
+
+        case 'year':
+          currentViewEl = renderYearView({
+            date: () => currentDateSignal(),
+            events: () => visibleEvents(),
+            config,
+            locale,
+            classes: classes ?? {},
+            translations: t,
+            onDateClick: (date: Date) => {
+              currentDateSignal.set(date)
+              currentViewSignal.set('day')
+            },
+            onMonthClick: (date: Date) => {
+              currentDateSignal.set(date)
+              currentViewSignal.set('month')
+            },
+          })
+          break
       }
 
       if (currentViewEl) {
@@ -545,6 +827,18 @@ export function createCalendar<T extends CalendarEvent>(
       onToggleWeekends: toggleWeekends,
       toolbarConfig,
       sizeClass,
+      onExport: () => downloadICalFn(visibleEvents()),
+      onImport: (file: File) => importICalFileFn(file).then((result) => {
+        for (const event of result.events) {
+          // iCal import can only populate base CalendarEvent fields.
+          // T-specific extra properties will be absent after import.
+          // Consumers with required extra fields on T should use mapImportedEvent.
+          addEvent(mapImportedEvent ? mapImportedEvent(event) : (event as T))
+        }
+      }),
+      onPrint: print,
+      miniCalendarVisible,
+      onToggleMiniCalendar: toggleMiniCalendar,
     })
   }
 
@@ -645,8 +939,26 @@ export function createCalendar<T extends CalendarEvent>(
     weekendsVisible,
     toggleWeekends,
 
+    // Mini-calendar visibility
+    miniCalendarVisible,
+    toggleMiniCalendar,
+
     // Selection
     selectedEvent: () => selectedEventSignal(),
+    clearSelectedEvent,
     selectedSlot: () => selectedSlotSignal(),
+
+    // Print
+    print,
+
+    // iCal
+    exportICal: (opts?: ICalExportOptions): string =>
+      exportToICal(visibleEvents(), opts),
+    downloadICal: (opts?: ICalExportOptions): void =>
+      downloadICalFn(visibleEvents(), opts),
+    importICal: (icalString: string): ICalImportResult =>
+      importFromICal(icalString),
+    importICalFile: (file: File): Promise<ICalImportResult> =>
+      importICalFileFn(file),
   }
 }

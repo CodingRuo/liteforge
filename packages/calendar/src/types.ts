@@ -4,7 +4,36 @@
 
 // ─── Calendar View Types ───────────────────────────────────
 
-export type CalendarView = 'day' | 'resource-day' | 'week' | 'month' | 'agenda'
+export type CalendarView = 'day' | 'resource-day' | 'week' | 'month' | 'agenda' | 'timeline' | 'quarter' | 'year'
+
+// ─── Timeline Options ───────────────────────────────────────
+
+/** Column width mode for the timeline view */
+export type TimelineColumnWidth = 'auto' | 'fixed'
+
+export interface TimelineOptions {
+  /**
+   * Duration each timeline cell spans in minutes (default: 60).
+   * e.g. 30 → every column is a half-hour slot.
+   */
+  cellDuration?: number
+  /**
+   * Pixel width of each time cell (default: 100).
+   */
+  cellWidth?: number
+  /**
+   * Pixel width of the sticky resource label column (default: 140).
+   */
+  resourceColumnWidth?: number
+  /**
+   * Pixel height of each resource row (default: 48).
+   */
+  rowHeight?: number
+  /**
+   * Show a vertical now-indicator line (default: true when nowIndicator is enabled).
+   */
+  nowIndicator?: boolean
+}
 
 // ─── Date Range ────────────────────────────────────────────
 
@@ -51,6 +80,21 @@ export interface RecurringRule {
   exceptions?: Date[]
 }
 
+// ─── Event Indicators ──────────────────────────────────────
+
+export interface EventIndicator {
+  /**
+   * SVG string, plain text (emoji), or a pre-built Node.
+   * When a string is provided it is set via innerHTML — the consumer is
+   * responsible for safe content.
+   */
+  icon: string | Node
+  /** Optional tooltip text shown on hover */
+  tooltip?: string
+  /** CSS color value — applied as color and border-color on the indicator */
+  color?: string
+}
+
 // ─── Calendar Event ────────────────────────────────────────
 
 export interface CalendarEvent {
@@ -64,6 +108,7 @@ export interface CalendarEvent {
   allDay?: boolean
   editable?: boolean
   recurring?: RecurringRule
+  indicators?: EventIndicator[]
   [key: string]: unknown
 }
 
@@ -118,6 +163,9 @@ export interface CalendarTranslations {
   week: string
   month: string
   agenda: string
+  timeline: string
+  quarter: string
+  year: string
   // Weekend toggle
   hideWeekends: string
   showWeekends: string
@@ -127,6 +175,20 @@ export interface CalendarTranslations {
   more: (count: number) => string
   // Agenda empty state
   noEvents: string
+  // Accessibility labels (ARIA)
+  calendar: string
+  navigation: string
+  previousPeriod: string
+  nextPeriod: string
+  viewSelector: string
+  resources: string
+  // "⋮ More" menu
+  moreActions: string
+  exportIcal: string
+  importIcal: string
+  print: string
+  toggleMiniCalendar: string
+  hideMiniCalendar: string
 }
 
 // ─── Slot Selection ────────────────────────────────────────
@@ -155,6 +217,55 @@ export interface ToolbarConfig {
   resourceDisplay?: 'inline' | 'dropdown'
   /** Label for the resource dropdown toggle button (default: first translation match) */
   resourceDropdownLabel?: string
+  /** How view buttons are shown (default: 'buttons') */
+  viewDisplay?: 'buttons' | 'dropdown'
+  /**
+   * Show the "⋮ More" dropdown with Export / Import / Print actions.
+   * Pass `false` to hide it completely.
+   * Default: `true`
+   */
+  showMoreMenu?: boolean
+  /** Show the weekend-toggle button (default: false) */
+  showWeekendToggle?: boolean
+}
+
+// ─── iCal Options ──────────────────────────────────────────
+
+export interface ICalExportOptions {
+  /** PRODID / X-WR-CALNAME, default: 'LiteForge Calendar' */
+  calendarName?: string
+  /** TZID, default: system timezone */
+  timezone?: string
+  /** Download filename, default: 'calendar.ics' */
+  filename?: string
+}
+
+export interface ICalImportError {
+  line: number
+  message: string
+  raw: string
+}
+
+export interface ICalImportResult {
+  events: CalendarEvent[]
+  errors: ICalImportError[]
+  calendarName?: string
+}
+
+// ─── Print Options ─────────────────────────────────────────
+
+export interface PrintOptions {
+  /** Which view to print — default: current view */
+  view?: CalendarView
+  /** Custom title shown on printout — default: current date range label */
+  title?: string
+  /** Whether to show weekends — default: current setting */
+  showWeekends?: boolean
+  /** Override the date range for print */
+  dateRange?: {
+    start: Date
+    end: Date
+  }
 }
 
 // ─── Responsive Config ─────────────────────────────────────
@@ -190,6 +301,33 @@ export interface CalendarOptions<T extends CalendarEvent> {
   /** Toolbar display configuration */
   toolbar?: ToolbarConfig
 
+  /**
+   * Event hover tooltips.
+   *
+   * Provide the `tooltip` function from `@liteforge/tooltip` (or any compatible
+   * implementation) together with an optional custom content renderer.
+   *
+   * @example
+   * import { tooltip } from '@liteforge/tooltip'
+   *
+   * eventTooltip: {
+   *   fn: tooltip,
+   *   render: (event) => `${event.title} — ${event.resourceId ?? ''}`,
+   *   delay: 400,
+   *   position: 'top',
+   * }
+   */
+  eventTooltip?: {
+    /** The tooltip attachment function — pass `tooltip` from `@liteforge/tooltip` */
+    fn: (el: HTMLElement, input: string | { content: string | Node; delay?: number; position?: 'top' | 'bottom' | 'left' | 'right' | 'auto'; triggerOnFocus?: boolean }) => () => void
+    /** Custom content renderer — receives the event, returns string or Node */
+    render?: (event: T) => string | Node
+    /** Delay in ms before showing (default: 300) */
+    delay?: number
+    /** Tooltip position (default: 'top') */
+    position?: 'top' | 'bottom' | 'left' | 'right' | 'auto'
+  }
+
   /** Responsive / mobile-breakpoint configuration */
   responsive?: ResponsiveConfig
 
@@ -209,6 +347,32 @@ export interface CalendarOptions<T extends CalendarEvent> {
   onViewChange?: (view: CalendarView, dateRange: DateRange) => void
   onDateChange?: (date: Date) => void
 
+  /**
+   * Called before an event is moved or resized when the new time range
+   * overlaps with one or more existing events on the same resource.
+   *
+   * Return:
+   * - `'allow'`   — proceed silently (e.g. intentional double-booking)
+   * - `'warn'`    — proceed but show a visual conflict indicator (`data-conflict="true"`)
+   * - `'prevent'` — cancel the operation, event stays at original position
+   *
+   * If not provided, conflicts are always allowed (current behaviour, no breaking change).
+   */
+  onEventConflict?: (event: T, conflicts: T[]) => 'allow' | 'warn' | 'prevent'
+
+  /**
+   * Transform a parsed iCal event before it is added to the calendar.
+   *
+   * iCal import can only populate base `CalendarEvent` fields — T-specific
+   * extra properties will be absent after parsing. If `T` extends
+   * `CalendarEvent` with required properties, use this hook to populate them
+   * before the event is added.
+   *
+   * @example
+   * mapImportedEvent: (e) => ({ ...e, category: 'imported' })
+   */
+  mapImportedEvent?: (event: CalendarEvent) => T
+
   /** Custom rendering */
   eventContent?: (event: T) => Node
   slotContent?: (date: Date, resourceId?: string) => Node | null
@@ -221,6 +385,9 @@ export interface CalendarOptions<T extends CalendarEvent> {
 
   /** UI string translations (default: English) */
   translations?: Partial<CalendarTranslations>
+
+  /** Timeline-view specific options */
+  timelineOptions?: TimelineOptions
 
   /** Virtual scroll / windowed rendering (activates above threshold) */
   virtualization?: {
@@ -315,9 +482,23 @@ export interface CalendarResult<T extends CalendarEvent> {
   weekendsVisible: () => boolean
   toggleWeekends: () => void
 
+  /** Mini-calendar visibility */
+  miniCalendarVisible: () => boolean
+  toggleMiniCalendar: () => void
+
   /** Selection */
   selectedEvent: () => T | null
+  clearSelectedEvent: () => void
   selectedSlot: () => SlotSelection | null
+
+  /** Print */
+  print: (options?: PrintOptions) => void
+
+  /** iCal export/import */
+  exportICal: (options?: ICalExportOptions) => string
+  downloadICal: (options?: ICalExportOptions) => void
+  importICal: (icalString: string) => ICalImportResult
+  importICalFile: (file: File) => Promise<ICalImportResult>
 }
 
 // ─── Internal Types ────────────────────────────────────────

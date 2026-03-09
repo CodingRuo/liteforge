@@ -15,9 +15,10 @@
 import { createComponent } from 'liteforge';
 import { signal } from 'liteforge';
 import { createCalendar, startOfWeek } from 'liteforge/calendar';
+import { tooltip } from 'liteforge/tooltip';
 import { createModal } from 'liteforge/modal';
 import { toast } from 'liteforge/toast';
-import type { CalendarEvent, Resource } from 'liteforge/calendar';
+import type { CalendarEvent, Resource, RecurringRule } from 'liteforge/calendar';
 
 // =============================================================================
 // Sample Data - Therapy Practice Schedule
@@ -143,6 +144,10 @@ function createSampleEvents(): CalendarEvent[] {
       end:   new Date(day.getFullYear(), day.getMonth(), day.getDate(), groupStart + 1, 30),
       resourceId: 'room-a',
       color: '#f97316',
+      indicators: [
+        { icon: '⚠', tooltip: 'Neue Serie noch nicht erstellt', color: '#ef4444' },
+        { icon: '★', tooltip: 'Priorität hoch', color: '#f59e0b' },
+      ],
     });
   }
 
@@ -369,8 +374,11 @@ export const CalendarPage = createComponent({
 
     // ── Detail modal — view / delete an existing event ─────────────────────────
 
+    // Forward ref — calendar is created after the modals, but onClose needs to clear selection
+    let calendarClearSelected: (() => void) | null = null
+
     const detailModal = createModal<{ event: CalendarEvent }>({
-      config: { size: 'sm', closeOnEsc: true, closeOnBackdrop: true },
+      config: { size: 'sm', closeOnEsc: true, closeOnBackdrop: true, onClose: () => calendarClearSelected?.() },
       component: ({ event }) => {
         const deleteAndClose = () => {
           events.update(evts => evts.filter(e => e.id !== event.id));
@@ -388,9 +396,24 @@ export const CalendarPage = createComponent({
               {event.resourceId
                 ? <><dt>Ressource</dt><dd>{event.resourceId}</dd></>
                 : null}
-              {event.recurring
-                ? <><dt>Wiederkehrend</dt><dd>{event.recurring.frequency}</dd></>
-                : null}
+              {event.recurring ? (
+                <>
+                  <dt>Wiederkehrend</dt>
+                  <dd>{
+                    event.recurring.frequency === 'weekly' && event.recurring.interval === 2
+                      ? 'Alle 2 Wochen'
+                      : ({
+                          daily: 'Täglich', weekly: 'Wöchentlich',
+                          biweekly: 'Alle 2 Wochen', monthly: 'Monatlich', yearly: 'Jährlich',
+                        }[event.recurring.frequency] ?? event.recurring.frequency)
+                  }{event.recurring.byDay && event.recurring.byDay.length > 0
+                    ? ` (${event.recurring.byDay.map(d => d.day).join(', ')})`
+                    : ''
+                  }{event.recurring.count ? `, ${event.recurring.count}×` : ''
+                  }{event.recurring.until ? `, bis ${new Intl.DateTimeFormat('de-AT').format(event.recurring.until)}` : ''
+                  }</dd>
+                </>
+              ) : null}
             </dl>
             <div class="cal-modal-footer">
               <button class="cal-btn cal-btn--danger" onclick={deleteAndClose}>
@@ -408,16 +431,73 @@ export const CalendarPage = createComponent({
     // ── Create modal — new event from slot click / drag-select ─────────────────
 
     interface SlotData { start: Date; end: Date; resourceId?: string }
-    const newTitle = signal('');
+
+    type RecFreq = 'none' | 'daily' | 'weekly' | 'biweekly' | 'monthly'
+    type RecEndMode = 'never' | 'count' | 'until'
+
+    const WEEKDAYS: Array<{ key: 'MO' | 'TU' | 'WE' | 'TH' | 'FR' | 'SA' | 'SU'; label: string }> = [
+      { key: 'MO', label: 'Mo' }, { key: 'TU', label: 'Di' }, { key: 'WE', label: 'Mi' },
+      { key: 'TH', label: 'Do' }, { key: 'FR', label: 'Fr' }, { key: 'SA', label: 'Sa' },
+      { key: 'SU', label: 'So' },
+    ]
+
+    const newTitle    = signal('')
+    const recFreq     = signal<RecFreq>('none')
+    const recDays     = signal<string[]>([])   // selected Weekday keys when freq=weekly
+    const recEndMode  = signal<RecEndMode>('never')
+    const recCount    = signal(10)
+    const recUntil    = signal('')             // ISO date string
+
+    const resetRec = () => {
+      recFreq.set('none')
+      recDays.set([])
+      recEndMode.set('never')
+      recCount.set(10)
+      recUntil.set('')
+    }
 
     const createEventModal = createModal<SlotData>({
       config: { size: 'sm', closeOnEsc: true, closeOnBackdrop: true },
       component: (slot) => {
-        newTitle.set('');
+        newTitle.set('')
+        resetRec()
+
+        const toggleDay = (key: string) => {
+          recDays.update(days =>
+            days.includes(key) ? days.filter(d => d !== key) : [...days, key]
+          )
+        }
+
+        const buildRecurring = () => {
+          const freq = recFreq()
+          if (freq === 'none') return undefined
+
+          const rule: RecurringRule = {
+            frequency: freq === 'biweekly' ? 'weekly' : freq,
+            ...(freq === 'biweekly' ? { interval: 2 } : {}),
+          }
+
+          if (freq === 'weekly') {
+            const days = recDays()
+            if (days.length > 0) {
+              rule.byDay = days.map(d => ({ day: d as 'MO' | 'TU' | 'WE' | 'TH' | 'FR' | 'SA' | 'SU' }))
+            }
+          }
+
+          const endMode = recEndMode()
+          if (endMode === 'count') {
+            rule.count = Math.max(1, recCount())
+          } else if (endMode === 'until' && recUntil()) {
+            rule.until = new Date(recUntil())
+          }
+
+          return rule
+        }
 
         const save = () => {
-          const title = newTitle().trim();
-          if (!title) return;
+          const title = newTitle().trim()
+          if (!title) return
+          const recurring = buildRecurring()
           events.update(evts => [
             ...evts,
             {
@@ -427,16 +507,25 @@ export const CalendarPage = createComponent({
               end: slot.end,
               ...(slot.resourceId ? { resourceId: slot.resourceId } : {}),
               color: '#3b82f6',
+              ...(recurring ? { recurring } : {}),
             },
-          ]);
-          createEventModal.close();
-          newTitle.set('');
-        };
+          ])
+          createEventModal.close()
+          newTitle.set('')
+          resetRec()
+        }
+
+        // ISO date string for 'until' default: 4 weeks from slot.start
+        const defaultUntil = new Date(slot.start)
+        defaultUntil.setDate(defaultUntil.getDate() + 28)
+        const defaultUntilStr = defaultUntil.toISOString().slice(0, 10)
 
         return (
           <div class="cal-modal-body">
             <h3 class="cal-modal-title">Neuer Termin</h3>
             <p class="cal-slot-range">{formatSlotRange(slot.start, slot.end)}</p>
+
+            {/* Title */}
             <div class="cal-field">
               <label class="cal-label">Titel</label>
               <input
@@ -449,6 +538,104 @@ export const CalendarPage = createComponent({
                 autofocus
               />
             </div>
+
+            {/* Recurrence frequency */}
+            <div class="cal-field">
+              <label class="cal-label">Wiederholung</label>
+              <select
+                class="cal-input cal-select"
+                value={() => recFreq()}
+                onchange={(e: Event) => {
+                  const v = (e.target as HTMLSelectElement).value as RecFreq
+                  recFreq.set(v)
+                  // Reset end mode when switching away from weekly
+                  if (v !== 'weekly') recDays.set([])
+                }}
+              >
+                <option value="none">Keine</option>
+                <option value="daily">Täglich</option>
+                <option value="weekly">Wöchentlich</option>
+                <option value="biweekly">Alle 2 Wochen</option>
+                <option value="monthly">Monatlich</option>
+              </select>
+            </div>
+
+            {/* Weekday picker — only for weekly */}
+            {() => recFreq() === 'weekly' ? (
+              <div class="cal-field">
+                <label class="cal-label">Wochentage</label>
+                <div class="cal-weekday-row">
+                  {WEEKDAYS.map(({ key, label }) => (
+                    <button
+                      type="button"
+                      class={() => `cal-day-btn${recDays().includes(key) ? ' cal-day-btn--active' : ''}`}
+                      onclick={() => toggleDay(key)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {/* End condition — only when freq is set */}
+            {() => recFreq() !== 'none' ? (
+              <div class="cal-field">
+                <label class="cal-label">Ende</label>
+                <div class="cal-end-row">
+                  <label class="cal-radio-label">
+                    <input
+                      type="radio"
+                      name="rec-end"
+                      value="never"
+                      checked={() => recEndMode() === 'never'}
+                      onchange={() => recEndMode.set('never')}
+                    /> Nie
+                  </label>
+                  <label class="cal-radio-label">
+                    <input
+                      type="radio"
+                      name="rec-end"
+                      value="count"
+                      checked={() => recEndMode() === 'count'}
+                      onchange={() => recEndMode.set('count')}
+                    /> Nach
+                    <input
+                      class="cal-input cal-count-input"
+                      type="number"
+                      min="1"
+                      max="365"
+                      value={() => recCount()}
+                      oninput={(e: Event) => recCount.set(Number((e.target as HTMLInputElement).value))}
+                      onclick={() => recEndMode.set('count')}
+                    />
+                    Terminen
+                  </label>
+                  <label class="cal-radio-label">
+                    <input
+                      type="radio"
+                      name="rec-end"
+                      value="until"
+                      checked={() => recEndMode() === 'until'}
+                      onchange={() => {
+                        recEndMode.set('until')
+                        if (!recUntil()) recUntil.set(defaultUntilStr)
+                      }}
+                    /> Am
+                    <input
+                      class="cal-input cal-date-input"
+                      type="date"
+                      value={() => recUntil() || defaultUntilStr}
+                      oninput={(e: Event) => {
+                        recEndMode.set('until')
+                        recUntil.set((e.target as HTMLInputElement).value)
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+            ) : null}
+
             <div class="cal-modal-footer">
               <button class="cal-btn cal-btn--ghost" onclick={() => createEventModal.close()}>
                 Abbrechen
@@ -466,7 +653,7 @@ export const CalendarPage = createComponent({
 
     const simState = signal<SimState>({ running: false, flash: false });
     const socket = new MockCalendarSocket(events, simState);
-    socket.start(); // autostart
+    // autostart disabled — click "Simulation starten" to enable
 
     const toggleSim = () => {
       if (simState().running) socket.stop(); else socket.start();
@@ -502,6 +689,7 @@ export const CalendarPage = createComponent({
       toolbar: {
         resourceDisplay: 'dropdown',
         resourceDropdownLabel: 'Ressourcen',
+        viewDisplay: 'dropdown',
       },
       onEventClick: (event) => {
         detailModal.open({ event });
@@ -527,8 +715,17 @@ export const CalendarPage = createComponent({
           evts.map(e => e.id === event.id ? { ...e, end: newEnd } : e)
         );
       },
+      eventTooltip: {
+        fn: tooltip,
+        delay: 400,
+        position: 'top',
+      },
     });
 
+    calendarClearSelected = calendar.clearSelectedEvent
+
+    // Expose for browser console testing (dev only)
+    if (import.meta.env.DEV) (window as Record<string, unknown>)._cal = calendar;
     return { calendar, simState, toggleSim };
   },
 
@@ -563,8 +760,11 @@ export const CalendarPage = createComponent({
         </div>
 
         <div class={() => `calendar-body${calendar.sizeClass() === 'mobile' ? ' calendar-body--mobile' : ''}`}>
-          {/* Sidebar with MiniCalendar — hidden on mobile */}
-          <aside class="calendar-sidebar">
+          {/* Sidebar with MiniCalendar — hidden on mobile or when toggled off */}
+          <aside
+            class="calendar-sidebar"
+            style={() => calendar.miniCalendarVisible() ? '' : 'display:none'}
+          >
             {calendar.MiniCalendar()}
           </aside>
 
@@ -732,6 +932,36 @@ export const CalendarPage = createComponent({
             border-color: var(--lf-color-border, #e2e8f0);
           }
           .cal-btn--ghost:hover { background: var(--lf-color-bg-subtle, #e2e8f0); }
+
+          /* Recurrence UI */
+          .cal-select { cursor: pointer; }
+          .cal-weekday-row { display: flex; gap: 6px; flex-wrap: wrap; }
+          .cal-day-btn {
+            width: 34px; height: 34px; border-radius: 50%; font-size: 12px; font-weight: 500;
+            border: 1px solid var(--lf-color-border, #e2e8f0);
+            background: var(--lf-color-bg-muted, #f1f5f9);
+            color: var(--lf-color-text-subtle, #475569);
+            cursor: pointer; transition: background 0.12s, color 0.12s, border-color 0.12s;
+          }
+          .cal-day-btn--active {
+            background: var(--lf-color-primary, #3b82f6);
+            border-color: var(--lf-color-primary, #3b82f6);
+            color: #fff;
+          }
+          .cal-day-btn:hover:not(.cal-day-btn--active) { background: var(--lf-color-bg-subtle, #e2e8f0); }
+          .cal-end-row { display: flex; flex-direction: column; gap: 8px; }
+          .cal-radio-label {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 13px; color: var(--lf-color-text, #1e293b); cursor: pointer;
+          }
+          .cal-count-input {
+            width: 54px; padding: 4px 8px; text-align: center;
+            display: inline-block; margin: 0;
+          }
+          .cal-date-input {
+            flex: 1; padding: 4px 8px; font-size: 13px;
+            display: inline-block; margin: 0; min-width: 0;
+          }
         `}</style>
       </div>
     );

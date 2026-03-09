@@ -56,6 +56,7 @@ export function renderMonthView<T extends CalendarEvent>(
   // Weekday headers
   const header = document.createElement('div')
   header.className = 'lf-cal-month-header'
+  header.setAttribute('role', 'row')
 
   // Generate weekday names based on weekStart
   const weekdayNames: string[] = []
@@ -71,6 +72,8 @@ export function renderMonthView<T extends CalendarEvent>(
   for (const name of weekdayNames) {
     const cell = document.createElement('div')
     cell.className = 'lf-cal-month-header-cell'
+    cell.setAttribute('role', 'columnheader')
+    cell.setAttribute('aria-label', name)
     cell.textContent = name
     header.appendChild(cell)
   }
@@ -80,6 +83,7 @@ export function renderMonthView<T extends CalendarEvent>(
   // Grid
   const grid = document.createElement('div')
   grid.className = getClass('monthGrid', classes, 'lf-cal-month-grid')
+  grid.setAttribute('role', 'grid')
   container.appendChild(grid)
 
   // Reactive rendering
@@ -105,10 +109,12 @@ export function renderMonthView<T extends CalendarEvent>(
       }
 
       cell.className = cellClass
+      cell.setAttribute('role', 'gridcell')
 
       // Day number
       const dayNumber = document.createElement('div')
       dayNumber.className = 'lf-cal-month-day-number'
+      dayNumber.setAttribute('aria-hidden', 'true')
       dayNumber.textContent = String(day.getDate())
       cell.appendChild(dayNumber)
 
@@ -142,6 +148,12 @@ export function renderMonthView<T extends CalendarEvent>(
       // Sort by start time
       dayEvents.sort((a, b) => a.start.getTime() - b.start.getTime())
 
+      // Set gridcell aria-label with date + event count
+      const dateLabel = new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long' }).format(day)
+      cell.setAttribute('aria-label', dayEvents.length > 0
+        ? `${dateLabel}, ${dayEvents.length} event${dayEvents.length !== 1 ? 's' : ''}`
+        : dateLabel)
+
       // Events container
       const eventsContainer = document.createElement('div')
       eventsContainer.className = 'lf-cal-month-events'
@@ -152,6 +164,9 @@ export function renderMonthView<T extends CalendarEvent>(
       for (const event of visibleEvents) {
         const eventEl = document.createElement('div')
         eventEl.className = getClass('monthEvent', classes, 'lf-cal-month-event')
+        eventEl.setAttribute('role', 'button')
+        eventEl.setAttribute('tabindex', '0')
+        eventEl.setAttribute('aria-label', event.title)
         eventEl.textContent = event.title
 
         if (event.color) {
@@ -163,6 +178,13 @@ export function renderMonthView<T extends CalendarEvent>(
             e.stopPropagation()
             onEventClick(event)
           })
+          eventEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              e.stopPropagation()
+              onEventClick(event)
+            }
+          })
         }
 
         eventsContainer.appendChild(eventEl)
@@ -171,12 +193,22 @@ export function renderMonthView<T extends CalendarEvent>(
       if (remainingCount > 0) {
         const more = document.createElement('div')
         more.className = getClass('monthMore', classes, 'lf-cal-month-more')
+        more.setAttribute('role', 'button')
+        more.setAttribute('tabindex', '0')
+        more.setAttribute('aria-label', `${remainingCount} more event${remainingCount !== 1 ? 's' : ''}`)
         more.textContent = t.more(remainingCount)
 
         more.addEventListener('click', (e) => {
           e.stopPropagation()
           if (onDateNavigate) {
             onDateNavigate(day)
+          }
+        })
+        more.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            e.stopPropagation()
+            if (onDateNavigate) onDateNavigate(day)
           }
         })
 

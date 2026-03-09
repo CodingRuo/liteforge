@@ -18,11 +18,28 @@ const EN: CalendarTranslations = {
   week: 'Week',
   month: 'Month',
   agenda: 'Agenda',
+  timeline: 'Timeline',
+  quarter: 'Quarter',
+  year: 'Year',
   hideWeekends: 'Hide weekends',
   showWeekends: 'Show weekends',
   allDay: 'All-day',
   more: (count) => `+${count} more`,
   noEvents: 'No events',
+  // Accessibility labels
+  calendar: 'Calendar',
+  navigation: 'Navigation',
+  previousPeriod: 'Previous',
+  nextPeriod: 'Next',
+  viewSelector: 'Select view',
+  resources: 'Resources',
+  // More menu
+  moreActions: 'More',
+  exportIcal: 'Export (.ics)',
+  importIcal: 'Import (.ics)',
+  print: 'Print',
+  toggleMiniCalendar: 'Show mini calendar',
+  hideMiniCalendar: 'Hide mini calendar',
 }
 
 const DE: CalendarTranslations = {
@@ -34,11 +51,28 @@ const DE: CalendarTranslations = {
   week: 'Woche',
   month: 'Monat',
   agenda: 'Agenda',
+  timeline: 'Zeitstrahl',
+  quarter: 'Quartal',
+  year: 'Jahr',
   hideWeekends: 'Wochenende ausblenden',
   showWeekends: 'Wochenende anzeigen',
   allDay: 'Ganztägig',
   more: (count) => `+${count} weitere`,
   noEvents: 'Keine Termine in diesem Zeitraum',
+  // Accessibility labels
+  calendar: 'Kalender',
+  navigation: 'Navigation',
+  previousPeriod: 'Zurück',
+  nextPeriod: 'Weiter',
+  viewSelector: 'Ansicht wählen',
+  resources: 'Ressourcen',
+  // More menu
+  moreActions: 'Mehr',
+  exportIcal: 'Exportieren (.ics)',
+  importIcal: 'Importieren (.ics)',
+  print: 'Drucken',
+  toggleMiniCalendar: 'Mini-Kalender anzeigen',
+  hideMiniCalendar: 'Mini-Kalender ausblenden',
 }
 
 const FR: CalendarTranslations = {
@@ -50,11 +84,28 @@ const FR: CalendarTranslations = {
   week: 'Semaine',
   month: 'Mois',
   agenda: 'Agenda',
+  timeline: 'Chronologie',
+  quarter: 'Trimestre',
+  year: 'Année',
   hideWeekends: 'Masquer les week-ends',
   showWeekends: 'Afficher les week-ends',
   allDay: 'Toute la journée',
   more: (count) => `+${count} de plus`,
   noEvents: 'Aucun événement',
+  // Accessibility labels
+  calendar: 'Calendrier',
+  navigation: 'Navigation',
+  previousPeriod: 'Précédent',
+  nextPeriod: 'Suivant',
+  viewSelector: 'Choisir la vue',
+  resources: 'Ressources',
+  // More menu
+  moreActions: 'Plus',
+  exportIcal: 'Exporter (.ics)',
+  importIcal: 'Importer (.ics)',
+  print: 'Imprimer',
+  toggleMiniCalendar: 'Afficher le mini-calendrier',
+  hideMiniCalendar: 'Masquer le mini-calendrier',
 }
 
 const ES: CalendarTranslations = {
@@ -66,11 +117,28 @@ const ES: CalendarTranslations = {
   week: 'Semana',
   month: 'Mes',
   agenda: 'Agenda',
+  timeline: 'Línea de tiempo',
+  quarter: 'Trimestre',
+  year: 'Año',
   hideWeekends: 'Ocultar fines de semana',
   showWeekends: 'Mostrar fines de semana',
   allDay: 'Todo el día',
   more: (count) => `+${count} más`,
   noEvents: 'Sin eventos',
+  // Accessibility labels
+  calendar: 'Calendario',
+  navigation: 'Navegación',
+  previousPeriod: 'Anterior',
+  nextPeriod: 'Siguiente',
+  viewSelector: 'Seleccionar vista',
+  resources: 'Recursos',
+  // More menu
+  moreActions: 'Más',
+  exportIcal: 'Exportar (.ics)',
+  importIcal: 'Importar (.ics)',
+  print: 'Imprimir',
+  toggleMiniCalendar: 'Mostrar mini-calendario',
+  hideMiniCalendar: 'Ocultar mini-calendario',
 }
 
 // ─── Locale map: exact match, then language prefix ─────────

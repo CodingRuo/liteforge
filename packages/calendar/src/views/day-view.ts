@@ -40,8 +40,10 @@ import {
   renderAllDayRow,
   createNowIndicator,
   getClass,
+  type EventTooltipConfig,
 } from './shared.js'
 import { setupSlotSelection } from '../interactions/slot-selection.js'
+import { snapToSlot } from '../utils/snap.js'
 
 interface DayViewOptions<T extends CalendarEvent> {
   date: () => Date
@@ -72,6 +74,7 @@ interface DayViewOptions<T extends CalendarEvent> {
   /** All resources for mobile merged-column label lookup */
   allResources?: Resource[]
   virtualizationCfg?: VirtualizationConfig
+  eventTooltip?: EventTooltipConfig<T>
 }
 
 export function renderDayView<T extends CalendarEvent>(
@@ -102,6 +105,7 @@ export function renderDayView<T extends CalendarEvent>(
     activeResource,
     allResources: allResourcesList = [],
     virtualizationCfg,
+    eventTooltip,
   } = options
 
   const container = document.createElement('div')
@@ -365,7 +369,8 @@ export function renderDayView<T extends CalendarEvent>(
           editable ? (event, element) => {
             setupEventResizeInteraction(event, element, currentDate, dayColumn)
           } : undefined,
-          selectedEvent ? () => selectedEvent()?.id ?? null : undefined
+          selectedEvent ? () => selectedEvent()?.id ?? null : undefined,
+          eventTooltip
         )
         eventEl.style.pointerEvents = 'auto'
 
@@ -464,7 +469,8 @@ export function renderDayView<T extends CalendarEvent>(
             editable ? (event, element) => {
               setupEventResizeInteraction(event, element, currentDate, resourceColumn)
             } : undefined,
-            selectedEvent ? () => selectedEvent()?.id ?? null : undefined
+            selectedEvent ? () => selectedEvent()?.id ?? null : undefined,
+            eventTooltip
           )
           eventEl.style.pointerEvents = 'auto'
           if (resource.color) {
@@ -566,7 +572,8 @@ export function renderDayView<T extends CalendarEvent>(
           editable ? (event, element) => {
             setupEventResizeInteraction(event, element, currentDate, dayColumn)
           } : undefined,
-          selectedEvent ? () => selectedEvent()?.id ?? null : undefined
+          selectedEvent ? () => selectedEvent()?.id ?? null : undefined,
+          eventTooltip
         )
         eventEl.style.pointerEvents = 'auto'
         eventsContainer.appendChild(eventEl)
@@ -624,6 +631,7 @@ export function renderDayView<T extends CalendarEvent>(
       if (!isDragging) {
         isDragging = true
         element.classList.add('lf-cal-event--dragging')
+        element.removeAttribute('data-conflict')
 
         // Create ghost
         ghostEl = element.cloneNode(true) as HTMLElement
@@ -697,6 +705,7 @@ export function renderDayView<T extends CalendarEvent>(
 
       isResizing = true
       element.classList.add('lf-cal-event--resizing')
+      element.removeAttribute('data-conflict')
       document.body.style.userSelect = 'none'
       document.body.style.cursor = 'ns-resize'
 
@@ -747,19 +756,20 @@ export function renderDayView<T extends CalendarEvent>(
 
   function calculateTimeFromY(y: number, day: Date, column: HTMLElement): Date {
     const rect = column.getBoundingClientRect()
-    const relativeY = y - rect.top
+    const deltaY = y - rect.top
     const slotHeight = Math.round((config.slotDuration / 30) * 40)
-    const totalSlots = (config.dayEnd - config.dayStart) * (60 / config.slotDuration)
+    const pixelsPerMinute = slotHeight / config.slotDuration
 
-    const slotIndex = Math.floor(relativeY / slotHeight)
-    const clampedIndex = Math.max(0, Math.min(slotIndex, totalSlots - 1))
-
-    const minutesFromStart = clampedIndex * config.slotDuration
-    const hours = config.dayStart + Math.floor(minutesFromStart / 60)
-    const minutes = minutesFromStart % 60
+    const { minutes: absMinutes } = snapToSlot(
+      deltaY,
+      pixelsPerMinute,
+      config.slotDuration,
+      config.dayStart * 60,
+      config.dayEnd * 60,
+    )
 
     const result = new Date(day)
-    result.setHours(hours, minutes, 0, 0)
+    result.setHours(Math.floor(absMinutes / 60), absMinutes % 60, 0, 0)
     return result
   }
 

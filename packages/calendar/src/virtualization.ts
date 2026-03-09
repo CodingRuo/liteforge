@@ -164,6 +164,165 @@ export function createScrollHandler(
   return { visibleRange, onScroll, dispose }
 }
 
+// ─── Horizontal scroll (timeline view) ────────────────────────────────────
+
+/**
+ * Describes which portion of the timeline horizontal axis is currently visible,
+ * expressed as minutes from the start of the timeline day.
+ */
+export interface HorizontalVisibleRange {
+  /** Minutes from dayStart visible at the left edge of the viewport */
+  startMinutes: number
+  /** Minutes from dayStart visible at the right edge */
+  endMinutes: number
+  /** Overscan buffer in minutes pre-rendered on each side */
+  overscanMinutes: number
+}
+
+/**
+ * Create a signal tracking the horizontal visible range of a timeline scroll
+ * container plus a scroll handler to keep it updated.
+ *
+ * @param dayStart     - hour the timeline begins (e.g. 0)
+ * @param dayEnd       - hour the timeline ends (e.g. 24)
+ * @param cellDuration - minutes per cell column (e.g. 60)
+ * @param cellWidth    - pixel width of each cell (e.g. 100)
+ * @param overscan     - overscan buffer in minutes (default: 120)
+ */
+export function createHorizontalScrollHandler(
+  dayStart: number,
+  dayEnd: number,
+  cellDuration: number,
+  cellWidth: number,
+  overscan: number = 120,
+): {
+  visibleRange: Signal<HorizontalVisibleRange>
+  onScroll: (scrollLeft: number, containerWidth: number) => void
+  dispose: () => void
+} {
+  const totalMinutes = (dayEnd - dayStart) * 60
+  const pxPerMinute = cellWidth / cellDuration
+
+  const visibleRange = signal<HorizontalVisibleRange>({
+    startMinutes: dayStart * 60,
+    endMinutes: Math.min(dayStart * 60 + totalMinutes, (dayStart + (dayEnd - dayStart)) * 60),
+    overscanMinutes: overscan,
+  })
+
+  let timer: ReturnType<typeof setTimeout> | null = null
+
+  function compute(scrollLeft: number, containerWidth: number): HorizontalVisibleRange {
+    const startMins = dayStart * 60 + Math.floor(scrollLeft / pxPerMinute)
+    const endMins   = startMins + Math.ceil(containerWidth / pxPerMinute)
+    return {
+      startMinutes: Math.max(dayStart * 60, startMins),
+      endMinutes:   Math.min(dayStart * 60 + totalMinutes, endMins),
+      overscanMinutes: overscan,
+    }
+  }
+
+  function onScroll(scrollLeft: number, containerWidth: number): void {
+    if (timer !== null) clearTimeout(timer)
+    timer = setTimeout(() => {
+      timer = null
+      visibleRange.set(compute(scrollLeft, containerWidth))
+    }, FRAME_MS)
+  }
+
+  function dispose(): void {
+    if (timer !== null) {
+      clearTimeout(timer)
+      timer = null
+    }
+  }
+
+  return { visibleRange, onScroll, dispose }
+}
+
+/**
+ * Calculate the pixel left-offset and width of an event bar on the timeline.
+ *
+ * @param eventStart   - event start Date
+ * @param eventEnd     - event end Date
+ * @param dayStart     - hour the timeline begins
+ * @param cellDuration - minutes per cell column
+ * @param cellWidth    - pixel width per cell
+ */
+export function calculateTimelinePosition(
+  eventStart: Date,
+  eventEnd: Date,
+  dayStart: number,
+  cellDuration: number,
+  cellWidth: number,
+): { left: number; width: number } {
+  const pxPerMinute = cellWidth / cellDuration
+  const timelineOriginMinutes = dayStart * 60
+
+  const startMins = eventStart.getHours() * 60 + eventStart.getMinutes()
+  const endMins   = eventEnd.getHours()   * 60 + eventEnd.getMinutes()
+
+  const left  = (startMins - timelineOriginMinutes) * pxPerMinute
+  const width = Math.max((endMins - startMins) * pxPerMinute, 2) // min 2px
+
+  return { left, width }
+}
+
+/**
+ * Calculate pixel position of the now-indicator line on the horizontal timeline.
+ * Returns null if current time is outside the timeline range.
+ *
+ * @param dayStart     - hour the timeline begins
+ * @param dayEnd       - hour the timeline ends
+ * @param cellDuration - minutes per cell column
+ * @param cellWidth    - pixel width per cell
+ */
+export function getNowIndicatorPosition(
+  dayStart: number,
+  dayEnd: number,
+  cellDuration: number,
+  cellWidth: number,
+): number | null {
+  const now = new Date()
+  const nowMins = now.getHours() * 60 + now.getMinutes()
+  const startMins = dayStart * 60
+  const endMins   = dayEnd   * 60
+
+  if (nowMins < startMins || nowMins > endMins) return null
+
+  const pxPerMinute = cellWidth / cellDuration
+  return (nowMins - startMins) * pxPerMinute
+}
+
+/**
+ * Filter a resource list to those whose row index falls within the current
+ * vertical viewport, expanded by the given overscan row count.
+ *
+ * Used for vertical virtualization of resource rows in the timeline view.
+ *
+ * @param resources       - full resource array
+ * @param rowHeight       - pixel height of each resource row
+ * @param scrollTop       - current scrollTop of the scroll container
+ * @param containerHeight - visible height of the scroll container
+ * @param overscanRows    - number of extra rows to pre-render on each side (default: 2)
+ */
+export function filterResourcesByViewport<R extends { id: string }>(
+  resources: R[],
+  rowHeight: number,
+  scrollTop: number,
+  containerHeight: number,
+  overscanRows: number = 2,
+): R[] {
+  if (resources.length === 0) return []
+
+  const firstVisible = Math.max(0, Math.floor(scrollTop / rowHeight) - overscanRows)
+  const lastVisible  = Math.min(
+    resources.length - 1,
+    Math.ceil((scrollTop + containerHeight) / rowHeight) + overscanRows,
+  )
+
+  return resources.slice(firstVisible, lastVisible + 1)
+}
+
 // ─── Should-virtualize gate ────────────────────────────────────────────────
 
 const DEFAULT_THRESHOLD   = 100

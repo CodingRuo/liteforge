@@ -2,9 +2,10 @@
  * @liteforge/calendar - Shared View Utilities
  */
 
-import { effect } from '@liteforge/core'
+import { effect, onCleanup } from '@liteforge/core'
 import type {
   CalendarEvent,
+  EventIndicator,
   ResolvedTimeConfig,
   OverlapLayout,
   CalendarClasses,
@@ -185,7 +186,79 @@ export function renderTimeSlots(
   return container
 }
 
+// ─── Indicator Rendering ───────────────────────────────────
+
+function renderIndicatorItem<T extends CalendarEvent>(
+  indicator: EventIndicator,
+  eventTooltip: EventTooltipConfig<T> | undefined,
+): HTMLDivElement {
+  const el = document.createElement('div')
+  el.className = 'lf-cal-event-indicator'
+
+  if (indicator.icon instanceof Node) {
+    el.appendChild(indicator.icon)
+  } else {
+    el.innerHTML = indicator.icon
+  }
+
+  if (indicator.color) {
+    el.style.color = indicator.color
+    el.style.borderColor = indicator.color
+  }
+
+  if (indicator.tooltip && eventTooltip) {
+    const cleanup = eventTooltip.fn(el, {
+      content: indicator.tooltip,
+      delay: 200,
+      position: 'top',
+    })
+    try { onCleanup(cleanup) } catch { /* no-op outside effect context */ }
+  }
+
+  return el
+}
+
+export function renderIndicators<T extends CalendarEvent>(
+  event: T,
+  container: HTMLElement,
+  eventTooltip?: EventTooltipConfig<T>,
+): void {
+  if (!event.indicators || event.indicators.length === 0) return
+
+  const wrapper = document.createElement('div')
+  wrapper.className = 'lf-cal-event-indicators'
+
+  for (const indicator of event.indicators) {
+    wrapper.appendChild(renderIndicatorItem(indicator, eventTooltip))
+  }
+
+  container.appendChild(wrapper)
+}
+
 // ─── Event Rendering ───────────────────────────────────────
+
+function buildDefaultTooltipContent<T extends CalendarEvent>(event: T): Node {
+  const el = document.createElement('div')
+  el.style.cssText = 'display:flex;flex-direction:column;gap:2px;min-width:120px'
+
+  const title = document.createElement('strong')
+  title.textContent = event.title
+  el.appendChild(title)
+
+  const time = document.createElement('span')
+  time.style.opacity = '0.8'
+  time.textContent = `${formatTime(event.start)} – ${formatTime(event.end)}`
+  el.appendChild(time)
+
+  return el
+}
+
+export type EventTooltipConfig<T extends CalendarEvent> = {
+  fn: (el: HTMLElement, input: string | { content: string | Node; delay?: number; position?: 'top' | 'bottom' | 'left' | 'right' | 'auto'; triggerOnFocus?: boolean }) => () => void
+  render?: (event: T) => string | Node
+  delay?: number
+  position?: 'top' | 'bottom' | 'left' | 'right' | 'auto'
+}
 
 export function renderEvent<T extends CalendarEvent>(
   event: T,
@@ -196,7 +269,8 @@ export function renderEvent<T extends CalendarEvent>(
   editable?: boolean,
   onDragStart?: (event: T, element: HTMLElement) => void,
   onResizeStart?: (event: T, element: HTMLElement) => void,
-  selectedEventId?: () => string | null
+  selectedEventId?: () => string | null,
+  eventTooltip?: EventTooltipConfig<T>
 ): HTMLDivElement {
   const eventEl = document.createElement('div')
   eventEl.className = 'lf-cal-event'
@@ -205,8 +279,11 @@ export function renderEvent<T extends CalendarEvent>(
   // ARIA attributes for accessibility
   eventEl.setAttribute('role', 'button')
   eventEl.setAttribute('tabindex', '0')
-  eventEl.setAttribute('aria-label', `${event.title}, ${formatTime(event.start)} - ${formatTime(event.end)}`)
-  eventEl.title = event.title // Native tooltip with full title
+  const ariaLabel = event.allDay
+    ? event.title
+    : `${event.title}, ${formatTime(event.start)} – ${formatTime(event.end)}`
+  eventEl.setAttribute('aria-label', ariaLabel)
+  if (!eventTooltip) eventEl.title = event.title // Native tooltip (suppressed when eventTooltip is active)
 
   // Position — slot height scales with slotDuration (30min = 40px baseline)
   const slotHeight = Math.round((config.slotDuration / 30) * 40)
@@ -247,7 +324,16 @@ export function renderEvent<T extends CalendarEvent>(
   if (onClick) {
     eventEl.addEventListener('click', (e) => {
       e.stopPropagation()
+      eventEl.dispatchEvent(new PointerEvent('pointerleave', { bubbles: false }))
       onClick(event)
+    })
+    // Keyboard activation (Enter / Space)
+    eventEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        e.stopPropagation()
+        onClick(event)
+      }
     })
   }
 
@@ -276,8 +362,27 @@ export function renderEvent<T extends CalendarEvent>(
   // Selected state
   if (selectedEventId) {
     effect(() => {
-      eventEl.classList.toggle('lf-cal-event--selected', selectedEventId() === event.id)
+      const isSelected = selectedEventId() === event.id
+      eventEl.classList.toggle('lf-cal-event--selected', isSelected)
+      eventEl.setAttribute('aria-selected', String(isSelected))
     })
+  }
+
+  // Indicators (bottom-right corner)
+  renderIndicators(event, eventEl, eventTooltip)
+
+  // Tooltip on hover
+  if (eventTooltip) {
+    const content = eventTooltip.render
+      ? eventTooltip.render(event)
+      : buildDefaultTooltipContent(event)
+    const cleanup = eventTooltip.fn(eventEl, {
+      content,
+      delay: eventTooltip.delay ?? 300,
+      position: eventTooltip.position ?? 'top',
+      triggerOnFocus: false,
+    })
+    onCleanup(cleanup)
   }
 
   return eventEl
@@ -292,6 +397,11 @@ export function renderAllDayEvent<T extends CalendarEvent>(
   const eventEl = document.createElement('div')
   eventEl.className = 'lf-cal-event lf-cal-event--allday'
   eventEl.dataset.eventId = event.id
+
+  // ARIA
+  eventEl.setAttribute('role', 'button')
+  eventEl.setAttribute('tabindex', '0')
+  eventEl.setAttribute('aria-label', event.title)
 
   // Color
   if (event.color) {
@@ -309,6 +419,14 @@ export function renderAllDayEvent<T extends CalendarEvent>(
     eventEl.addEventListener('click', (e) => {
       e.stopPropagation()
       onClick(event)
+    })
+    // Keyboard activation
+    eventEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        e.stopPropagation()
+        onClick(event)
+      }
     })
   }
 
@@ -333,12 +451,15 @@ export function renderAllDayRow<T extends CalendarEvent>(
 
   const row = document.createElement('div')
   row.className = getClass('header', classes, 'lf-cal-allday-row')
+  row.setAttribute('role', 'row')
+  row.setAttribute('aria-label', allDayLabel)
 
   // Time column spacer (to align with time column below)
   if (hasTimeColumnSpacer) {
     const spacer = document.createElement('div')
     spacer.className = 'lf-cal-allday-label'
     spacer.textContent = allDayLabel
+    spacer.setAttribute('aria-hidden', 'true')
     row.appendChild(spacer)
   }
 

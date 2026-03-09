@@ -26,6 +26,7 @@ import {
   addMinutes,
   diffInMinutes,
 } from '../date-utils.js'
+import { snapToSlot } from '../utils/snap.js'
 import {
   calculateOverlaps,
   getTimedEventsForDay,
@@ -35,6 +36,7 @@ import {
   renderAllDayRow,
   createNowIndicator,
   getClass,
+  type EventTooltipConfig,
 } from './shared.js'
 import { setupSlotSelection } from '../interactions/slot-selection.js'
 
@@ -59,6 +61,7 @@ interface WeekViewOptions<T extends CalendarEvent> {
   selectionConfig?: SelectionConfig | undefined
   maxAllDayVisible?: () => number | undefined
   virtualizationCfg?: VirtualizationConfig
+  eventTooltip?: EventTooltipConfig<T>
 }
 
 export function renderWeekView<T extends CalendarEvent>(
@@ -85,6 +88,7 @@ export function renderWeekView<T extends CalendarEvent>(
     selectionConfig,
     maxAllDayVisible,
     virtualizationCfg,
+    eventTooltip,
   } = options
 
   const container = document.createElement('div')
@@ -94,10 +98,12 @@ export function renderWeekView<T extends CalendarEvent>(
   // Header
   const header = document.createElement('div')
   header.className = getClass('header', classes, 'lf-cal-header')
+  header.setAttribute('role', 'row')
 
   // Time spacer in header
   const timeSpacer = document.createElement('div')
   timeSpacer.className = 'lf-cal-header-time-spacer'
+  timeSpacer.setAttribute('aria-hidden', 'true')
   header.appendChild(timeSpacer)
 
   // Day headers - will be populated reactively
@@ -122,6 +128,7 @@ export function renderWeekView<T extends CalendarEvent>(
   // Grid
   const grid = document.createElement('div')
   grid.className = getClass('grid', classes, 'lf-cal-grid')
+  grid.setAttribute('role', 'row')
   body.appendChild(grid)
 
   container.appendChild(body)
@@ -214,16 +221,21 @@ export function renderWeekView<T extends CalendarEvent>(
       if (isToday(day)) headerClass += ' lf-cal-header-cell--today'
       if (isWeekend(day)) headerClass += ' lf-cal-header-cell--weekend'
       headerCell.className = headerClass
+      headerCell.setAttribute('role', 'columnheader')
+      headerCell.setAttribute('aria-label',
+        new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long' }).format(day))
 
       if (dayHeaderContent) {
         headerCell.appendChild(dayHeaderContent(day))
       } else {
         const dayName = document.createElement('div')
         dayName.className = 'lf-cal-header-day-name'
+        dayName.setAttribute('aria-hidden', 'true')
         dayName.textContent = new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(day)
 
         const dayNumber = document.createElement('div')
         dayNumber.className = 'lf-cal-header-day-number'
+        dayNumber.setAttribute('aria-hidden', 'true')
         dayNumber.textContent = String(day.getDate())
 
         headerCell.appendChild(dayName)
@@ -281,6 +293,9 @@ export function renderWeekView<T extends CalendarEvent>(
       if (isToday(day)) columnClass += ' lf-cal-day-column--today'
       if (isWeekend(day)) columnClass += ' lf-cal-day-column--weekend'
       dayColumn.className = columnClass
+      dayColumn.setAttribute('role', 'gridcell')
+      dayColumn.setAttribute('aria-label',
+        new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long' }).format(day))
 
       // Time slots
       const slotsContainer = renderTimeSlots(day, config)
@@ -345,7 +360,8 @@ export function renderWeekView<T extends CalendarEvent>(
           editable ? (event, element) => {
             setupEventResizeInteraction(event, element, day, dayColumn)
           } : undefined,
-          selectedEvent ? () => selectedEvent()?.id ?? null : undefined
+          selectedEvent ? () => selectedEvent()?.id ?? null : undefined,
+          eventTooltip
         )
         eventEl.style.pointerEvents = 'auto'
         eventsContainer.appendChild(eventEl)
@@ -404,6 +420,7 @@ export function renderWeekView<T extends CalendarEvent>(
       if (!isDragging) {
         isDragging = true
         element.classList.add('lf-cal-event--dragging')
+        element.removeAttribute('data-conflict')
 
         // Create ghost
         ghostEl = element.cloneNode(true) as HTMLElement
@@ -496,6 +513,7 @@ export function renderWeekView<T extends CalendarEvent>(
 
       isResizing = true
       element.classList.add('lf-cal-event--resizing')
+      element.removeAttribute('data-conflict')
       document.body.style.userSelect = 'none'
       document.body.style.cursor = 'ns-resize'
 
@@ -571,19 +589,20 @@ export function renderWeekView<T extends CalendarEvent>(
     if (!column) return day
 
     const rect = column.getBoundingClientRect()
-    const relativeY = y - rect.top
+    const deltaY = y - rect.top
     const slotHeight = Math.round((config.slotDuration / 30) * 40)
-    const totalSlots = (config.dayEnd - config.dayStart) * (60 / config.slotDuration)
+    const pixelsPerMinute = slotHeight / config.slotDuration
 
-    const slotIndex = Math.floor(relativeY / slotHeight)
-    const clampedIndex = Math.max(0, Math.min(slotIndex, totalSlots - 1))
-
-    const minutesFromStart = clampedIndex * config.slotDuration
-    const hours = config.dayStart + Math.floor(minutesFromStart / 60)
-    const minutes = minutesFromStart % 60
+    const { minutes: absMinutes } = snapToSlot(
+      deltaY,
+      pixelsPerMinute,
+      config.slotDuration,
+      config.dayStart * 60,
+      config.dayEnd * 60,
+    )
 
     const result = new Date(day)
-    result.setHours(hours, minutes, 0, 0)
+    result.setHours(Math.floor(absMinutes / 60), absMinutes % 60, 0, 0)
     return result
   }
 

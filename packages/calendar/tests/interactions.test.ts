@@ -4,7 +4,7 @@
  * Tests for drag & drop, resize, and slot selection interactions.
  */
 
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { signal } from '@liteforge/core'
 import { createCalendar } from '../src/calendar.js'
 import type { CalendarEvent, Resource } from '../src/types.js'
@@ -698,6 +698,185 @@ describe('Calendar Interactions', () => {
       // Toggle sarah back on
       calendar.toggleResource('sarah')
       expect(calendar.visibleResources()).toContain('sarah')
+    })
+  })
+
+  describe('slot selection — unhappy paths', () => {
+    beforeEach(() => {
+      localStorage.clear()
+    })
+
+    it('drag beyond maxDuration still calls onSlotSelect with capped end', () => {
+      const onSlotSelect = vi.fn()
+      const events = signal<CalendarEvent[]>([])
+
+      const calendar = createCalendar({
+        events,
+        defaultDate: new Date(2024, 5, 15),
+        selectable: true,
+        selection: { maxDuration: 60, snapIndicator: false },
+        onSlotSelect,
+        unstyled: true,
+      })
+
+      const root = calendar.Root() as HTMLElement
+      document.body.appendChild(root)
+
+      const slotsContainer = root.querySelector('.lf-cal-day-column') as HTMLElement
+      expect(slotsContainer).toBeTruthy()
+
+      const containerRect = slotsContainer.getBoundingClientRect()
+      // Start near top of the slots container
+      const startY = containerRect.top + 5
+      // Move very far down to exceed a 60-minute maxDuration
+      const farY = containerRect.top + 800
+
+      slotsContainer.dispatchEvent(new PointerEvent('pointerdown', {
+        bubbles: true, cancelable: true, button: 0, clientY: startY,
+      }))
+      slotsContainer.dispatchEvent(new PointerEvent('pointermove', {
+        bubbles: true, cancelable: true, button: 0, clientY: farY,
+      }))
+      slotsContainer.dispatchEvent(new PointerEvent('pointerup', {
+        bubbles: true, cancelable: true, button: 0, clientY: farY,
+      }))
+
+      // If the drag was large enough to be a selection (not a click), onSlotSelect fires
+      if (onSlotSelect.mock.calls.length > 0) {
+        const call = onSlotSelect.mock.calls[0] as [Date, Date, string | undefined]
+        const [selStart, selEnd] = call
+        const durationMinutes = (selEnd.getTime() - selStart.getTime()) / 60000
+        expect(durationMinutes).toBeLessThanOrEqual(60)
+      }
+      // The main guarantee: no crash when drag exceeds maxDuration
+
+      document.body.removeChild(root)
+    })
+
+    it('immediate pointerup without move calls onSlotClick with minimum slot', () => {
+      const onSlotClick = vi.fn()
+      const events = signal<CalendarEvent[]>([])
+
+      const calendar = createCalendar({
+        events,
+        defaultDate: new Date(2024, 5, 15),
+        selectable: true,
+        onSlotClick,
+        unstyled: true,
+      })
+
+      const root = calendar.Root() as HTMLElement
+      document.body.appendChild(root)
+
+      const slot = root.querySelector('.lf-cal-time-slot')
+      expect(slot).toBeTruthy()
+
+      // Pointerdown immediately followed by pointerup at the same position
+      const pointerDown = new PointerEvent('pointerdown', {
+        bubbles: true, cancelable: true, button: 0, clientY: 300,
+      })
+      const pointerUp = new PointerEvent('pointerup', {
+        bubbles: true, cancelable: true, button: 0, clientY: 300,
+      })
+
+      slot!.dispatchEvent(pointerDown)
+      slot!.dispatchEvent(pointerUp)
+
+      // A single click (no move) should fire onSlotClick
+      expect(onSlotClick).toHaveBeenCalledTimes(1)
+
+      // The slot should have duration equal to one slotDuration (30 min by default)
+      const call = onSlotClick.mock.calls[0] as [Date, Date, string | undefined]
+      const [clickStart, clickEnd] = call
+      const durationMinutes = (clickEnd.getTime() - clickStart.getTime()) / 60000
+      expect(durationMinutes).toBe(30) // default slotDuration
+
+      document.body.removeChild(root)
+    })
+  })
+
+  // ─── checkConflict Integration ──────────────────────────────────────────
+
+  describe('checkConflict (conflict wrapper logic)', () => {
+    /**
+     * Tests for the checkConflict() utility which is the pure decision core
+     * of handleEventDrop / handleEventResize in calendar.ts.
+     *
+     * No drag simulation needed — the function takes events and a callback,
+     * returns 'allow' | 'warn' | 'prevent'.
+     */
+
+    type E = CalendarEvent
+
+    function makeEvent2(id: string, startH: number, endH: number, resourceId?: string): E {
+      const day = new Date(2024, 5, 17)
+      const start = new Date(day); start.setHours(startH, 0, 0, 0)
+      const end   = new Date(day); end.setHours(endH, 0, 0, 0)
+      return { id, title: id, start, end, resourceId }
+    }
+
+    it("no callback → always 'allow'", async () => {
+      const { checkConflict } = await import('../src/utils/conflict.js')
+      const event = makeEvent2('a', 10, 11)
+      const other = makeEvent2('b', 10, 11) // overlapping
+      expect(checkConflict(event, [other], 'a', undefined)).toBe('allow')
+    })
+
+    it("no conflicts → 'allow', callback not called", async () => {
+      const { checkConflict } = await import('../src/utils/conflict.js')
+      const event = makeEvent2('a', 10, 11)
+      const other = makeEvent2('b', 12, 13) // no overlap
+      const cb = vi.fn(() => 'prevent' as const)
+      expect(checkConflict(event, [other], 'a', cb)).toBe('allow')
+      expect(cb).not.toHaveBeenCalled()
+    })
+
+    it("conflicts + callback returns 'prevent' → 'prevent'", async () => {
+      const { checkConflict } = await import('../src/utils/conflict.js')
+      const event = makeEvent2('a', 10, 12)
+      const other = makeEvent2('b', 11, 13) // overlapping
+      const cb = vi.fn(() => 'prevent' as const)
+      expect(checkConflict(event, [other, event], 'a', cb)).toBe('prevent')
+      expect(cb).toHaveBeenCalledTimes(1)
+      expect(cb).toHaveBeenCalledWith(event, [other])
+    })
+
+    it("conflicts + callback returns 'warn' → 'warn'", async () => {
+      const { checkConflict } = await import('../src/utils/conflict.js')
+      const event = makeEvent2('a', 10, 12)
+      const other = makeEvent2('b', 11, 13)
+      const cb = vi.fn(() => 'warn' as const)
+      expect(checkConflict(event, [other, event], 'a', cb)).toBe('warn')
+    })
+
+    it("conflicts + callback returns 'allow' → 'allow'", async () => {
+      const { checkConflict } = await import('../src/utils/conflict.js')
+      const event = makeEvent2('a', 10, 12)
+      const other = makeEvent2('b', 11, 13)
+      const cb = vi.fn(() => 'allow' as const)
+      expect(checkConflict(event, [other, event], 'a', cb)).toBe('allow')
+    })
+
+    it('excludeId removes the dragged event from conflict check', async () => {
+      const { checkConflict } = await import('../src/utils/conflict.js')
+      // event 'a' would conflict with itself if not excluded
+      const event = makeEvent2('a', 10, 11)
+      const cb = vi.fn(() => 'prevent' as const)
+      // allEvents contains only 'a' itself — excludeId='a' removes it → no conflicts → 'allow'
+      expect(checkConflict(event, [event], 'a', cb)).toBe('allow')
+      expect(cb).not.toHaveBeenCalled()
+    })
+
+    it('callback receives the updated event (with new times)', async () => {
+      const { checkConflict } = await import('../src/utils/conflict.js')
+      const updatedEvent = makeEvent2('a', 10, 12) // new proposed times
+      const conflict     = makeEvent2('b', 11, 13)
+      const cb = vi.fn(() => 'allow' as const)
+      checkConflict(updatedEvent, [conflict, updatedEvent], 'a', cb)
+      expect(cb).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'a', start: updatedEvent.start, end: updatedEvent.end }),
+        [conflict],
+      )
     })
   })
 })

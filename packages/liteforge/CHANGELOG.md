@@ -1,5 +1,11 @@
 # liteforge
 
+## 0.7.6
+
+### Patch Changes
+
+- fix: bump @liteforge/runtime dependency to 0.6.6
+
 ## 0.7.5
 
 ### Patch Changes

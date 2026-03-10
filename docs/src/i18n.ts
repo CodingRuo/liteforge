@@ -1,12 +1,9 @@
 /**
  * docs i18n singleton
  *
- * Used as a module-level singleton (same pattern as themeStore) so every
- * page and component can import { t, locale, setLocale } directly without
- * needing use() injection.
- *
- * i18nPlugin in main.tsx pre-loads the default/persisted locale before mount,
- * preventing any flash of untranslated keys.
+ * Every page imports { t, locale, setLocale } directly from here.
+ * main.tsx passes this instance to i18nPlugin() — the plugin preloads
+ * the persisted locale and provides the same instance via use('i18n').
  */
 import { createI18n } from 'liteforge/i18n';
 import en from './locales/en.js';

@@ -1,7 +1,8 @@
 import { createApp } from 'liteforge';
 import { createBrowserHistory, createRouter } from 'liteforge/router';
-import { ModalProvider } from 'liteforge/modal';
-import { ToastProvider } from 'liteforge/toast';
+import { modalPlugin } from 'liteforge/modal';
+import { toastPlugin } from 'liteforge/toast';
+import { i18nPlugin } from 'liteforge/i18n';
 import { routes } from './router';
 import { App } from './App';
 import { initTheme } from './stores/theme';
@@ -11,12 +12,6 @@ import './styles.css';
 // Sync dark/light class on <html> before first render — no flash of wrong theme
 initTheme();
 
-// Pre-load locale before mount — prevents flash of untranslated keys (FOUC equivalent)
-const initialLocale = i18n.locale();
-const preloads: Promise<void>[] = [i18n._load(initialLocale)];
-if (initialLocale !== 'en') preloads.push(i18n._loadFallback('en'));
-await Promise.all(preloads);
-
 const history = createBrowserHistory();
 const router = createRouter({
   routes,
@@ -24,12 +19,8 @@ const router = createRouter({
   titleTemplate: (title) => title ?? 'LiteForge Docs',
 });
 
-document.body.appendChild(ModalProvider());
-document.body.appendChild(ToastProvider({ position: 'bottom-right' }));
-
-await createApp({
-  root: App,
-  target: '#app',
-  router,
-});
-
+await createApp({ root: App, target: '#app', router })
+  .use(i18nPlugin(i18n))
+  .use(modalPlugin())
+  .use(toastPlugin({ position: 'bottom-right' }))
+  .mount();

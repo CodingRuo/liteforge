@@ -256,9 +256,6 @@ export default defineLocale({
     apiLocale:        'Signal — aktuelle Locale. Abonniert Aufrufer in Effekten / JSX automatisch.',
     apiSetLocale:     'Lädt Übersetzungen für die neue Locale, aktualisiert Signal atomar via batch()',
     apiT:             'Übersetzt einen Punkt-Notation-Schlüssel. Unterstützt {param}-Interpolation und |-Pipe-Pluralisierung.',
-    defineTranslations:      'Typsichere Locale-Definitionen',
-    defineTranslationsDesc:  'Mit defineTranslations() werden Locale-Dateien validiert, ohne den Typ in jeder Datei importieren zu müssen. Fehlende oder überzählige Schlüssel werden direkt an der Verwendungsstelle erkannt.',
-    defineTranslationsTitle: 'defineTranslations()-Pattern',
   },
 
   // ─── Store page ──────────────────────────────────────────────────────

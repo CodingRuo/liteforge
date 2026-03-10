@@ -28,17 +28,3 @@ export function defineLocale<T extends Record<string, unknown>>(t: T): T {
   return t;
 }
 
-/**
- * Type-safe wrapper for locale definitions.
- * Validates that a translation object matches the canonical shape T.
- * Missing or extra keys are caught at the call site.
- *
- * @example
- * // locales/de.ts
- * import { defineTranslations } from '@liteforge/i18n'
- * import type { AppTranslations } from './en.js'
- * export default defineTranslations<AppTranslations>({ ... })
- */
-export function defineTranslations<T>(t: T): T {
-  return t;
-}

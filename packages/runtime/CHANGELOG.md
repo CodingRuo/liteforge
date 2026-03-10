@@ -1,5 +1,11 @@
 # @liteforge/runtime
 
+## 0.6.3
+
+### Patch Changes
+
+- 627a0e8: `ComponentFactory` call signature now uses optional props (`props?: InputP`). Components without defined props can now be called as `MyComponent()` instead of requiring `MyComponent({})`.
+
 ## 0.6.2
 
 ### Patch Changes

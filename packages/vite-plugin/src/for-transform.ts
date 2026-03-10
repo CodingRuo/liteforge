@@ -200,6 +200,30 @@ function walkJsxNodes(
     walkJsxNodes(node.expression, itemName, indexName);
     return;
   }
+
+  // CallExpression: NavLink({ href: item.href, children: item.label })
+  // Rewrite param refs in all arguments so item.x → item().x
+  if (t.isCallExpression(node)) {
+    for (let i = 0; i < node.arguments.length; i++) {
+      const arg = node.arguments[i];
+      if (t.isObjectExpression(arg)) {
+        // Object literal argument: rewrite each property value
+        for (const prop of arg.properties) {
+          if (!t.isObjectProperty(prop) || !t.isExpression(prop.value)) continue;
+          const rewritten = rewriteParamRefs(prop.value, itemName, indexName);
+          if (rewritten !== prop.value) prop.value = rewritten;
+        }
+      } else if (t.isExpression(arg)) {
+        const rewritten = rewriteParamRefs(arg, itemName, indexName);
+        if (rewritten !== arg) node.arguments[i] = rewritten;
+      }
+    }
+    // Also recurse into nested call expressions (e.g. NavLink inside For inside another call)
+    for (const arg of node.arguments) {
+      if (t.isCallExpression(arg)) walkJsxNodes(arg, itemName, indexName);
+    }
+    return;
+  }
 }
 
 // =============================================================================

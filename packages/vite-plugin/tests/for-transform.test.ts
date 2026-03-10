@@ -203,6 +203,45 @@ describe('For() transform', () => {
   });
 
   // ─────────────────────────────────────────────────────────────────────────
+  // children prop — component call arguments
+  // ─────────────────────────────────────────────────────────────────────────
+
+  describe('children — component call arguments', () => {
+    it('rewrites item.x in NavLink({ href: item.href, children: item.label })', () => {
+      const input = `
+        const NAV = [{ label: 'Home', href: '/' }];
+        function App() {
+          return (<nav>{For({ each: NAV, children: (item) => NavLink({ href: item.href, children: item.label }) })}</nav>);
+        }
+      `;
+      const output = norm(transformCode(input)).replace(/\(\)\.\s+/g, '().');
+      expect(output).toContain('href: item().href');
+      expect(output).toContain('children: item().label');
+    });
+
+    it('rewrites item.x in a plain function call argument', () => {
+      const input = `
+        function List() {
+          return (<ul>{For({ each: items(), children: (item) => renderRow({ id: item.id, name: item.name }) })}</ul>);
+        }
+      `;
+      const output = norm(transformCode(input)).replace(/\(\)\.\s+/g, '().');
+      expect(output).toContain('id: item().id');
+      expect(output).toContain('name: item().name');
+    });
+
+    it('rewrites bare item passed as positional argument', () => {
+      const input = `
+        function List() {
+          return (<ul>{For({ each: items(), children: (item) => MyComp({ value: item }) })}</ul>);
+        }
+      `;
+      const output = norm(transformCode(input)).replace(/\(\)\.\s+/g, '().');
+      expect(output).toContain('value: item()');
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
   // children prop — event handler bodies
   // ─────────────────────────────────────────────────────────────────────────
 

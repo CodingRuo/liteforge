@@ -1,19 +1,16 @@
-import { createRouter, createBrowserHistory } from 'liteforge/router';
+import type { RouteDefinition } from 'liteforge/router';
 
-export function createAppRouter() {
-  return createRouter({
-    history: createBrowserHistory(),
-    routes: [
-      {
-        path: '/',
-        component: () => import('./pages/Home.js'),
-        title: 'Home',
-      },
-      {
-        path: '/about',
-        component: () => import('./pages/About.js'),
-        title: 'About',
-      },
-    ],
-  });
-}
+export const routes: RouteDefinition[] = [
+  {
+    path: '/',
+    component: () => import('./pages/Home.js'),
+    export: 'Home',
+    meta: { title: 'Home' },
+  },
+  {
+    path: '/about',
+    component: () => import('./pages/About.js'),
+    export: 'About',
+    meta: { title: 'About' },
+  },
+];

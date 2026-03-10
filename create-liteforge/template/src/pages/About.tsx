@@ -1,6 +1,6 @@
 import { createComponent } from 'liteforge';
 
-export default createComponent({
+export const About = createComponent({
   name: 'About',
   component() {
     return (

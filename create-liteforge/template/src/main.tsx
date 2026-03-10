@@ -1,12 +1,13 @@
 import { createApp } from 'liteforge';
-import { routerPlugin } from 'liteforge/router';
+import { createBrowserHistory, createRouter } from 'liteforge/router';
 import { modalPlugin } from 'liteforge/modal';
 import { App } from './App';
-import { createAppRouter } from './router';
-import { uiStore } from './stores/ui';
+import { routes } from './router';
 import './styles.css';
 
-await createApp({ root: App, target: '#app', stores: [uiStore] })
-  .use(routerPlugin(createAppRouter()))
+const history = createBrowserHistory();
+const router = createRouter({ routes, history });
+
+await createApp({ root: App, target: '#app', router })
   .use(modalPlugin())
   .mount();

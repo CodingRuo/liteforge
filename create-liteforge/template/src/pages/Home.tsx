@@ -1,7 +1,7 @@
 import { createComponent, signal } from 'liteforge';
 import { Link } from 'liteforge/router';
 
-export default createComponent({
+export const Home = createComponent({
   name: 'Home',
   component() {
     const count = signal(0);

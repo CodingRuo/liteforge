@@ -177,22 +177,31 @@ function createComponentNode(
 }
 
 // =============================================================================
-// HTML Element Creation
+// HTML / SVG Element Creation
 // =============================================================================
 
+const SVG_TAGS = new Set([
+  'svg', 'path', 'circle', 'rect', 'line', 'polyline', 'polygon', 'g',
+  'text', 'tspan', 'defs', 'use', 'symbol', 'clipPath', 'mask', 'pattern',
+  'linearGradient', 'radialGradient', 'stop', 'animate', 'animateTransform',
+  'feGaussianBlur', 'filter', 'feMerge', 'feMergeNode',
+]);
+
 /**
- * Create an HTML element with props and children
+ * Create an HTML or SVG element with props and children
  */
 function createElement(
   tag: string,
   props: Props,
   children: HChild[]
-): HTMLElement {
-  const element = document.createElement(tag);
+): Element {
+  const element = SVG_TAGS.has(tag)
+    ? document.createElementNS('http://www.w3.org/2000/svg', tag)
+    : document.createElement(tag);
 
   // Apply props
   if (props !== null) {
-    applyProps(element, props);
+    applyProps(element as HTMLElement, props);
   }
 
   // Append children

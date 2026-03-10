@@ -220,14 +220,7 @@ const { t, locale, setLocale } = i18n;
 
 <button onclick={() => setLocale('de')}>🇩🇪 Deutsch</button>`;
 
-const DEFINE_TRANSLATIONS_CODE = `// locales/define.ts
-import type { AppTranslations } from './en.js'
-
-export function defineTranslations(t: AppTranslations): AppTranslations {
-  return t
-}
-
-// locales/en.ts
+const DEFINE_TRANSLATIONS_CODE = `// locales/en.ts
 export const en = {
   greeting: 'Hello, {name}!',
   nav: { home: 'Home', about: 'About' },
@@ -237,15 +230,16 @@ export type AppTranslations = typeof en
 export default en
 
 // locales/de.ts
-import { defineTranslations } from './define.js'
+import { defineTranslations } from '@liteforge/i18n'
+import type { AppTranslations } from './en.js'
 
-export default defineTranslations({
+export default defineTranslations<AppTranslations>({
   greeting: 'Hallo, {name}!',
   nav: { home: 'Startseite', about: 'Über uns' },
 })
 
 // Missing key → TypeScript error at the defineTranslations() call site.
-// No \`satisfies\`, no type import in every locale file.`;
+// No \`satisfies\`, no repeated type import — one import per locale file.`;
 
 // ─── API rows ──────────────────────────────────────────────────────────────────
 

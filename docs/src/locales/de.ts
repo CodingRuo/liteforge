@@ -1,4 +1,5 @@
 import { defineTranslations } from './define.js';
+import type { DocsTranslations } from './en.js';
 
 const de = {
   // ─── Layout / Nav ────────────────────────────────────────────────────
@@ -842,4 +843,4 @@ const de = {
   },
 };
 
-export default defineTranslations(de);
+export default defineTranslations<DocsTranslations>(de);

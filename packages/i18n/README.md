@@ -72,28 +72,24 @@ export default en;
 
 ### Type-safe locale definitions with `defineTranslations()`
 
-Instead of repeating `import type` and `satisfies` in every locale file, create a small wrapper once:
+`defineTranslations<T>(t: T): T` is exported directly from `@liteforge/i18n`. It validates that a locale object matches the canonical shape — no `satisfies`, no repeated type imports.
 
 ```ts
-// locales/define.ts
+// locales/en.ts
+export const en = {
+  greeting: 'Hello, {name}!',
+  nav: { home: 'Home', about: 'About' },
+  items: '{count} item | {count} items',
+};
+
+export type AppTranslations = typeof en;
+export default en;
+
+// locales/de.ts
+import { defineTranslations } from '@liteforge/i18n';
 import type { AppTranslations } from './en.js';
 
-/**
- * Type-safe wrapper for locale definitions.
- * Missing or extra keys are caught at the defineTranslations() call site.
- */
-export function defineTranslations(t: AppTranslations): AppTranslations {
-  return t;
-}
-```
-
-Then each locale file is just:
-
-```ts
-// locales/de.ts
-import { defineTranslations } from './define.js';
-
-export default defineTranslations({
+export default defineTranslations<AppTranslations>({
   greeting: 'Hallo, {name}!',
   nav: {
     home: 'Startseite',
@@ -105,10 +101,10 @@ export default defineTranslations({
 
 **Why this pattern?**
 
-- No `satisfies DocsTranslations` — TypeScript checks at the call site instead
-- No `import type { AppTranslations }` in every locale file — the import lives once in `define.ts`
-- Scales well: adding a new locale is a single `import { defineTranslations }` line
-- Missing key → TypeScript error immediately at the `defineTranslations()` call, not at the consumer
+- No `satisfies AppTranslations` in every file — TypeScript checks at the call site instead
+- `import type { AppTranslations }` is only needed once per locale (to pass the type parameter)
+- Generic `<T>` — works for any translation shape in any project using `@liteforge/i18n`
+- Missing key → TypeScript error immediately at `defineTranslations<AppTranslations>(...)`, not at the consumer
 
 ## Interpolation
 

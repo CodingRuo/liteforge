@@ -106,11 +106,17 @@ const IMPORT_CODE  = `import { i18nPlugin } from 'liteforge/i18n';`;
 
 const PLUGIN_CODE = `import en from './locales/en.js'
 
+// Vite discovers all locale files at build time — no manual import list.
+const localeModules = import.meta.glob('./locales/*.js')
+
 const app = await createApp({ root: App, target: '#app' })
   .use(i18nPlugin({
     default: en,              // T is inferred — no explicit generic needed
     fallback: 'en',           // used when a key is missing in current locale
-    localesDir: './locales',  // auto-loads ./locales/{locale}.js
+    load: async (locale) => {
+      const mod = await localeModules[\`./locales/\${locale}.js\`]?.()
+      return (mod as { default: typeof en })?.default ?? en
+    },
     persist: true,            // saves to localStorage (default: true)
     storageKey: 'my-locale',  // default: 'lf-locale'
   }))

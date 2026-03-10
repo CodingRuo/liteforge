@@ -1,6 +1,6 @@
-import type { TranslationTree } from 'liteforge/i18n';
+import { defineLocale } from 'liteforge/i18n';
 
-const en = {
+const en = defineLocale({
   // ─── Layout / Nav ────────────────────────────────────────────────────
   nav: {
     foundation: 'Foundation',
@@ -243,19 +243,19 @@ const en = {
     live: 'Live example',
     liveDesc: 'Click the locale buttons — only the bound text nodes update, no component re-render.',
     liveTitle: 'Locale switch · interpolation · pluralization · fallback',
-    addLocale:     'Adding a language',
+    addLocale: 'Adding a language',
     addLocaleDesc: 'Create one file in the locales directory — that\'s it. No changes to i18n.ts, no imports to update. defineLocale() signals intent and keeps all locale files uniform.',
     // API row descriptions
-    apiDefault:       'The default locale object — T is inferred from this value. No explicit generic needed.',
+    apiDefault: 'The default locale object — T is inferred from this value. No explicit generic needed.',
     apiDefaultLocale: 'Locale loaded on startup (or from localStorage if persist: true)',
     apiFallbackLocale: 'Used when a key is missing in the current locale',
-    apiLocalesDir:    'Directory prefix for auto-loading locale files: import(`${localesDir}/${locale}.js`)',
-    apiLoad:          'Manual load function — overrides localesDir when provided',
-    apiPersist:       'Save locale choice to localStorage; restore on next visit',
-    apiStorageKey:    'localStorage key used for persistence',
-    apiLocale:        'Signal — current locale. Auto-subscribes callers inside effects / JSX.',
-    apiSetLocale:     'Load translations for the new locale, update signal atomically via batch()',
-    apiT:             'Translate a dot-notation key. Supports {param} interpolation and | pipe pluralization.',
+    apiLocalesDir: 'Node/runtime only — not compatible with Vite. Use import.meta.glob + load: instead.',
+    apiLoad: 'Async loader function. In Vite apps, pair with import.meta.glob for zero-config locale discovery.',
+    apiPersist: 'Save locale choice to localStorage; restore on next visit',
+    apiStorageKey: 'localStorage key used for persistence',
+    apiLocale: 'Signal — current locale. Auto-subscribes callers inside effects / JSX.',
+    apiSetLocale: 'Load translations for the new locale, update signal atomically via batch()',
+    apiT: 'Translate a dot-notation key. Supports {param} interpolation and | pipe pluralization.',
   },
 
   // ─── Store page ──────────────────────────────────────────────────────
@@ -841,7 +841,7 @@ const en = {
     copied: 'Copied!',
     learnMore: 'Learn more',
   },
-} satisfies TranslationTree;
+});
 
 /** Canonical shape — all other locale files must satisfy this type. */
 export type DocsTranslations = typeof en;

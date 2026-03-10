@@ -16,11 +16,18 @@ import { createApp } from 'liteforge'
 import { i18nPlugin } from '@liteforge/i18n'
 import en from './locales/en.js'
 
+// Vite-native: import.meta.glob discovers all locale files automatically.
+// Adding a new language = create one file, no other changes needed.
+const localeModules = import.meta.glob('./locales/*.js')
+
 await createApp({ root: App, target: '#app' })
   .use(i18nPlugin({
-    default: en,              // T inferred — no explicit generic needed
+    default: en,
     fallback: 'en',
-    localesDir: './locales',  // auto-loads ./locales/{locale}.js on setLocale()
+    load: async (locale) => {
+      const mod = await localeModules[`./locales/${locale}.js`]?.()
+      return (mod as { default: typeof en })?.default ?? en
+    },
     persist: true,
   }))
   .mount()
@@ -66,7 +73,7 @@ export default defineLocale({
 })
 ```
 
-No changes to `main.ts`, no imports to update. `localesDir: './locales'` picks it up automatically when `setLocale('fr')` is called.
+No changes to `main.ts`, no imports to update. `import.meta.glob('./locales/*.js')` discovers it automatically when `setLocale('fr')` is called.
 
 ## Usage in components
 
@@ -99,9 +106,14 @@ Or as a module-level singleton (no `use()` needed):
 import { createI18n } from '@liteforge/i18n'
 import en from './locales/en.js'
 
+const localeModules = import.meta.glob('./locales/*.js')
+
 export const { t, locale, setLocale } = createI18n({
   default: en,
-  localesDir: './locales',
+  load: async (locale) => {
+    const mod = await localeModules[`./locales/${locale}.js`]?.()
+    return (mod as { default: typeof en })?.default ?? en
+  },
 })
 ```
 
@@ -162,8 +174,8 @@ t('nav.settings')  // → returns the English string
 | `default` | `T` | — | Default locale object — **T is inferred from this** |
 | `defaultLocaleKey` | `string` | `'en'` | Key of the default locale for loader routing |
 | `fallback` | `string` | — | Fallback locale key — used when a key is missing |
-| `localesDir` | `string` | — | Auto-load locale files: `` import(`${localesDir}/${locale}.js`) `` |
-| `load` | `(locale: string) => Promise<T>` | — | Manual loader — overrides `localesDir` |
+| `localesDir` | `string` | — | Auto-load via variable import path — **Node/runtime only**, not compatible with Vite (use `import.meta.glob` + `load:` instead) |
+| `load` | `(locale: string) => Promise<T>` | — | Loader function — use with `import.meta.glob` for Vite apps |
 | `persist` | `boolean` | `true` | Persist locale choice to localStorage |
 | `storageKey` | `string` | `'lf-locale'` | localStorage key |
 

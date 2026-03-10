@@ -32,8 +32,8 @@ const I18nExample = createComponent({
   name: 'I18nExample',
   setup() {
     const i18n = createI18n({
-      defaultLocale: 'en',
-      fallbackLocale: 'en',
+      default: EN,
+      fallback: 'en',
       load: async (locale) => (locale === 'de' ? DE : EN),
       persist: false,
     });
@@ -193,12 +193,14 @@ export default { greeting: 'Hello, {name}!', nav: { home: 'Home' } };
 t('nav.home')   // → 'Home' (falls back to en)
 t('greeting')   // → 'Hallo, {name}!'  (found in de)`;
 
-const FALLBACK_DETAIL_CODE = `const i18n = createI18n({
-  defaultLocale: 'en',
-  fallbackLocale: 'en',   // used when a key is missing in the current locale
+const FALLBACK_DETAIL_CODE = `import en from './locales/en.js'
+
+const i18n = createI18n({
+  default: en,          // seeds t() synchronously + infers type T
+  fallback: 'en',       // used when a key is missing in the current locale
   load: async (locale) => {
     if (locale === 'de') return (await import('./locales/de.js')).default;
-    return (await import('./locales/en.js')).default;
+    return en;
   },
 })
 
@@ -207,16 +209,16 @@ const FALLBACK_DETAIL_CODE = `const i18n = createI18n({
 // → No runtime errors, no visible breakage`;
 
 const LOCALE_FILE_CODE = `// locales/en.ts — source of truth, defines the type
-import type { TranslationTree } from '@liteforge/i18n'
+import { defineLocale } from '@liteforge/i18n'
 
-const en = {
+const en = defineLocale({
   greeting: 'Hello, {name}!',
   nav: {
     home: 'Home',
     settings: 'Settings',
   },
   items: '{count} item | {count} items',
-} satisfies TranslationTree
+})
 
 export type AppTranslations = typeof en  // canonical type for all other locales
 export default en
@@ -254,8 +256,8 @@ export default defineLocale({
   items: '{count} élément | {count} éléments',
 })
 
-// That's it. No imports, no type annotations, no changes to i18n.ts.
-// createI18n({ localesDir: './locales' }) picks it up automatically.`;
+// That's it. No type annotations, no changes to i18n.ts.
+// import.meta.glob('./locales/*.js') picks it up automatically.`;
 
 // ─── API rows ──────────────────────────────────────────────────────────────────
 

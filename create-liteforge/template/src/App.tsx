@@ -1,5 +1,5 @@
 import { createComponent } from 'liteforge';
-import { RouterOutlet, Link } from 'liteforge/router';
+import { RouterOutlet, Link } from '@liteforge/router';
 
 export const App = createComponent({
   name: 'App',

@@ -1,4 +1,4 @@
-import type { RouteDefinition } from 'liteforge/router';
+import type { RouteDefinition } from '@liteforge/router';
 
 export const routes: RouteDefinition[] = [
   {

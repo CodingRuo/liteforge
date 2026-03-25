@@ -107,7 +107,7 @@ describe('createProject', () => {
       'utf-8',
     );
 
-    expect(viteConfig).toContain("from 'liteforge/vite-plugin'");
+    expect(viteConfig).toContain("from '@liteforge/vite-plugin'");
     expect(viteConfig).toContain('liteforge()');
   });
 
@@ -127,8 +127,8 @@ describe('createProject', () => {
     );
 
     expect(main).toContain("from 'liteforge'");
-    expect(main).toContain("from 'liteforge/router'");
-    expect(main).toContain("from 'liteforge/modal'");
+    expect(main).toContain("from '@liteforge/router'");
+    expect(main).toContain("from '@liteforge/modal'");
   });
 });
 

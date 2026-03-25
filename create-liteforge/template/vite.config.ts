@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import liteforge from 'liteforge/vite-plugin';
+import liteforge from '@liteforge/vite-plugin';
 
 export default defineConfig({
   plugins: [liteforge()],

@@ -10,10 +10,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "liteforge": "^0.4.2",
+    "liteforge": "^0.7.6",
+    "@liteforge/router": "^0.8.0",
+    "@liteforge/modal": "^3.1.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {
+    "@liteforge/vite-plugin": "^0.4.5",
     "typescript": "^5.7.0",
     "vite": "^6.0.0"
   }

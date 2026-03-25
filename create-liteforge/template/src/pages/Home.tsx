@@ -1,5 +1,5 @@
 import { createComponent, signal } from 'liteforge';
-import { Link } from 'liteforge/router';
+import { Link } from '@liteforge/router';
 
 export const Home = createComponent({
   name: 'Home',

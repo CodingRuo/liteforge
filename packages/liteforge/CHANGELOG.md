@@ -1,5 +1,16 @@
 # liteforge
 
+## 0.7.7
+
+### Patch Changes
+
+- Rewrite README to correctly describe umbrella package scope.
+
+  - Clarify that `liteforge` re-exports only `@liteforge/core` + `@liteforge/runtime`
+  - Remove incorrect sub-path export documentation (`liteforge/router` etc. do not exist)
+  - Add "Install what you need" table listing all `@liteforge/*` packages
+  - Update Quick Start and Plugin System examples to use correct `@liteforge/*` imports
+
 ## 0.7.6
 
 ### Patch Changes

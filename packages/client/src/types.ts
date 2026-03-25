@@ -108,7 +108,7 @@ export interface ListResponse<T> {
  */
 export interface QueryResultShape<T> {
   data: () => T | undefined;
-  error: () => Error | undefined;
+  error: () => Error | null;
   isLoading: () => boolean;
   isStale: () => boolean;
   isFetched: () => boolean;
@@ -122,7 +122,7 @@ export interface QueryResultShape<T> {
 export interface MutationResultShape<TData, TVariables> {
   mutate: (variables: TVariables) => Promise<TData>;
   isLoading: () => boolean;
-  error: () => Error | undefined;
+  error: () => Error | null;
   data: () => TData | undefined;
   reset: () => void;
 }

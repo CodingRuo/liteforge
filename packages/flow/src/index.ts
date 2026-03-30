@@ -21,6 +21,11 @@ export type { HandleHandle } from './components/Handle.js'
 
 // Geometry utilities
 export { screenToCanvas, canvasToScreen } from './geometry/coords.js'
+export { getBezierPath, getStepPath, getStraightPath } from './geometry/paths.js'
 
 // Pure change helpers
 export { applyNodeChanges, applyEdgeChanges } from './helpers/apply-changes.js'
+
+// Edge layer
+export { createEdgeLayer } from './components/EdgeLayer.js'
+export type { EdgeLayerHandle } from './components/EdgeLayer.js'

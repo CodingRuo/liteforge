@@ -264,7 +264,9 @@ describe('createGhostEdge', () => {
     }
 
     const d = el.getAttribute('d') ?? ''
-    expect(d).toContain('L 300 400')
+    // Bezier path ends at target coordinates (no L prefix)
+    expect(d).toContain('300 400')
+    expect(d).not.toMatch(/^M 50 75 L/)  // must be bezier, not straight line
     dispose()
   })
 

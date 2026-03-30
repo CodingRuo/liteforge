@@ -1,5 +1,6 @@
 import { effect } from '@liteforge/core'
 import type { FlowContextValue } from '../context.js'
+import { getBezierPath } from '../geometry/paths.js'
 
 export interface GhostEdgeHandle {
   el:      SVGPathElement
@@ -33,7 +34,7 @@ export function createGhostEdge(
     const cur = state.currentPoint()   // subscribes to per-state Signal
     pathEl.style.display = ''
     const src = state.sourcePoint
-    pathEl.setAttribute('d', `M ${src.x} ${src.y} L ${cur.x} ${cur.y}`)
+    pathEl.setAttribute('d', getBezierPath(src, cur))
   })
 
   function dispose() {

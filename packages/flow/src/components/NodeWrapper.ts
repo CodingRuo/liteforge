@@ -1,0 +1,105 @@
+import { effect } from '@liteforge/core'
+import type { FlowContextValue } from '../context.js'
+import type { Point } from '../types.js'
+import { setupNodeDrag } from '../interactions/drag-node.js'
+
+export interface NodeWrapperHandle {
+  el: HTMLDivElement
+  dispose: () => void
+}
+
+/**
+ * Creates and manages the DOM wrapper for a single node.
+ *
+ * Responsibilities:
+ *  - Absolutely-position the wrapper using the node's canvas position
+ *  - Overlay the localOffset Signal during an active drag for visual feedback
+ *  - Add/remove the `lf-node-selected` class reactively
+ *  - Initiate drag on pointerdown (unless on a handle)
+ *  - Render user content via ctx.nodeTypes
+ */
+export function createNodeWrapper(
+  nodeId: string,
+  ctx: FlowContextValue,
+  nodesLayer: HTMLElement,
+): NodeWrapperHandle {
+  const startDrag = setupNodeDrag(ctx, () => ctx.transform())
+
+  // ---- DOM element ----
+  const wrapperEl = document.createElement('div')
+  wrapperEl.className = 'lf-node-wrapper'
+  wrapperEl.setAttribute('data-node-id', nodeId)
+  wrapperEl.style.cssText = 'position:absolute;pointer-events:all;cursor:grab'
+
+  // ---- Render user content ----
+  const node = ctx.getNode(nodeId)
+  if (node) {
+    const nodeTypeFn = ctx.nodeTypes[node.type]
+    if (nodeTypeFn) {
+      const content = nodeTypeFn(node)
+      wrapperEl.appendChild(content)
+    }
+  }
+
+  // ---- Effect: position (base + drag offset) ----
+  const posEffect = effect(() => {
+    const state = ctx.interactionState()
+    const offset: Point =
+      state.type === 'dragging' && state.nodeId === nodeId
+        ? state.localOffset()
+        : { x: 0, y: 0 }
+
+    const currentNode = ctx.getNode(nodeId)
+    if (!currentNode) return
+
+    wrapperEl.style.left = `${currentNode.position.x + offset.x}px`
+    wrapperEl.style.top  = `${currentNode.position.y + offset.y}px`
+  })
+
+  // ---- Effect: selected class ----
+  const selEffect = effect(() => {
+    const currentNode = ctx.getNode(nodeId)
+    wrapperEl.classList.toggle('lf-node-selected', currentNode?.selected ?? false)
+  })
+
+  // ---- Drag initiation ----
+  const onPointerDown = (e: PointerEvent) => {
+    // Only primary button
+    if (e.button !== 0) return
+    // Ignore if the event originated on a handle
+    if ((e.target as Element).closest('.lf-handle') !== null) return
+
+    e.stopPropagation()
+    e.preventDefault()
+
+    const currentNode = ctx.getNode(nodeId)
+    if (!currentNode) return
+
+    // Transition interaction state to dragging
+    // We need the canvas-space pointer position to anchor the drag
+    const transform = ctx.transform()
+    const canvasX = (e.clientX - transform.x) / transform.scale
+    const canvasY = (e.clientY - transform.y) / transform.scale
+    const startCanvasPoint = { x: canvasX, y: canvasY }
+
+    ctx.stateMgr.toDragging(nodeId, e.pointerId, startCanvasPoint, currentNode.position)
+
+    // Start listening for move / up
+    startDrag(nodeId, e.pointerId, startCanvasPoint, wrapperEl)
+  }
+
+  wrapperEl.addEventListener('pointerdown', onPointerDown)
+
+  // ---- Append to layer ----
+  nodesLayer.appendChild(wrapperEl)
+
+  // ---- Dispose ----
+  function dispose() {
+    posEffect()   // calling the effect's dispose function
+    selEffect()
+    wrapperEl.removeEventListener('pointerdown', onPointerDown)
+    wrapperEl.remove()
+  }
+
+  return { el: wrapperEl, dispose }
+}

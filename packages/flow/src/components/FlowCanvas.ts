@@ -5,6 +5,8 @@ import { createHandleRegistry } from '../registry/handle-registry.js'
 import { pushFlowContext, popFlowContext } from '../context.js'
 import type { FlowContextValue } from '../context.js'
 import { injectFlowStyles } from '../styles.js'
+import { createNodeWrapper } from './NodeWrapper.js'
+import type { NodeWrapperHandle } from './NodeWrapper.js'
 
 const DEFAULT_MIN_ZOOM = 0.1
 const DEFAULT_MAX_ZOOM = 4
@@ -86,6 +88,30 @@ export function FlowCanvas(props: FlowCanvasProps): Node {
 
   // Pop context — the DOM is now built synchronously
   popFlowContext()
+
+  // ---- Effect: manage NodeWrapper instances ----
+  const wrapperMap = new Map<string, NodeWrapperHandle>()
+
+  effect(() => {
+    const currentNodes = props.nodes()
+    const currentIds = new Set(currentNodes.map(n => n.id))
+
+    // Dispose wrappers for nodes that are no longer present
+    for (const [id, handle] of wrapperMap) {
+      if (!currentIds.has(id)) {
+        handle.dispose()
+        wrapperMap.delete(id)
+      }
+    }
+
+    // Create wrappers for newly added nodes
+    for (const node of currentNodes) {
+      if (!wrapperMap.has(node.id)) {
+        const handle = createNodeWrapper(node.id, ctx, nodesLayer)
+        wrapperMap.set(node.id, handle)
+      }
+    }
+  })
 
   // ---- Effect: sync CSS transform ----
   effect(() => {

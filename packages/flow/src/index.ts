@@ -17,3 +17,6 @@ export { FlowCanvas } from './components/FlowCanvas.js'
 
 // Geometry utilities
 export { screenToCanvas, canvasToScreen } from './geometry/coords.js'
+
+// Pure change helpers
+export { applyNodeChanges, applyEdgeChanges } from './helpers/apply-changes.js'

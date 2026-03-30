@@ -56,6 +56,8 @@ export default defineConfig({
       '@liteforge/theme':      path.resolve(__dirname, '../../packages/theme/src/index.ts'),
       '@liteforge/toast':      path.resolve(__dirname, '../../packages/toast/src/index.ts'),
       '@liteforge/tooltip':    path.resolve(__dirname, '../../packages/tooltip/src/index.ts'),
+      'liteforge/flow':        path.resolve(__dirname, '../../packages/flow/src/index.ts'),
+      '@liteforge/flow':       path.resolve(__dirname, '../../packages/flow/src/index.ts'),
     },
   },
 });

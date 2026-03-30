@@ -25,6 +25,7 @@ const NAV_ITEMS = [
   { href: '/dashboard/client',   label: 'Client',      icon: '🔌'               },
   { href: '/dashboard/i18n',     label: 'i18n',        icon: '🌍'               },
   { href: '/dashboard/toasts',   label: 'Toasts',      icon: '🔔'               },
+  { href: '/dashboard/flow',     label: 'Flow',        icon: '⬡'                },
   { href: '/lf-admin',           label: 'LF Admin',    icon: '🛡️'               },
 ];
 

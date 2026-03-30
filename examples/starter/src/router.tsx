@@ -235,6 +235,12 @@ export const routes: RouteDefinition[] = [
         export: 'ToastsPage',
         meta: { title: 'Toasts' },
       },
+      {
+        path: '/flow',
+        component: () => import('./pages/dashboard/Flow.js'),
+        export: 'FlowPage',
+        meta: { title: 'Flow Editor' },
+      },
     ],
   },
 

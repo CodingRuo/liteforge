@@ -30,3 +30,9 @@ export { applyNodeChanges, applyEdgeChanges } from './helpers/apply-changes.js'
 // Edge layer
 export { createEdgeLayer } from './components/EdgeLayer.js'
 export type { EdgeLayerHandle } from './components/EdgeLayer.js'
+
+// Phase 6 components
+export { createControls } from './components/Controls.js'
+export { createMiniMap } from './components/MiniMap.js'
+export { computeFitView } from './helpers/fit-view.js'
+export type { FitViewOptions } from './helpers/fit-view.js'

@@ -13,6 +13,9 @@ import { createEdgeLayer } from './EdgeLayer.js'
 import { setupMarqueeSelect } from '../interactions/marquee-select.js'
 import { createMarquee } from './Marquee.js'
 import { screenToCanvas } from '../geometry/coords.js'
+import { createControls } from './Controls.js'
+import { createMiniMap } from './MiniMap.js'
+import { computeFitView } from '../helpers/fit-view.js'
 
 const DEFAULT_MIN_ZOOM = 0.1
 const DEFAULT_MAX_ZOOM = 4
@@ -84,26 +87,30 @@ export function FlowCanvas(props: FlowCanvasProps): Node {
   transformLayer.appendChild(edgesLayer)
   transformLayer.appendChild(nodesLayer)
 
-  // Controls (empty in Phase 1)
-  const controls = document.createElement('div')
-  controls.className = 'lf-controls'
-  controls.style.cssText = 'position:absolute;bottom:16px;right:16px'
-
-  // Minimap (empty in Phase 1)
-  const minimap = document.createElement('div')
-  minimap.className = 'lf-minimap'
-  minimap.style.cssText = 'position:absolute;bottom:16px;left:16px'
-
   // Root
   const root = document.createElement('div')
   root.className = 'lf-flow-root'
   root.style.cssText = 'overflow:hidden;position:relative;width:100%;height:100%;user-select:none'
   root.appendChild(transformLayer)
-  root.appendChild(controls)
-  root.appendChild(minimap)
 
   // Pop context — the DOM is now built synchronously
   popFlowContext()
+
+  // fitView helper (needs ctx + transform + root)
+  function fitView() {
+    const t = computeFitView(
+      ctx.getNodes(),
+      root.offsetWidth || 800,
+      root.offsetHeight || 600,
+    )
+    transform.set(t)
+  }
+
+  // Controls overlay (appended outside transform layer)
+  createControls(ctx, transform, root, fitView)
+
+  // MiniMap overlay (appended outside transform layer)
+  createMiniMap(ctx, transform, root)
 
   // ---- Connect interaction, EdgeLayer & GhostEdge ----
   setupConnect(ctx, () => transform.peek())

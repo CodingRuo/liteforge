@@ -79,14 +79,61 @@
 .lf-controls {
   position: absolute;
   bottom: 16px;
-  right: 16px;
+  left: 16px;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  z-index: 5;
 }
 
+.lf-controls-btn {
+  width: 28px;
+  height: 28px;
+  background: var(--lf-flow-bg-controls, #fff);
+  border: 1px solid var(--lf-flow-border, #e2e8f0);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--lf-flow-text, #1a202c);
+}
+
+.lf-controls-btn:hover {
+  background: var(--lf-flow-bg-controls-hover, #f7fafc);
+}
+
+/* MiniMap */
 .lf-minimap {
   position: absolute;
   bottom: 16px;
-  left: 16px;
+  right: 16px;
+  width: 160px;
+  height: 100px;
+  background: var(--lf-flow-bg-minimap, rgba(255,255,255,0.9));
+  border: 1px solid var(--lf-flow-border, #e2e8f0);
+  border-radius: 6px;
+  overflow: hidden;
+  z-index: 5;
+}
+
+.lf-minimap-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.lf-minimap-node {
+  fill: var(--lf-flow-minimap-node, #94a3b8);
+}
+
+.lf-minimap-node-selected {
+  fill: var(--lf-flow-minimap-node-selected, #3b82f6);
+}
+
+.lf-minimap-viewport {
+  fill: none;
+  stroke: var(--lf-flow-minimap-viewport, #3b82f6);
+  stroke-width: 1;
+  opacity: 0.5;
 }

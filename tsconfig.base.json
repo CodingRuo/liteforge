@@ -34,7 +34,9 @@
       "@liteforge/theme": ["./packages/theme/src/index.ts"],
       "@liteforge/theme/*": ["./packages/theme/src/*"],
       "@liteforge/toast": ["./packages/toast/src/index.ts"],
-      "@liteforge/toast/*": ["./packages/toast/src/*"]
+      "@liteforge/toast/*": ["./packages/toast/src/*"],
+      "@liteforge/flow": ["./packages/flow/src/index.ts"],
+      "@liteforge/flow/*": ["./packages/flow/src/*"]
     },
     "noUncheckedIndexedAccess": true,
     "noEmit": false,

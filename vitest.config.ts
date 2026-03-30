@@ -21,6 +21,7 @@ export default defineConfig({
       '@liteforge/theme': path.resolve(__dirname, 'packages/theme/src/index.ts'),
       '@liteforge/toast': path.resolve(__dirname, 'packages/toast/src/index.ts'),
       '@liteforge/tooltip': path.resolve(__dirname, 'packages/tooltip/src/index.ts'),
+      '@liteforge/flow': path.resolve(__dirname, 'packages/flow/src/index.ts'),
     },
   },
   test: {
@@ -44,6 +45,7 @@ export default defineConfig({
       ['packages/theme/**', 'happy-dom'],
       ['packages/toast/**', 'happy-dom'],
       ['packages/tooltip/**', 'happy-dom'],
+      ['packages/flow/**', 'happy-dom'],
       ['packages/liteforge/**', 'node'],
       ['create-liteforge/**', 'node'],
     ],

@@ -143,6 +143,15 @@ importers:
         specifier: workspace:*
         version: link:../store
 
+  packages/flow:
+    devDependencies:
+      '@liteforge/core':
+        specifier: workspace:*
+        version: link:../core
+      '@liteforge/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+
   packages/form:
     devDependencies:
       '@liteforge/core':

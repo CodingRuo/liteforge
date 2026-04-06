@@ -1,5 +1,5 @@
 {
-  "name": "@liteforge/docs",
+  "name": "@liteforge/docs-site",
   "private": true,
   "type": "module",
   "scripts": {

@@ -1,0 +1,204 @@
+{
+  "version": "1",
+  "generated": "2026-04-06",
+  "framework": "LiteForge",
+  "description": "Signals-based frontend framework — no Virtual DOM, direct DOM updates",
+  "pages": [
+    {
+      "title": "Installation",
+      "category": "getting-started",
+      "tags": ["install", "setup", "npm", "pnpm", "create-liteforge"],
+      "related": ["Quick Start", "Core Concepts"],
+      "path": "getting-started/01-installation.md"
+    },
+    {
+      "title": "Quick Start",
+      "category": "getting-started",
+      "tags": ["quickstart", "hello-world", "app", "component"],
+      "related": ["Installation", "Core Concepts", "createComponent"],
+      "path": "getting-started/02-quick-start.md"
+    },
+    {
+      "title": "Core Concepts",
+      "category": "getting-started",
+      "tags": ["signals", "reactivity", "jsx", "components", "effects"],
+      "related": ["Signals", "createComponent", "JSX"],
+      "path": "getting-started/03-core-concepts.md"
+    },
+    {
+      "title": "Signals",
+      "category": "core",
+      "tags": ["signal", "computed", "effect", "batch", "onCleanup", "reactivity"],
+      "related": ["Core Concepts", "createComponent", "JSX"],
+      "path": "core/01-signals.md"
+    },
+    {
+      "title": "createComponent",
+      "category": "core",
+      "tags": ["component", "createComponent", "factory", "props", "setup", "load"],
+      "related": ["Lifecycle", "JSX", "Context"],
+      "path": "core/02-create-component.md"
+    },
+    {
+      "title": "Lifecycle",
+      "category": "core",
+      "tags": ["lifecycle", "setup", "load", "mounted", "destroyed", "placeholder", "error"],
+      "related": ["createComponent", "Context", "Rendering"],
+      "path": "core/03-lifecycle.md"
+    },
+    {
+      "title": "JSX",
+      "category": "core",
+      "tags": ["jsx", "tsx", "h", "Fragment", "Show", "For", "Switch", "Match", "Dynamic"],
+      "related": ["Signals", "createComponent", "Vite Plugin"],
+      "path": "core/04-jsx.md"
+    },
+    {
+      "title": "Context",
+      "category": "runtime",
+      "tags": ["context", "use", "provide", "dependency-injection", "plugin"],
+      "related": ["createComponent", "Rendering", "Quick Start"],
+      "path": "runtime/01-context.md"
+    },
+    {
+      "title": "Rendering",
+      "category": "runtime",
+      "tags": ["rendering", "dom", "template", "insert", "setProp", "h"],
+      "related": ["JSX", "createComponent", "Context"],
+      "path": "runtime/02-rendering.md"
+    },
+    {
+      "title": "createRouter",
+      "category": "router",
+      "tags": ["router", "createRouter", "navigate", "history", "guards", "middleware"],
+      "related": ["Route Definition", "Navigation", "Context"],
+      "path": "router/01-create-router.md"
+    },
+    {
+      "title": "Route Definition",
+      "category": "router",
+      "tags": ["routes", "nested", "lazy", "guards", "redirect", "meta", "preload"],
+      "related": ["createRouter", "Navigation", "Lazy Loading"],
+      "path": "router/02-route-definition.md"
+    },
+    {
+      "title": "Navigation",
+      "category": "router",
+      "tags": ["navigate", "Link", "NavLink", "RouterOutlet", "useParam", "back", "forward"],
+      "related": ["createRouter", "Route Definition"],
+      "path": "router/03-navigation.md"
+    },
+    {
+      "title": "defineStore",
+      "category": "store",
+      "tags": ["store", "defineStore", "state", "getters", "actions", "storeRegistry", "time-travel"],
+      "related": ["Signals", "Context", "DevTools"],
+      "path": "store/01-create-store.md"
+    },
+    {
+      "title": "createQuery",
+      "category": "query",
+      "tags": ["query", "createQuery", "createMutation", "cache", "fetch", "refetch", "invalidate"],
+      "related": ["defineStore", "createForm", "Context"],
+      "path": "query/01-create-query.md"
+    },
+    {
+      "title": "createForm",
+      "category": "form",
+      "tags": ["form", "createForm", "validation", "zod", "field", "array", "submit"],
+      "related": ["createQuery", "Signals"],
+      "path": "form/01-create-form.md"
+    },
+    {
+      "title": "createTable",
+      "category": "table",
+      "tags": ["table", "createTable", "sort", "filter", "pagination", "selection", "columns"],
+      "related": ["createQuery", "createForm"],
+      "path": "table/01-create-table.md"
+    },
+    {
+      "title": "createFlow",
+      "category": "flow",
+      "tags": ["flow", "createFlow", "node-editor", "graph", "FlowHandle"],
+      "related": ["FlowCanvas", "Handle", "Edges"],
+      "path": "flow/01-create-flow.md"
+    },
+    {
+      "title": "FlowCanvas",
+      "category": "flow",
+      "tags": ["FlowCanvas", "canvas", "pan", "zoom", "minimap", "controls", "fitView"],
+      "related": ["createFlow", "Handle", "Edges"],
+      "path": "flow/02-flow-canvas.md"
+    },
+    {
+      "title": "Handle",
+      "category": "flow",
+      "tags": ["handle", "createHandle", "source", "target", "connection", "port"],
+      "related": ["createFlow", "FlowCanvas", "Edges"],
+      "path": "flow/03-handle.md"
+    },
+    {
+      "title": "Edges",
+      "category": "flow",
+      "tags": ["edges", "EdgeLayer", "bezier", "step", "straight", "path", "EdgeComponentFn"],
+      "related": ["createFlow", "FlowCanvas", "Handle"],
+      "path": "flow/04-edges.md"
+    },
+    {
+      "title": "createCalendar",
+      "category": "calendar",
+      "tags": ["calendar", "createCalendar", "events", "drag-drop", "resources", "recurring", "views"],
+      "related": ["createTable", "Signals"],
+      "path": "calendar/01-create-calendar.md"
+    },
+    {
+      "title": "createModal",
+      "category": "modal",
+      "tags": ["modal", "createModal", "ModalProvider", "confirm", "alert", "prompt", "dialog"],
+      "related": ["Toast", "Tooltip"],
+      "path": "modal/01-create-modal.md"
+    },
+    {
+      "title": "Toast",
+      "category": "toast",
+      "tags": ["toast", "ToastProvider", "notification", "success", "error", "warning", "info"],
+      "related": ["createModal", "Tooltip"],
+      "path": "toast/01-create-toast.md"
+    },
+    {
+      "title": "Tooltip",
+      "category": "tooltip",
+      "tags": ["tooltip", "tooltip directive", "Tooltip component", "position", "delay", "showWhen"],
+      "related": ["createModal", "Toast"],
+      "path": "tooltip/01-create-tooltip.md"
+    },
+    {
+      "title": "createI18n",
+      "category": "i18n",
+      "tags": ["i18n", "createI18n", "locale", "translations", "interpolation", "plural", "defineLocale"],
+      "related": ["createApp", "Context"],
+      "path": "i18n/01-create-i18n.md"
+    },
+    {
+      "title": "DevTools",
+      "category": "devtools",
+      "tags": ["devtools", "devtoolsPlugin", "createDevTools", "time-travel", "signals", "debug"],
+      "related": ["defineStore", "Signals", "createApp"],
+      "path": "devtools/01-devtools.md"
+    },
+    {
+      "title": "Vite Plugin",
+      "category": "vite-plugin",
+      "tags": ["vite-plugin", "jsx", "transform", "hmr", "getter-wrap", "event-handler"],
+      "related": ["JSX", "Installation", "createComponent"],
+      "path": "vite-plugin/01-vite-plugin.md"
+    },
+    {
+      "title": "Admin",
+      "category": "admin",
+      "tags": ["admin", "defineResource", "defineDashboard", "AdminLayout", "DataTable", "ResourceForm"],
+      "related": ["createTable", "createForm", "createRouter"],
+      "path": "admin/01-admin.md"
+    }
+  ]
+}

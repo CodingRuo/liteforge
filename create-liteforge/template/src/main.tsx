@@ -6,6 +6,8 @@ import { routes } from './router';
 import { uiStore } from './stores/ui';
 import './styles.css';
 
+uiStore.init();
+
 await createApp({ root: App, target: '#app', stores: [uiStore] })
   .use(routerPlugin({ routes, history: createBrowserHistory() }))
   .use(modalPlugin())

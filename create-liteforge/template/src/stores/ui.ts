@@ -20,6 +20,22 @@ export const uiStore = defineStore('ui', {
   }),
 
   actions: (state) => ({
+    init() {
+      const theme = state.theme();
+      const effective = theme === 'system'
+        ? (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        : theme;
+      document.documentElement.setAttribute('data-theme', effective);
+      if (typeof window !== 'undefined' && window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+          if (state.theme() === 'system') {
+            const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+          }
+        });
+      }
+    },
+
     setTheme(theme: Theme) {
       state.theme.set(theme);
       const effective = theme === 'system'

@@ -1,23 +1,48 @@
 {
   "name": "@liteforge/flow",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Signals-based node editor — foundation for pipeline and visual programming editors.",
   "author": "SchildW3rk <contact@schildw3rk.dev>",
   "license": "MIT",
-  "repository": { "type": "git", "url": "https://github.com/schildw3rk/liteforge", "directory": "packages/flow" },
-  "keywords": ["liteforge", "flow", "node-editor", "graph", "pipeline", "blueprint"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/schildw3rk/liteforge",
+    "directory": "packages/flow"
+  },
+  "keywords": [
+    "liteforge",
+    "flow",
+    "node-editor",
+    "graph",
+    "pipeline",
+    "blueprint"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
     "./styles": "./css/styles.css"
   },
-  "files": ["dist", "css", "README.md", "LICENSE"],
-  "sideEffects": ["css/*.css"],
-  "engines": { "node": ">=18" },
-  "publishConfig": { "access": "public" },
+  "files": [
+    "dist",
+    "css",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "css/*.css"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc -p tsconfig.build.json --watch",

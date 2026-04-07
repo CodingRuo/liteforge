@@ -83,7 +83,7 @@ export function FlowCanvas(props: FlowCanvasProps): Node {
   // Nodes layer
   const nodesLayer = document.createElement('div')
   nodesLayer.className = 'lf-nodes-layer'
-  nodesLayer.style.cssText = 'position:relative;width:100%;height:100%;pointer-events:none'
+  nodesLayer.style.cssText = 'position:absolute;width:100%;height:100%;pointer-events:none'
 
   // Transform layer (wraps edges + nodes)
   const transformLayer = document.createElement('div')

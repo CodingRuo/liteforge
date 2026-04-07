@@ -33,27 +33,42 @@ export function createEdgeLayer(
         pathEl.classList.add('lf-edge')
         edgesLayerEl.appendChild(pathEl)
 
-        // Inner effect for this edge — subscribes to handle positions + transform
+        // Inner effect for this edge — subscribes to handle positions + transform + drag
         const innerDispose = effect(() => {
           // Subscribe to registry version (handle positions)
           ctx.handleRegistry.version()
           // Subscribe to transform (pan/zoom)
           ctx.transform()
+          // Subscribe to drag state so edges track live node movement
+          const istate = ctx.interactionState()
+          const dragOffset = istate.type === 'dragging' ? istate.localOffset() : null
+          const draggedId  = istate.type === 'dragging' ? istate.nodeId : null
+
           // Read current edge without subscribing to ctx.edges() again
           const currentEdge = ctx.edges().find(e => e.id === edge.id)
           if (!currentEdge) return
 
           const nodes = ctx.nodes()
-          const src = ctx.handleRegistry.getAbsolutePosition(
+          let src = ctx.handleRegistry.getAbsolutePosition(
             currentEdge.source,
             currentEdge.sourceHandle,
             nodes,
           )
-          const tgt = ctx.handleRegistry.getAbsolutePosition(
+          let tgt = ctx.handleRegistry.getAbsolutePosition(
             currentEdge.target,
             currentEdge.targetHandle,
             nodes,
           )
+
+          // Fold in live drag offset for edges connected to the dragged node
+          if (dragOffset) {
+            if (src && currentEdge.source === draggedId) {
+              src = { x: src.x + dragOffset.x, y: src.y + dragOffset.y }
+            }
+            if (tgt && currentEdge.target === draggedId) {
+              tgt = { x: tgt.x + dragOffset.x, y: tgt.y + dragOffset.y }
+            }
+          }
 
           // Always update selection state regardless of handle availability
           pathEl.classList.toggle('lf-edge-selected', currentEdge.selected ?? false)

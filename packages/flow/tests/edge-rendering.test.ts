@@ -244,4 +244,122 @@ describe('createEdgeLayer', () => {
     await tick()
     expect(svg.querySelectorAll('path.lf-edge').length).toBe(0)
   })
+
+  // ---- Drag-reactivity fix: edges must track live localOffset ----
+
+  it('edge d attribute updates reactively during node drag (localOffset)', async () => {
+    const nodes: FlowNode[] = [
+      { id: 'n1', type: 'default', position: { x: 0,   y: 0 }, data: null },
+      { id: 'n2', type: 'default', position: { x: 200, y: 0 }, data: null },
+    ]
+    const edges = signal<FlowEdge[]>([
+      { id: 'e1', source: 'n1', sourceHandle: 'out', target: 'n2', targetHandle: 'in' },
+    ])
+    const stateMgr = createInteractionState()
+    const ctx = makeCtx(edges, {
+      nodes: () => nodes,
+      interactionState: stateMgr.state,
+      stateMgr,
+      interactionStateManager: stateMgr,
+    })
+    registerHandle(ctx, 'n1', 'out', { x: 10, y: 0 })
+    registerHandle(ctx, 'n2', 'in',  { x: 0,  y: 0 })
+
+    const { dispose } = createEdgeLayer(ctx, svg)
+    await tick()
+
+    const path = svg.querySelector('path.lf-edge') as SVGPathElement
+    const dBefore = path.getAttribute('d')
+    expect(dBefore).not.toBeNull()
+
+    // Start dragging n1
+    stateMgr.toDragging('n1', 1, { x: 0, y: 0 }, { x: 0, y: 0 })
+    const state = stateMgr.state()
+    if (state.type === 'dragging') {
+      state.localOffset.set({ x: 50, y: 30 })
+    }
+
+    const dDuring = path.getAttribute('d')
+    // Path must have changed — source endpoint moved with n1
+    expect(dDuring).not.toBe(dBefore)
+    // Source x: node.position.x(0) + offset.x(10) + drag.x(50) = 60
+    expect(dDuring).toMatch(/^M 60 30/)
+
+    dispose()
+  })
+
+  it('edge snaps back when drag ends (toIdle)', async () => {
+    const nodes: FlowNode[] = [
+      { id: 'n1', type: 'default', position: { x: 0,   y: 0 }, data: null },
+      { id: 'n2', type: 'default', position: { x: 200, y: 0 }, data: null },
+    ]
+    const edges = signal<FlowEdge[]>([
+      { id: 'e1', source: 'n1', sourceHandle: 'out', target: 'n2', targetHandle: 'in' },
+    ])
+    const stateMgr = createInteractionState()
+    const ctx = makeCtx(edges, {
+      nodes: () => nodes,
+      interactionState: stateMgr.state,
+      stateMgr,
+      interactionStateManager: stateMgr,
+    })
+    registerHandle(ctx, 'n1', 'out', { x: 0, y: 0 })
+    registerHandle(ctx, 'n2', 'in',  { x: 0, y: 0 })
+
+    const { dispose } = createEdgeLayer(ctx, svg)
+    await tick()
+
+    const path = svg.querySelector('path.lf-edge') as SVGPathElement
+    const dBefore = path.getAttribute('d')
+
+    stateMgr.toDragging('n1', 1, { x: 0, y: 0 }, { x: 0, y: 0 })
+    const state = stateMgr.state()
+    if (state.type === 'dragging') {
+      state.localOffset.set({ x: 100, y: 0 })
+    }
+    expect(path.getAttribute('d')).not.toBe(dBefore)
+
+    stateMgr.toIdle()
+    expect(path.getAttribute('d')).toBe(dBefore)
+
+    dispose()
+  })
+
+  it('only the source endpoint moves when source node is dragged', async () => {
+    const nodes: FlowNode[] = [
+      { id: 'n1', type: 'default', position: { x: 0,   y: 0 }, data: null },
+      { id: 'n2', type: 'default', position: { x: 200, y: 0 }, data: null },
+    ]
+    const edges = signal<FlowEdge[]>([
+      { id: 'e1', source: 'n1', sourceHandle: 'out', target: 'n2', targetHandle: 'in' },
+    ])
+    const stateMgr = createInteractionState()
+    const ctx = makeCtx(edges, {
+      nodes: () => nodes,
+      interactionState: stateMgr.state,
+      stateMgr,
+      interactionStateManager: stateMgr,
+    })
+    registerHandle(ctx, 'n1', 'out', { x: 0, y: 0 })
+    registerHandle(ctx, 'n2', 'in',  { x: 0, y: 0 })
+
+    const { dispose } = createEdgeLayer(ctx, svg)
+    await tick()
+
+    const path = svg.querySelector('path.lf-edge') as SVGPathElement
+
+    // Drag n1 — source endpoint should move, target endpoint stays at n2 (200,0)
+    stateMgr.toDragging('n1', 1, { x: 0, y: 0 }, { x: 0, y: 0 })
+    const state = stateMgr.state()
+    if (state.type === 'dragging') {
+      state.localOffset.set({ x: 40, y: 0 })
+    }
+
+    // Path starts at source (n1+offset = 40,0), ends at target (200,0)
+    const d = path.getAttribute('d')!
+    expect(d).toMatch(/^M 40 0/)
+    expect(d).toMatch(/200 0$/)
+
+    dispose()
+  })
 })

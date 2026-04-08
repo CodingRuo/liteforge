@@ -1,5 +1,5 @@
 import { signal, computed } from '@liteforge/core'
-import type { Signal } from '@liteforge/core'
+import type { Signal, ReadonlySignal } from '@liteforge/core'
 import { applyNodeChanges, applyEdgeChanges } from './apply-changes.js'
 import type { FlowNode, FlowEdge, NodeChange, EdgeChange, Connection } from '../types.js'
 
@@ -28,9 +28,9 @@ export interface FlowHistoryResult {
   /** Re-apply previously undone snapshot */
   redo: () => void
   /** True when there is at least one entry in the undo stack */
-  canUndo: Signal<boolean>
+  canUndo: ReadonlySignal<boolean>
   /** True when there is at least one entry in the redo stack */
-  canRedo: Signal<boolean>
+  canRedo: ReadonlySignal<boolean>
   /**
    * Attach keyboard listeners to a target element (or document).
    * Returns a cleanup function to remove the listeners.

@@ -1,5 +1,56 @@
 # @liteforge/flow
 
+## 0.4.0
+
+### Minor Changes
+
+- v0.3.0 — full-featured node editor release
+
+  **New composables**
+
+  - `createFlowClipboard` — copy/paste nodes and edges with fresh IDs and configurable offset
+  - `createAutoLayout` — Sugiyama-inspired layered layout, 4 directions (LR/RL/TB/BT)
+  - `createViewportPersistence` — localStorage-backed viewport persistence, SSR-safe, debounced
+  - `createFlowHistory` — undo/redo with `maxHistory`, `canUndo`/`canRedo` signals, Ctrl+Z/Y
+  - `createContextMenu` — node, edge, and pane context menus with Escape/click-outside dismiss
+  - `createNodeResizer` — 8-direction resize handles with `setPointerCapture`, emits resize changes
+  - `createNodeToolbar` — floating toolbar in screen space, 4 positions × 3 alignments
+
+  **New interactions**
+
+  - Edge reconnect — drag source or target endpoint to a new handle
+  - Marquee selection — rubber-band select with AABB hit test, Shift-additive
+  - Keyboard accessibility (WCAG 2.1 AA) — roving tabindex, `role="button"`, `aria-selected`, Tab/Arrow/Enter/Escape/Delete
+  - Touch / pinch-to-zoom — automatic via Pointer Events API, no configuration needed
+  - Multi-node group drag — drag a selection as a unit
+
+  **New edge features**
+
+  - Animated edges — `animated: true`, GPU-composited `stroke-dashoffset` keyframe
+  - Arrow markers — `markerEnd: 'arrow' | 'arrowclosed'`, uses `currentColor`
+  - Edge labels — `label: string`, renders at midpoint with background rect
+
+  **Connection validation**
+
+  - Built-in self-loop guard (cannot be bypassed)
+  - `isNoSelfConnection`, `isNoDuplicateEdge`, `combineValidators` helpers
+
+  **Performance**
+
+  - Edge batching: N×3 reactive effects → 1 batched effect (1200→1 for 400 edges)
+  - Viewport culling: nodes outside viewport hidden with `display:none`, selected/dragged nodes never culled
+
+  **Other**
+
+  - `setViewport` with optional duration animation on `FlowHandle`
+  - `onViewportChange` callback prop on `FlowCanvas`
+  - `snapToGrid` prop
+  - `parentId` / node groups with cascade removal and group drag
+  - Node + edge mouse enter/leave events
+  - Grid background (`backgroundVariant: 'dots' | 'lines'`)
+
+  580 tests passing across 30 test files.
+
 ## 0.2.0
 
 ### Minor Changes

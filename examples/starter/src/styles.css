@@ -1742,8 +1742,14 @@ input, select {
    Execution Engine — Node State Styles (minimal, Linear/Vercel aesthetic)
    ============================================================================= */
 
-/* ── Base: smooth transitions for exec state changes ─────────────────────────  */
-.pipe-node {
+/* ── Base: smooth transitions + stacking above the ::before ring ─────────────
+   The running ring uses lf-node-wrapper::before with z-index:1. The node
+   content (.lf-dn, .pipe-node) must be position:relative + z-index:2 so it
+   paints above the ring pseudo-element and stays fully visible.            ── */
+.pipe-node,
+.lf-dn {
+  position: relative;
+  z-index: 2;
   transition: border-color 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
 }
 

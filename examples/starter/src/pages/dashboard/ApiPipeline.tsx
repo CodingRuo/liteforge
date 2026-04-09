@@ -72,7 +72,7 @@ type PipelineNodeData =
 // The component's setup() wires the runner to update these signals.
 // =============================================================================
 
-export type NodeExecStatus = 'idle' | 'running' | 'success' | 'error'
+export type NodeExecStatus = 'idle' | 'pending' | 'running' | 'success' | 'error' | 'skipped'
 
 const execNodeStates  = signal<Map<string, NodeExecStatus>>(new Map())
 const execNodeOutputs = signal<Map<string, unknown>>(new Map())
@@ -280,6 +280,24 @@ function evalCondition(cfg: ConditionData, payload: unknown): boolean {
   }
 }
 
+// Mark a node and all its downstream-only descendants as skipped
+// (only if they haven't been visited/executed via another path).
+function markSkipped(
+  nodeId:   string,
+  allNodes: FlowNode[],
+  allEdges: FlowEdge[],
+  state:    RunnerState,
+  visited:  Set<string>,
+): void {
+  if (visited.has(nodeId)) return
+  visited.add(nodeId)
+  if (!state.nodeStates.has(nodeId)) {
+    state.nodeStates.set(nodeId, 'skipped')
+  }
+  const outgoing = allEdges.filter(e => e.source === nodeId)
+  for (const e of outgoing) markSkipped(e.target, allNodes, allEdges, state, visited)
+}
+
 async function executeNode(
   nodeId:   string,
   payload:  unknown,
@@ -354,6 +372,10 @@ async function executeNode(
         const d = node.data as ConditionData
         const result = evalCondition(d, payload)
         outHandle = result ? 'true' : 'false'
+        const skipHandle = result ? 'false' : 'true'
+        // Mark the not-taken branch as skipped
+        const skipEdges = allEdges.filter(e => e.source === nodeId && e.sourceHandle === skipHandle)
+        for (const e of skipEdges) markSkipped(e.target, allNodes, allEdges, state, new Set(visited))
         output = { ...((payload as object) ?? {}), _branch: result }
         state.log.push(`🔀 Condition "${d.field} ${d.operator} ${d.value}" → ${result ? 'TRUE' : 'FALSE'}`)
         break
@@ -583,13 +605,16 @@ export const ApiPipelinePage = createComponent({
       if (!triggerNode) return
 
       execRunning.set(true)
-      execNodeStates.set(new Map())
+      // Mark all nodes as pending before execution starts
+      const pendingMap = new Map<string, NodeExecStatus>()
+      for (const n of currentNodes) pendingMap.set(n.id, 'pending')
+      execNodeStates.set(pendingMap)
       execNodeOutputs.set(new Map())
       execNodeErrors.set(new Map())
       execLog.set(['⚡ Pipeline starting…'])
 
       const state: RunnerState = {
-        nodeStates:  new Map(),
+        nodeStates:  new Map(pendingMap),
         nodeOutputs: new Map(),
         nodeErrors:  new Map(),
         log:         ['⚡ Pipeline starting…'],

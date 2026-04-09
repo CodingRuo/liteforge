@@ -36,6 +36,7 @@ import {
   createHandle,
   getFlowContext,
   defineNode,
+  withNodeStatus,
   createFlowHistory,
   createAutoLayout,
   createNodeContextMenu,
@@ -44,8 +45,10 @@ import {
 } from '@liteforge/flow';
 import type {
   FlowNode,
+  FlowEdge,
   NodeComponentFn,
   NodeChange,
+  NodeExecStatus,
 } from '@liteforge/flow';
 
 // =============================================================================
@@ -71,66 +74,12 @@ type PipelineNodeData =
 // The component's setup() wires the runner to update these signals.
 // =============================================================================
 
-export type NodeExecStatus = 'idle' | 'pending' | 'running' | 'success' | 'error' | 'skipped'
-
 const execNodeStates  = signal<Map<string, NodeExecStatus>>(new Map())
 const execNodeOutputs = signal<Map<string, unknown>>(new Map())
 const execNodeErrors  = signal<Map<string, string>>(new Map())
 
 // Shared click dispatcher — wired by setup()
 const onNodeClick = { fn: (_id: string) => {} }
-
-// =============================================================================
-// Execution State — helpers
-// =============================================================================
-
-function nodeOutputText(nodeId: string): string {
-  const status = execNodeStates().get(nodeId) ?? 'idle'
-  if (status === 'idle') return ''
-  const out = execNodeOutputs().get(nodeId)
-  if (out === undefined) return ''
-  if (typeof out === 'object' && out !== null) {
-    const s = JSON.stringify(out)
-    return s.length > 60 ? s.slice(0, 57) + '…' : s
-  }
-  return String(out)
-}
-
-// =============================================================================
-// withExecState — HOF wrapping any NodeComponentFn with reactive exec styles
-//
-// Applies pipe-node--{status} class and data-output tooltip to the rendered
-// element. Pipeline-specific concern; @liteforge/flow core knows nothing of it.
-// =============================================================================
-
-function withExecState<T>(fn: NodeComponentFn<T>): NodeComponentFn<T> {
-  return function execWrapped(node: FlowNode<T>): Node {
-    const el = fn(node) as HTMLElement
-
-    // Apply exec-state class reactively
-    effect(() => {
-      const status = execNodeStates().get(node.id) ?? 'idle'
-      // Remove any previous exec class
-      el.classList.forEach(cls => {
-        if (cls.startsWith('pipe-node--')) el.classList.remove(cls)
-      })
-      if (status !== 'idle') el.classList.add(`pipe-node--${status}`)
-    })
-
-    // Set data-output on the lf-node-wrapper (parent) for hover tooltip
-    queueMicrotask(() => {
-      const wrapper = el.parentElement
-      if (!wrapper) return
-      effect(() => {
-        const text = nodeOutputText(node.id)
-        if (text) wrapper.setAttribute('data-output', text)
-        else       wrapper.removeAttribute('data-output')
-      })
-    })
-
-    return el
-  }
-}
 
 // =============================================================================
 // Node Types — defined with defineNode()
@@ -210,8 +159,16 @@ function ResponseNode(node: FlowNode): Node {
   return el
 }
 
+// Shared withNodeStatus options — pipeline-specific class prefix + output tooltip
+const statusOpts = {
+  statusClass:  (s: NodeExecStatus) => s === 'idle' ? '' : `pipe-node--${s}`,
+  outputSignal: execNodeOutputs,
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ws = (fn: NodeComponentFn<any>) => withNodeStatus(execNodeStates, fn, statusOpts)
+
 const nodeTypes: Record<string, NodeComponentFn> = {
-  trigger:   withExecState(defineNode<TriggerData>({
+  trigger:   ws(defineNode<TriggerData>({
     type:    'trigger',
     icon:    '⚡',
     color:   '#10b981',
@@ -222,7 +179,7 @@ const nodeTypes: Record<string, NodeComponentFn> = {
     },
   })),
 
-  auth:      withExecState(defineNode<AuthData>({
+  auth:      ws(defineNode<AuthData>({
     type:    'auth',
     icon:    '🔑',
     color:   '#f59e0b',
@@ -234,7 +191,7 @@ const nodeTypes: Record<string, NodeComponentFn> = {
     },
   })),
 
-  http:      withExecState(defineNode<HttpData>({
+  http:      ws(defineNode<HttpData>({
     type:    'http',
     icon:    '🌐',
     color:   '#3b82f6',
@@ -246,7 +203,7 @@ const nodeTypes: Record<string, NodeComponentFn> = {
     },
   })),
 
-  transform: withExecState(defineNode<TransformData>({
+  transform: ws(defineNode<TransformData>({
     type:    'transform',
     icon:    '⚙️',
     color:   '#8b5cf6',
@@ -257,8 +214,8 @@ const nodeTypes: Record<string, NodeComponentFn> = {
     },
   })),
 
-  condition: withExecState(ConditionNodeFn as NodeComponentFn),
-  response:  withExecState(ResponseNode),
+  condition: ws(ConditionNodeFn as NodeComponentFn),
+  response:  ws(ResponseNode),
 }
 
 // =============================================================================

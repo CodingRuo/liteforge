@@ -51,6 +51,10 @@ export {
   createEdgeContextMenu,
   createPaneContextMenu,
 } from './helpers/context-menu-helpers.js'
+
+// Node status HOF — reactive execution-state classes + output tooltip
+export { withNodeStatus } from './helpers/node-status.js'
+export type { NodeExecStatus, WithNodeStatusOptions } from './helpers/node-status.js'
 export type {
   CreateNodeContextMenuOptions,
   NodeDeleteOptions,

@@ -45,6 +45,23 @@ export { rectsOverlap, rectFromPoints } from './geometry/aabb.js'
 export { defineNode } from './helpers/define-node.js'
 export type { DefineNodeOptions, FieldDescriptor, FieldType, HandleDescriptor } from './helpers/define-node.js'
 
+// Context menu helpers — factory functions returning item arrays
+export {
+  createNodeContextMenu,
+  createEdgeContextMenu,
+  createPaneContextMenu,
+} from './helpers/context-menu-helpers.js'
+export type {
+  CreateNodeContextMenuOptions,
+  NodeDeleteOptions,
+  NodeDuplicateOptions,
+  CreateEdgeContextMenuOptions,
+  EdgeDeleteOptions,
+  EdgeEditLabelOptions,
+  CreatePaneContextMenuOptions,
+  PaneNodeItem,
+} from './helpers/context-menu-helpers.js'
+
 // Pure change helpers
 export { applyNodeChanges, applyEdgeChanges } from './helpers/apply-changes.js'
 export { isNoSelfConnection, isNoDuplicateEdge, combineValidators } from './helpers/connection-validators.js'

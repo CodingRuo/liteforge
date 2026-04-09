@@ -38,16 +38,14 @@ import {
   defineNode,
   createFlowHistory,
   createAutoLayout,
+  createNodeContextMenu,
+  createEdgeContextMenu,
+  createPaneContextMenu,
 } from '@liteforge/flow';
 import type {
   FlowNode,
-  FlowEdge,
   NodeComponentFn,
   NodeChange,
-  NodeContextMenuItem,
-  EdgeContextMenuItem,
-  PaneContextMenuItem,
-  Point,
 } from '@liteforge/flow';
 
 // =============================================================================
@@ -666,52 +664,21 @@ export const ApiPipelinePage = createComponent({
     }
 
     // ── Context Menus ─────────────────────────────────────────────────────────
-    const nodeContextMenu: NodeContextMenuItem[] = [
-      { label: '✏️ Edit Properties', action: (n: FlowNode) => selectedNodeId.set(n.id) },
-      {
-        label: '🗑 Delete Node',
-        action: (n: FlowNode) => {
-          if (selectedNodeId.peek() === n.id) selectedNodeId.set(null)
-          history.onNodesChange([{ type: 'remove', id: n.id }])
-        },
-      },
-      {
-        label: '📋 Duplicate Node',
-        action: (n: FlowNode) => {
-          const id = `${n.id}-copy-${Date.now()}`
-          nodes.set([...nodes.peek(), { ...n, id, position: { x: n.position.x + 40, y: n.position.y + 40 }, selected: false }])
-        },
-      },
-    ]
-
-    const edgeContextMenu: EdgeContextMenuItem[] = [
-      { label: '🗑 Delete Edge',  action: (e: FlowEdge) => history.onEdgesChange([{ type: 'remove', id: e.id }]) },
-      {
-        label: '✏️ Edit Label',
-        action: (e: FlowEdge) => {
-          const label = window.prompt('Edge label:', e.label ?? '')
-          if (label === null) return
-          edges.set(edges.peek().map(ed => ed.id === e.id ? { ...ed, label: label.trim() || undefined } : ed))
-        },
-      },
-    ]
-
-    const paneContextMenu: PaneContextMenuItem[] = [
-      {
-        label: '➕ Add Transform Node',
-        action: (pos: Point) => {
-          const snap = (v: number) => Math.round(v / 20) * 20
-          nodes.set([...nodes.peek(), { id: `transform-${Date.now()}`, type: 'transform', position: { x: snap(pos.x), y: snap(pos.y) }, data: { label: 'Transform', expression: '{ ...data }' } as TransformData }])
-        },
-      },
-      {
-        label: '➕ Add Condition Node',
-        action: (pos: Point) => {
-          const snap = (v: number) => Math.round(v / 20) * 20
-          nodes.set([...nodes.peek(), { id: `condition-${Date.now()}`, type: 'condition', position: { x: snap(pos.x), y: snap(pos.y) }, data: { label: 'Condition', field: 'status', operator: '==', value: '200' } as ConditionData }])
-        },
-      },
-    ]
+    const nodeContextMenu = createNodeContextMenu({
+      onEdit:      (n) => selectedNodeId.set(n.id),
+      onDelete:    { onNodesChange: history.onNodesChange, onDeselect: (id) => { if (selectedNodeId.peek() === id) selectedNodeId.set(null) } },
+      onDuplicate: { nodes, onNodesChange: history.onNodesChange },
+    })
+    const edgeContextMenu = createEdgeContextMenu({
+      onDelete:    { onEdgesChange: history.onEdgesChange },
+      onEditLabel: { onEditLabel: (e, lbl) => edges.set(edges.peek().map(ed => ed.id === e.id ? { ...ed, label: lbl || undefined } : ed)) },
+    })
+    const paneContextMenu = createPaneContextMenu({
+      items: [
+        { label: '➕ Add Transform Node', nodeType: 'transform', data: () => ({ label: 'Transform', expression: '{ ...data }' } as TransformData), via: (n) => nodes.set([...nodes.peek(), n]) },
+        { label: '➕ Add Condition Node',  nodeType: 'condition', data: () => ({ label: 'Condition', field: 'status', operator: '==', value: '200' } as ConditionData), via: (n) => nodes.set([...nodes.peek(), n]) },
+      ],
+    })
 
     return {
       nodes, edges, flow, history,

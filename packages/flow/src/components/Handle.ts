@@ -28,9 +28,12 @@ export function createHandle(
   handleEl.dataset['handleId']   = handleId
   handleEl.dataset['handleType'] = type
 
-  // Register a live measure function — called by the EdgeLayer each time it needs
-  // the handle position. No timing issue: measurement happens when the edge geometry
-  // is actually needed (after layout), not at mount time.
+  // measureFn is called live each time EdgeLayer needs the handle position.
+  // On the very first render the browser may not have laid out the element yet,
+  // so getBoundingClientRect() returns {0,0}. We register the fn immediately
+  // (so the handle is known to the registry) and schedule a single rAF to bump
+  // the registry version once layout has settled — EdgeLayer re-runs before the
+  // first visible paint, so the user never sees edges at the wrong position.
   const measureFn = (): Point => {
     const handleRect = handleEl.getBoundingClientRect()
     const nodeRect   = nodeWrapperEl.getBoundingClientRect()
@@ -42,6 +45,10 @@ export function createHandle(
     }
   }
   ctx.handleRegistry.register(nodeId, handleId, measureFn, type)
+  // Trigger one re-render after layout so edges start at the correct position.
+  requestAnimationFrame(() => {
+    ctx.handleRegistry.register(nodeId, handleId, measureFn, type)
+  })
 
   // Pointer down — start a connecting interaction
   const onPointerDown = (e: PointerEvent) => {

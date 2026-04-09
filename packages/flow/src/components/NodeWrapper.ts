@@ -126,6 +126,10 @@ export function createNodeWrapper(
     const vw = rootSize.width
     const vh = rootSize.height
 
+    // If the canvas has no layout yet (vw/vh = 0), never cull — we don't know
+    // the real viewport size yet and would incorrectly hide all nodes.
+    if (vw === 0 || vh === 0) { wrapperEl.style.display = ''; return }
+
     const culled = nx2 < -margin || ny2 < -margin || nx1 > vw + margin || ny1 > vh + margin
 
     // Only update the style property when the culled state changes to avoid

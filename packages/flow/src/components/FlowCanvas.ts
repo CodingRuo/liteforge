@@ -97,6 +97,7 @@ export function FlowCanvas(props: FlowCanvasProps): Node {
     onNodesChange: props.onNodesChange,
     onEdgesChange: props.onEdgesChange,
     onConnect: props.onConnect,
+    onNodeClick:      props.onNodeClick,
     onNodeMouseEnter: props.onNodeMouseEnter,
     onNodeMouseLeave: props.onNodeMouseLeave,
     onEdgeMouseEnter: props.onEdgeMouseEnter,

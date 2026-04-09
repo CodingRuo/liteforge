@@ -44,6 +44,7 @@ export interface FlowContextValue {
   onNodesChange:       ((changes: NodeChange[]) => void) | undefined
   onEdgesChange:       ((changes: EdgeChange[]) => void) | undefined
   onConnect:           ((connection: Connection) => void) | undefined
+  onNodeClick:         ((node: FlowNode) => void) | undefined
   onNodeMouseEnter:    ((node: FlowNode) => void) | undefined
   onNodeMouseLeave:    ((node: FlowNode) => void) | undefined
   onEdgeMouseEnter:    ((edge: FlowEdge) => void) | undefined

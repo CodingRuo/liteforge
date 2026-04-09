@@ -203,6 +203,9 @@ export function createNodeWrapper(
       }))
       ctx.onNodesChange?.(changes)
     }
+    // Fire onNodeClick after selection — user callback
+    const clickedNode = ctx.getNode(nodeId)
+    if (clickedNode) ctx.onNodeClick?.(clickedNode)
   }
 
   wrapperEl.addEventListener('click', onClickNode)

@@ -323,4 +323,97 @@ describe('defineNode', () => {
       expect(before).toBeDefined()
     })
   })
+
+  // ---- Cleanup 1: offsetPercent -----------------------------------------------
+
+  describe('offsetPercent on handles', () => {
+    it('sets inline top style on handle when offsetPercent provided (outputs)', () => {
+      const fn = defineNode({
+        type:    'cond',
+        outputs: [
+          { id: 'true',  offsetPercent: 0.3 },
+          { id: 'false', offsetPercent: 0.7 },
+        ],
+      })
+      const el = renderNode(fn, makeNode('n1', {})) as HTMLElement
+      const handles = el.querySelectorAll<HTMLElement>('[data-handle-id]')
+      const trueH  = [...handles].find(h => h.dataset['handleId'] === 'true')!
+      const falseH = [...handles].find(h => h.dataset['handleId'] === 'false')!
+      expect(trueH.style.top).toBe('30%')
+      expect(falseH.style.top).toBe('70%')
+    })
+
+    it('sets inline top style on handle when offsetPercent provided (inputs)', () => {
+      const fn = defineNode({
+        type:   'cond',
+        inputs: [{ id: 'in', offsetPercent: 0.2 }],
+      })
+      const el = renderNode(fn, makeNode('n1', {})) as HTMLElement
+      const handle = el.querySelector<HTMLElement>('[data-handle-id="in"]')!
+      expect(handle.style.top).toBe('20%')
+    })
+
+    it('does not set inline top when offsetPercent is absent', () => {
+      const fn = defineNode({
+        type:    'x',
+        outputs: [{ id: 'out' }],
+      })
+      const el = renderNode(fn, makeNode('n1', {})) as HTMLElement
+      const handle = el.querySelector<HTMLElement>('[data-handle-id="out"]')!
+      expect(handle.style.top).toBe('')
+    })
+
+    it('offsetPercent 0.0 sets top to 0%', () => {
+      const fn = defineNode({ type: 'x', outputs: [{ id: 'out', offsetPercent: 0 }] })
+      const el = renderNode(fn, makeNode('n1', {})) as HTMLElement
+      const handle = el.querySelector<HTMLElement>('[data-handle-id="out"]')!
+      expect(handle.style.top).toBe('0%')
+    })
+
+    it('offsetPercent 1.0 sets top to 100%', () => {
+      const fn = defineNode({ type: 'x', outputs: [{ id: 'out', offsetPercent: 1 }] })
+      const el = renderNode(fn, makeNode('n1', {})) as HTMLElement
+      const handle = el.querySelector<HTMLElement>('[data-handle-id="out"]')!
+      expect(handle.style.top).toBe('100%')
+    })
+  })
+
+  // ---- Cleanup 2: color as function -------------------------------------------
+
+  describe('color as function', () => {
+    it('accepts a static color string', () => {
+      const fn = defineNode({ type: 'x', color: '#3b82f6' })
+      const el = renderNode(fn, makeNode('n1', {})) as HTMLElement
+      expect(el.style.getPropertyValue('--lf-dn-color')).toBe('#3b82f6')
+    })
+
+    it('calls color function with node.data and applies result', () => {
+      interface StatusData { status: number }
+      const fn = defineNode<StatusData>({
+        type:  'x',
+        color: (d) => d.status >= 400 ? '#ef4444' : '#10b981',
+      })
+      const errEl = renderNode(fn, makeNode('n1', { status: 500 })) as HTMLElement
+      expect(errEl.style.getPropertyValue('--lf-dn-color')).toBe('#ef4444')
+
+      const okEl = renderNode(fn, makeNode('n2', { status: 200 })) as HTMLElement
+      expect(okEl.style.getPropertyValue('--lf-dn-color')).toBe('#10b981')
+    })
+
+    it('color function is called per-instance with correct data', () => {
+      const colorFn = vi.fn((d: { code: string }) => d.code)
+      const fn = defineNode<{ code: string }>({ type: 'x', color: colorFn })
+      renderNode(fn, makeNode('n1', { code: '#aaa' }))
+      renderNode(fn, makeNode('n2', { code: '#bbb' }))
+      expect(colorFn).toHaveBeenCalledTimes(2)
+      expect(colorFn).toHaveBeenNthCalledWith(1, { code: '#aaa' })
+      expect(colorFn).toHaveBeenNthCalledWith(2, { code: '#bbb' })
+    })
+
+    it('defaults to #6366f1 when color is omitted', () => {
+      const fn = defineNode({ type: 'x' })
+      const el = renderNode(fn, makeNode('n1', {})) as HTMLElement
+      expect(el.style.getPropertyValue('--lf-dn-color')).toBe('#6366f1')
+    })
+  })
 })

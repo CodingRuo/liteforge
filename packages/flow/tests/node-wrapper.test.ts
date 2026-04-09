@@ -261,4 +261,23 @@ describe('createNodeWrapper', () => {
     expect(el.style.top).toBe('200px')
     dispose()
   })
+
+  it('fires onNodeClick with the clicked node on click', () => {
+    const onNodeClick = vi.fn()
+    const node = makeNode('n1', 50, 80)
+    const ctx = makeCtx(node, { onNodeClick })
+    const { el, dispose } = createNodeWrapper('n1', ctx, container)
+    el.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(onNodeClick).toHaveBeenCalledOnce()
+    expect(onNodeClick).toHaveBeenCalledWith(node)
+    dispose()
+  })
+
+  it('does not throw when onNodeClick is undefined', () => {
+    const node = makeNode('n1', 50, 80)
+    const ctx = makeCtx(node, { onNodeClick: undefined })
+    const { el, dispose } = createNodeWrapper('n1', ctx, container)
+    expect(() => el.dispatchEvent(new MouseEvent('click', { bubbles: true }))).not.toThrow()
+    dispose()
+  })
 })

@@ -41,6 +41,13 @@ export interface HandleDescriptor {
   id:        string
   label?:    string
   position?: HandlePosition  // default: inputs='left', outputs='right'
+  /**
+   * Vertical offset along the node edge as a fraction of the node height.
+   * `0.0` = top, `0.5` = center (default), `1.0` = bottom.
+   * Only meaningful for left/right positioned handles.
+   * Overrides the default `top: 50%` CSS.
+   */
+  offsetPercent?: number
 }
 
 // ---- defineNode Options -------------------------------------------------------
@@ -57,10 +64,11 @@ export interface DefineNodeOptions<TData = unknown> {
   icon?:     string
   /**
    * Accent color for the node header background and badge.
-   * Any valid CSS color string.
+   * Can be a static CSS color string, or a function receiving node.data
+   * and returning a CSS color string (for data-driven colors).
    * @default '#6366f1'
    */
-  color?:    string
+  color?:    string | ((data: TData) => string)
 
   /** Target handles — default position: 'left'. */
   inputs?:   HandleDescriptor[]
@@ -162,6 +170,17 @@ function injectStyles(): void {
   border-color: var(--lf-dn-color, #6366f1);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--lf-dn-color, #6366f1) 22%, transparent);
 }
+.lf-dn-handle-label {
+  position: absolute;
+  font-size: 0.5rem;
+  font-weight: 700;
+  pointer-events: none;
+  right: -14px;
+  top: 50%;
+  transform: translateY(-50%);
+  line-height: 1;
+  color: var(--lf-dn-color, #6366f1);
+}
 `
   document.head.appendChild(style)
 }
@@ -208,7 +227,10 @@ export function defineNode<TData = unknown>(
     // ---- Root element ----
     const root = document.createElement('div')
     root.className = 'lf-dn'
-    root.style.setProperty('--lf-dn-color', opts.color ?? '#6366f1')
+    const resolvedColor = typeof opts.color === 'function'
+      ? opts.color(node.data)
+      : (opts.color ?? '#6366f1')
+    root.style.setProperty('--lf-dn-color', resolvedColor)
 
     // ---- Header ----
     const header = document.createElement('div')
@@ -280,6 +302,7 @@ export function defineNode<TData = unknown>(
       for (const h of opts.inputs) {
         const pos = h.position ?? 'left'
         const { el } = createHandle(node.id, h.id, 'target', pos, ctx, getWrapper())
+        if (h.offsetPercent !== undefined) el.style.top = `${h.offsetPercent * 100}%`
         if (h.label) {
           const lbl = document.createElement('span')
           lbl.className = 'lf-dn-handle-label'
@@ -294,6 +317,7 @@ export function defineNode<TData = unknown>(
       for (const h of opts.outputs) {
         const pos = h.position ?? 'right'
         const { el } = createHandle(node.id, h.id, 'source', pos, ctx, getWrapper())
+        if (h.offsetPercent !== undefined) el.style.top = `${h.offsetPercent * 100}%`
         if (h.label) {
           const lbl = document.createElement('span')
           lbl.className = 'lf-dn-handle-label'

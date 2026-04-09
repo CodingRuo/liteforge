@@ -33,8 +33,6 @@ import { createComponent, signal, effect } from 'liteforge';
 import {
   createFlow,
   FlowCanvas,
-  createHandle,
-  getFlowContext,
   defineNode,
   withNodeStatus,
   createFlowHistory,
@@ -78,86 +76,9 @@ const execNodeStates  = signal<Map<string, NodeExecStatus>>(new Map())
 const execNodeOutputs = signal<Map<string, unknown>>(new Map())
 const execNodeErrors  = signal<Map<string, string>>(new Map())
 
-// Shared click dispatcher — wired by setup()
-const onNodeClick = { fn: (_id: string) => {} }
-
 // =============================================================================
 // Node Types — defined with defineNode()
 // =============================================================================
-
-// Condition node uses a raw NodeComponentFn — it needs two source handles
-// at distinct vertical positions (T/F) which defineNode's outputs[] doesn't
-// support yet. defineNode is used for all other node types.
-function ConditionNodeFn(node: FlowNode<ConditionData>): Node {
-  const data = node.data
-  const ctx  = getFlowContext()
-
-  const root = document.createElement('div')
-  root.className = 'lf-dn'
-  root.style.setProperty('--lf-dn-color', '#f97316')
-
-  // Header
-  const header = document.createElement('div')
-  header.className = 'lf-dn-header'
-  const icon = document.createElement('span'); icon.className = 'lf-dn-icon'; icon.textContent = '🔀'
-  const lbl  = document.createElement('span'); lbl.className  = 'lf-dn-label'; lbl.textContent = (data as unknown as { label?: string }).label ?? 'condition'
-  const bdg  = document.createElement('span'); bdg.className  = 'lf-dn-badge'; bdg.textContent = 'CONDITION'
-  header.append(icon, lbl, bdg)
-  root.appendChild(header)
-
-  // Body
-  const body = document.createElement('div'); body.className = 'lf-dn-body'
-  const row1 = document.createElement('div'); row1.className = 'lf-dn-field'
-  const l1   = document.createElement('span'); l1.className  = 'lf-dn-field-label'; l1.textContent = 'Field'
-  const v1   = document.createElement('span'); v1.className  = 'lf-dn-field-value'; v1.textContent = data.field
-  row1.append(l1, v1)
-  const row2 = document.createElement('div'); row2.className = 'lf-dn-field'
-  const l2   = document.createElement('span'); l2.className  = 'lf-dn-field-label'; l2.textContent = 'Check'
-  const v2   = document.createElement('span'); v2.className  = 'lf-dn-field-value'; v2.textContent = `${data.operator} ${data.value}`
-  row2.append(l2, v2)
-  body.append(row1, row2)
-  root.appendChild(body)
-
-  // Handles — lf-node-wrapper is root.parentElement after NodeWrapper.ts mounts us
-  const getWrapper = (): HTMLElement =>
-    (root.parentElement as HTMLElement | null) ?? root
-
-  const { el: trueEl  } = createHandle(node.id, 'true',  'source', 'right', ctx, getWrapper())
-  const { el: falseEl } = createHandle(node.id, 'false', 'source', 'right', ctx, getWrapper())
-  const { el: inEl    } = createHandle(node.id, 'in',    'target', 'left',  ctx, getWrapper())
-
-  trueEl.classList.add('pipe-handle-true')
-  falseEl.classList.add('pipe-handle-false')
-
-  const tLbl = document.createElement('span'); tLbl.className = 'pipe-handle-label pipe-handle-label--true';  tLbl.textContent = 'T'
-  const fLbl = document.createElement('span'); fLbl.className = 'pipe-handle-label pipe-handle-label--false'; fLbl.textContent = 'F'
-  trueEl.appendChild(tLbl)
-  falseEl.appendChild(fLbl)
-
-  root.append(trueEl, falseEl, inEl)
-  return root
-}
-
-// Response color depends on status code — set via CSS custom prop override
-const responseFn = defineNode<ResponseData>({
-  type:    'response',
-  icon:    '📤',
-  color:   '#10b981',  // default; overridden per-node below
-  inputs:  [{ id: 'in' }],
-  fields: {
-    status: { type: 'number', label: 'Status' },
-    body:   { type: 'text',   label: 'Body'   },
-  },
-})
-
-// For response nodes we override the color after render based on status code
-function ResponseNode(node: FlowNode): Node {
-  const el = responseFn(node) as HTMLElement
-  const data = node.data as ResponseData
-  const color = data.status >= 400 ? '#ef4444' : data.status >= 300 ? '#f59e0b' : '#10b981'
-  el.style.setProperty('--lf-dn-color', color)
-  return el
-}
 
 // Shared withNodeStatus options — pipeline-specific class prefix + output tooltip
 const statusOpts = {
@@ -214,8 +135,32 @@ const nodeTypes: Record<string, NodeComponentFn> = {
     },
   })),
 
-  condition: ws(ConditionNodeFn as NodeComponentFn),
-  response:  ws(ResponseNode),
+  condition: ws(defineNode<ConditionData>({
+    type:    'condition',
+    icon:    '🔀',
+    color:   '#f97316',
+    inputs:  [{ id: 'in' }],
+    outputs: [
+      { id: 'true',  label: 'T', offsetPercent: 0.3 },
+      { id: 'false', label: 'F', offsetPercent: 0.7 },
+    ],
+    fields: {
+      field:    { type: 'text',   label: 'Field' },
+      operator: { type: 'select', label: 'Check', options: ['>', '<', '==', '!=', 'contains'] },
+      value:    { type: 'text',   label: 'Value' },
+    },
+  })),
+
+  response: ws(defineNode<ResponseData>({
+    type:   'response',
+    icon:   '📤',
+    color:  (d) => d.status >= 400 ? '#ef4444' : d.status >= 300 ? '#f59e0b' : '#10b981',
+    inputs: [{ id: 'in' }],
+    fields: {
+      status: { type: 'number', label: 'Status' },
+      body:   { type: 'text',   label: 'Body'   },
+    },
+  })),
 }
 
 // =============================================================================
@@ -553,8 +498,8 @@ export const ApiPipelinePage = createComponent({
     // ── Properties Panel ─────────────────────────────────────────────────────
     const selectedNodeId = signal<string | null>(null)
 
-    onNodeClick.fn = (id: string) => {
-      selectedNodeId.set(id === selectedNodeId.peek() ? null : id)
+    function onNodeClick(node: FlowNode) {
+      selectedNodeId.set(node.id === selectedNodeId.peek() ? null : node.id)
     }
 
     function commitDataChange(change: NodeChange) {
@@ -639,7 +584,7 @@ export const ApiPipelinePage = createComponent({
 
     return {
       nodes, edges, flow, history,
-      selectedNodeId, commitDataChange,
+      selectedNodeId, commitDataChange, onNodeClick,
       applyAutoLayout,
       execRunning, execLog, resetExec,
       runPipeline, resetAll,
@@ -650,7 +595,7 @@ export const ApiPipelinePage = createComponent({
   component({ setup }) {
     const {
       nodes, edges, flow, history,
-      selectedNodeId, commitDataChange,
+      selectedNodeId, commitDataChange, onNodeClick,
       applyAutoLayout,
       execRunning, execLog, resetExec,
       runPipeline, resetAll,
@@ -719,6 +664,7 @@ export const ApiPipelinePage = createComponent({
               onNodesChange:   history.onNodesChange,
               onEdgesChange:   history.onEdgesChange,
               onConnect:       history.onConnect,
+              onNodeClick,
               snapToGrid:      [20, 20],
               nodeContextMenu,
               edgeContextMenu,

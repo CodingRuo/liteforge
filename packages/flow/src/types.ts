@@ -208,6 +208,7 @@ export interface FlowCanvasProps {
   onNodesChange?:   (changes: NodeChange[]) => void
   onEdgesChange?:   (changes: EdgeChange[]) => void
   onConnect?:       (connection: Connection) => void
+  onNodeClick?:      (node: FlowNode) => void
   onNodeMouseEnter?: (node: FlowNode) => void
   onNodeMouseLeave?: (node: FlowNode) => void
   onEdgeMouseEnter?: (edge: FlowEdge) => void

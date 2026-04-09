@@ -66,6 +66,17 @@ export type {
   PaneNodeItem,
 } from './helpers/context-menu-helpers.js'
 
+// Flow runner — generic graph-traversal execution engine
+export { createFlowRunner } from './helpers/flow-runner.js'
+export type {
+  FlowRunnerState,
+  ExecuteContext,
+  ExecuteResult,
+  ExecuteFn,
+  FlowRunnerOptions,
+  FlowRunnerHandle,
+} from './helpers/flow-runner.js'
+
 // Pure change helpers
 export { applyNodeChanges, applyEdgeChanges } from './helpers/apply-changes.js'
 export { isNoSelfConnection, isNoDuplicateEdge, combineValidators } from './helpers/connection-validators.js'

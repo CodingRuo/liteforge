@@ -40,6 +40,7 @@ import {
   createNodeContextMenu,
   createEdgeContextMenu,
   createPaneContextMenu,
+  createFlowRunner,
 } from '@liteforge/flow';
 import type {
   FlowNode,
@@ -47,6 +48,7 @@ import type {
   NodeComponentFn,
   NodeChange,
   NodeExecStatus,
+  ExecuteContext,
 } from '@liteforge/flow';
 
 // =============================================================================
@@ -164,170 +166,77 @@ const nodeTypes: Record<string, NodeComponentFn> = {
 }
 
 // =============================================================================
-// Execution Engine — Recursive Graph Traversal
+// Execution Engine — per-type executors for createFlowRunner
 // =============================================================================
-
-interface RunnerState {
-  nodeStates:  Map<string, NodeExecStatus>
-  nodeOutputs: Map<string, unknown>
-  nodeErrors:  Map<string, string>
-  log:         string[]
-}
-
-function evalTransform(expression: string, data: unknown): unknown {
-  // eslint-disable-next-line no-new-func
-  const fn = new Function('data', `"use strict"; return (${expression})`)
-  return fn(data)
-}
 
 function evalCondition(cfg: ConditionData, payload: unknown): boolean {
   const obj = payload as Record<string, unknown>
-  const fieldVal = obj?.[cfg.field]
+  const v = obj?.[cfg.field]
   switch (cfg.operator) {
-    case '>':        return Number(fieldVal) > Number(cfg.value)
-    case '<':        return Number(fieldVal) < Number(cfg.value)
-    case '==':       return String(fieldVal) === cfg.value
-    case '!=':       return String(fieldVal) !== cfg.value
-    case 'contains': return String(fieldVal).includes(cfg.value)
+    case '>':        return Number(v) > Number(cfg.value)
+    case '<':        return Number(v) < Number(cfg.value)
+    case '==':       return String(v) === cfg.value
+    case '!=':       return String(v) !== cfg.value
+    case 'contains': return String(v).includes(cfg.value)
     default:         return false
   }
 }
 
-// Mark a node and all its downstream-only descendants as skipped
-// (only if they haven't been visited/executed via another path).
-function markSkipped(
-  nodeId:   string,
-  allNodes: FlowNode[],
-  allEdges: FlowEdge[],
-  state:    RunnerState,
-  visited:  Set<string>,
-): void {
-  if (visited.has(nodeId)) return
-  visited.add(nodeId)
-  if (!state.nodeStates.has(nodeId)) {
-    state.nodeStates.set(nodeId, 'skipped')
-  }
-  const outgoing = allEdges.filter(e => e.source === nodeId)
-  for (const e of outgoing) markSkipped(e.target, allNodes, allEdges, state, visited)
-}
+const pipelineExecutors = {
+  trigger: ({ data, log }: ExecuteContext<TriggerData>) => {
+    const out = { username: data.username || 'octocat', _headers: {} as Record<string, string> }
+    log(`▶ Trigger fired — username: "${out.username}"`)
+    return { output: out }
+  },
 
-async function executeNode(
-  nodeId:   string,
-  payload:  unknown,
-  allNodes: FlowNode[],
-  allEdges: FlowEdge[],
-  state:    RunnerState,
-  visited:  Set<string>,
-  flush:    () => void,
-): Promise<void> {
-  if (visited.has(nodeId)) return
-  visited.add(nodeId)
-
-  const node = allNodes.find(n => n.id === nodeId)
-  if (!node) return
-
-  state.nodeStates.set(nodeId, 'running')
-  flush()
-  await delay(300)
-
-  let output: unknown
-  let outHandle = 'out'
-
-  try {
-    switch (node.type) {
-      case 'trigger': {
-        const d = node.data as TriggerData
-        output = { username: d.username || 'octocat', _headers: {} as Record<string, string> }
-        state.log.push(`▶ Trigger fired — username: "${(output as Record<string, string>).username}"`)
-        break
-      }
-
-      case 'auth': {
-        const d = node.data as AuthData
-        const ctx = payload as Record<string, unknown>
-        const headers = { ...(ctx._headers as Record<string, string> ?? {}) }
-        if (d.token.trim()) {
-          if (d.authType === 'bearer')  headers['Authorization'] = `Bearer ${d.token}`
-          else if (d.authType === 'api-key') headers['X-API-Key'] = d.token
-          else headers['Authorization'] = `Basic ${btoa(d.token)}`
-          state.log.push(`🔑 Auth — added ${d.authType} header`)
-        } else {
-          state.log.push(`🔑 Auth — no token configured, skipping header`)
-        }
-        output = { ...ctx, _headers: headers }
-        break
-      }
-
-      case 'http': {
-        const d   = node.data as HttpData
-        const ctx = payload as Record<string, unknown>
-        const headers = ctx._headers as Record<string, string> ?? {}
-        const url = d.url.replace('{username}', (ctx.username as string) ?? '')
-        state.log.push(`🌐 HTTP ${d.method} → https://${url}`)
-        const res = await fetch(`https://${url}`, {
-          method: d.method,
-          headers: { 'Content-Type': 'application/json', ...headers },
-        })
-        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`)
-        output = await res.json()
-        state.log.push(`   ✓ ${res.status} OK`)
-        break
-      }
-
-      case 'transform': {
-        const d = node.data as TransformData
-        output = evalTransform(d.expression, payload)
-        state.log.push(`⚙️ Transform — ${d.expression.slice(0, 40)}`)
-        break
-      }
-
-      case 'condition': {
-        const d = node.data as ConditionData
-        const result = evalCondition(d, payload)
-        outHandle = result ? 'true' : 'false'
-        const skipHandle = result ? 'false' : 'true'
-        // Mark the not-taken branch as skipped
-        const skipEdges = allEdges.filter(e => e.source === nodeId && e.sourceHandle === skipHandle)
-        for (const e of skipEdges) markSkipped(e.target, allNodes, allEdges, state, new Set(visited))
-        output = { ...((payload as object) ?? {}), _branch: result }
-        state.log.push(`🔀 Condition "${d.field} ${d.operator} ${d.value}" → ${result ? 'TRUE' : 'FALSE'}`)
-        break
-      }
-
-      case 'response': {
-        const d = node.data as ResponseData
-        output = { status: d.status, body: d.body, payload }
-        state.log.push(`📤 Response ${d.status} — ${d.body.slice(0, 40)}`)
-        break
-      }
-
-      default:
-        output = payload
+  auth: ({ data, payload, log }: ExecuteContext<AuthData>) => {
+    const ctx = payload as Record<string, unknown>
+    const headers = { ...(ctx._headers as Record<string, string> ?? {}) }
+    if (data.token.trim()) {
+      if (data.authType === 'bearer')      headers['Authorization'] = `Bearer ${data.token}`
+      else if (data.authType === 'api-key') headers['X-API-Key'] = data.token
+      else                                  headers['Authorization'] = `Basic ${btoa(data.token)}`
+      log(`🔑 Auth — added ${data.authType} header`)
+    } else {
+      log('🔑 Auth — no token configured, skipping header')
     }
+    return { output: { ...ctx, _headers: headers } }
+  },
 
-    state.nodeStates.set(nodeId, 'success')
-    state.nodeOutputs.set(nodeId, output)
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    state.nodeStates.set(nodeId, 'error')
-    state.nodeErrors.set(nodeId, msg)
-    state.nodeOutputs.set(nodeId, msg)
-    state.log.push(`   ✗ Error: ${msg}`)
-    flush()
-    return
-  }
+  http: async ({ data, payload, log }: ExecuteContext<HttpData>) => {
+    const ctx = payload as Record<string, unknown>
+    const headers = ctx._headers as Record<string, string> ?? {}
+    const url = data.url.replace('{username}', (ctx.username as string) ?? '')
+    log(`🌐 HTTP ${data.method} → https://${url}`)
+    const res = await fetch(`https://${url}`, {
+      method: data.method,
+      headers: { 'Content-Type': 'application/json', ...headers },
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`)
+    const json = await res.json()
+    log(`   ✓ ${res.status} OK`)
+    return { output: json }
+  },
 
-  flush()
-  await delay(200)
+  transform: ({ data, payload, log }: ExecuteContext<TransformData>) => {
+    // eslint-disable-next-line no-new-func
+    const fn = new Function('data', `"use strict"; return (${data.expression})`)
+    log(`⚙️ Transform — ${data.expression.slice(0, 40)}`)
+    return { output: fn(payload) }
+  },
 
-  const outgoing = allEdges.filter(e => e.source === nodeId && e.sourceHandle === outHandle)
-  await Promise.all(outgoing.map(e =>
-    executeNode(e.target, output, allNodes, allEdges, state, visited, flush),
-  ))
-}
+  condition: ({ data, payload, log }: ExecuteContext<ConditionData>) => {
+    const result = evalCondition(data, payload)
+    const outHandle  = result ? 'true'  : 'false'
+    const skipHandle = result ? 'false' : 'true'
+    log(`🔀 Condition "${data.field} ${data.operator} ${data.value}" → ${result ? 'TRUE' : 'FALSE'}`)
+    return { output: { ...((payload as object) ?? {}), _branch: result }, outHandle, skipHandles: [skipHandle] }
+  },
 
-function delay(ms: number): Promise<void> {
-  return new Promise(r => setTimeout(r, ms))
+  response: ({ data, payload, log }: ExecuteContext<ResponseData>) => {
+    log(`📤 Response ${data.status} — ${data.body.slice(0, 40)}`)
+    return { output: { status: data.status, body: data.body, payload } }
+  },
 }
 
 // =============================================================================
@@ -510,42 +419,30 @@ export const ApiPipelinePage = createComponent({
     const execRunning = signal(false)
     const execLog     = signal<string[]>([])
 
+    const runner = createFlowRunner({
+      executors: pipelineExecutors,
+      onFlush: (s) => {
+        execNodeStates.set(new Map(s.nodeStates))
+        execNodeOutputs.set(new Map(s.nodeOutputs))
+        execNodeErrors.set(new Map(s.nodeErrors))
+        execLog.set([...s.log])
+      },
+    })
+
     async function runPipeline() {
       if (execRunning.peek()) return
       const currentNodes = nodes.peek()
-      const currentEdges = edges.peek()
       const triggerNode  = currentNodes.find(n => n.type === 'trigger')
       if (!triggerNode) return
 
       execRunning.set(true)
-      // Mark all nodes as pending before execution starts
-      const pendingMap = new Map<string, NodeExecStatus>()
-      for (const n of currentNodes) pendingMap.set(n.id, 'pending')
-      execNodeStates.set(pendingMap)
-      execNodeOutputs.set(new Map())
-      execNodeErrors.set(new Map())
       execLog.set(['⚡ Pipeline starting…'])
-
-      const state: RunnerState = {
-        nodeStates:  new Map(pendingMap),
-        nodeOutputs: new Map(),
-        nodeErrors:  new Map(),
-        log:         ['⚡ Pipeline starting…'],
-      }
-
-      function flush() {
-        execNodeStates.set(new Map(state.nodeStates))
-        execNodeOutputs.set(new Map(state.nodeOutputs))
-        execNodeErrors.set(new Map(state.nodeErrors))
-        execLog.set([...state.log])
-      }
-
       try {
-        await executeNode(triggerNode.id, null, currentNodes, currentEdges, state, new Set(), flush)
-        state.log.push(state.nodeErrors.size > 0
-          ? `⚠️ Completed with ${state.nodeErrors.size} error(s)`
-          : '✅ Pipeline completed successfully')
-        flush()
+        const result = await runner.run(triggerNode, currentNodes, edges.peek())
+        const finalLog = [...result.log, result.nodeErrors.size > 0
+          ? `⚠️ Completed with ${result.nodeErrors.size} error(s)`
+          : '✅ Pipeline completed successfully']
+        execLog.set(finalLog)
       } finally {
         execRunning.set(false)
       }

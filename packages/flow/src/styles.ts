@@ -1,15 +1,16 @@
-let stylesInjected = false
+const STYLE_ID = 'lf-flow-styles'
 
 export function injectFlowStyles(): void {
-  if (stylesInjected || typeof document === 'undefined') return
-  stylesInjected = true
+  if (typeof document === 'undefined') return
+  if (document.getElementById(STYLE_ID)) return
   const style = document.createElement('style')
+  style.id = STYLE_ID
   style.textContent = getFlowCSS()
   document.head.appendChild(style)
 }
 
 export function resetFlowStylesInjection(): void {
-  stylesInjected = false
+  document.getElementById(STYLE_ID)?.remove()
 }
 
 function getFlowCSS(): string {
@@ -188,6 +189,22 @@ function getFlowCSS(): string {
   font-size: var(--lf-flow-edge-label-size, 11px);
   font-family: inherit;
   user-select: none;
+}
+.lf-edge-endpoint {
+  fill: var(--lf-flow-handle-bg);
+  stroke: var(--lf-flow-handle-border);
+  stroke-width: 2;
+  cursor: crosshair;
+  pointer-events: all;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.lf-edge:hover ~ .lf-edge-endpoint,
+.lf-edge-endpoint:hover {
+  opacity: 1;
+}
+.lf-edge-selected ~ .lf-edge-endpoint {
+  opacity: 1;
 }
 .lf-marquee {
   position: absolute;

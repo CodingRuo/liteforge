@@ -131,8 +131,8 @@ describe('Edge Batching — scalability with 400 edges', () => {
 
     // Register handles so paths get a 'd' attribute
     for (let i = 0; i < NODE_COUNT; i++) {
-      ctx.handleRegistry.register(`n${i}`, 'out', { x: 10, y: 25 }, 'source')
-      ctx.handleRegistry.register(`n${i}`, 'in',  { x: 0,  y: 25 }, 'target')
+      ctx.handleRegistry.register(`n${i}`, 'out', () => ({ x: 10, y: 25 }), 'source')
+      ctx.handleRegistry.register(`n${i}`, 'in',  () => ({ x: 0,  y: 25 }), 'target')
     }
 
     const { dispose } = createEdgeLayer(ctx, svg)
@@ -300,8 +300,8 @@ describe('Scale test — 500 nodes / 400 edges full render', () => {
 
     // Register a handle for each node
     for (let i = 0; i < NODE_COUNT; i++) {
-      ctx.handleRegistry.register(`n${i}`, 'out', { x: 150, y: 25 }, 'source')
-      ctx.handleRegistry.register(`n${i}`, 'in',  { x: 0,   y: 25 }, 'target')
+      ctx.handleRegistry.register(`n${i}`, 'out', () => ({ x: 150, y: 25 }), 'source')
+      ctx.handleRegistry.register(`n${i}`, 'in',  () => ({ x: 0,   y: 25 }), 'target')
     }
 
     const { dispose } = createEdgeLayer(ctx, svg)

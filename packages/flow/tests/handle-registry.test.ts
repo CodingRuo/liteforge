@@ -14,13 +14,13 @@ describe('createHandleRegistry', () => {
 
   it('register increments version', () => {
     const reg = createHandleRegistry()
-    reg.register('n1', 'h1', { x: 10, y: 20 }, 'source')
+    reg.register('n1', 'h1', () => ({ x: 10, y: 20 }), 'source')
     expect(reg.version()).toBe(1)
   })
 
   it('unregister increments version', () => {
     const reg = createHandleRegistry()
-    reg.register('n1', 'h1', { x: 10, y: 20 }, 'source')
+    reg.register('n1', 'h1', () => ({ x: 10, y: 20 }), 'source')
     reg.unregister('n1', 'h1')
     expect(reg.version()).toBe(2)
   })
@@ -39,21 +39,22 @@ describe('createHandleRegistry', () => {
 
   it('getEntry returns the registered entry', () => {
     const reg = createHandleRegistry()
-    reg.register('n1', 'h1', { x: 5, y: 15 }, 'target')
+    reg.register('n1', 'h1', () => ({ x: 5, y: 15 }), 'target')
     const entry = reg.getEntry('n1', 'h1')
-    expect(entry).toEqual({ offset: { x: 5, y: 15 }, type: 'target' })
+    expect(entry?.type).toBe('target')
+    expect(entry?.measureFn()).toEqual({ x: 5, y: 15 })
   })
 
   it('unregister removes the entry (getEntry returns undefined after)', () => {
     const reg = createHandleRegistry()
-    reg.register('n1', 'h1', { x: 5, y: 15 }, 'source')
+    reg.register('n1', 'h1', () => ({ x: 5, y: 15 }), 'source')
     reg.unregister('n1', 'h1')
     expect(reg.getEntry('n1', 'h1')).toBeUndefined()
   })
 
   it('getAbsolutePosition returns undefined when node not found in nodes array', () => {
     const reg = createHandleRegistry()
-    reg.register('n1', 'h1', { x: 10, y: 20 }, 'source')
+    reg.register('n1', 'h1', () => ({ x: 10, y: 20 }), 'source')
     const nodes: FlowNode[] = []
     expect(reg.getAbsolutePosition('n1', 'h1', nodes)).toBeUndefined()
   })
@@ -66,7 +67,7 @@ describe('createHandleRegistry', () => {
 
   it('getAbsolutePosition = node.position + handle offset', () => {
     const reg = createHandleRegistry()
-    reg.register('n1', 'h1', { x: 10, y: 20 }, 'source')
+    reg.register('n1', 'h1', () => ({ x: 10, y: 20 }), 'source')
     const nodes = [makeNode('n1', 100, 200)]
     const pos = reg.getAbsolutePosition('n1', 'h1', nodes)
     expect(pos).toEqual({ x: 110, y: 220 })
@@ -74,8 +75,8 @@ describe('createHandleRegistry', () => {
 
   it('supports multiple handles on the same node', () => {
     const reg = createHandleRegistry()
-    reg.register('n1', 'h-source', { x: 10, y: 0  }, 'source')
-    reg.register('n1', 'h-target', { x: 10, y: 50 }, 'target')
+    reg.register('n1', 'h-source', () => ({ x: 10, y: 0  }), 'source')
+    reg.register('n1', 'h-target', () => ({ x: 10, y: 50 }), 'target')
 
     const nodes = [makeNode('n1', 100, 200)]
 
@@ -85,24 +86,24 @@ describe('createHandleRegistry', () => {
 
   it('re-registering the same handle updates the stored offset', () => {
     const reg = createHandleRegistry()
-    reg.register('n1', 'h1', { x: 10, y: 20 }, 'source')
-    reg.register('n1', 'h1', { x: 99, y: 88 }, 'source')
+    reg.register('n1', 'h1', () => ({ x: 10, y: 20 }), 'source')
+    reg.register('n1', 'h1', () => ({ x: 99, y: 88 }), 'source')
 
     const entry = reg.getEntry('n1', 'h1')
-    expect(entry?.offset).toEqual({ x: 99, y: 88 })
+    expect(entry?.measureFn()).toEqual({ x: 99, y: 88 })
   })
 
   it('each register call increments version (re-register counts too)', () => {
     const reg = createHandleRegistry()
-    reg.register('n1', 'h1', { x: 10, y: 20 }, 'source')
-    reg.register('n1', 'h1', { x: 99, y: 88 }, 'source')
+    reg.register('n1', 'h1', () => ({ x: 10, y: 20 }), 'source')
+    reg.register('n1', 'h1', () => ({ x: 99, y: 88 }), 'source')
     expect(reg.version()).toBe(2)
   })
 
   it('handles on different nodes are stored independently', () => {
     const reg = createHandleRegistry()
-    reg.register('n1', 'h1', { x: 10, y: 20 }, 'source')
-    reg.register('n2', 'h1', { x: 30, y: 40 }, 'target')
+    reg.register('n1', 'h1', () => ({ x: 10, y: 20 }), 'source')
+    reg.register('n2', 'h1', () => ({ x: 30, y: 40 }), 'target')
 
     const nodes = [makeNode('n1', 0, 0), makeNode('n2', 50, 50)]
 

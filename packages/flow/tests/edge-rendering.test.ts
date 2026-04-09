@@ -61,7 +61,7 @@ function makeCtx(
 
 /** Registers handles so getAbsolutePosition returns a fixed point */
 function registerHandle(ctx: FlowContextValue, nodeId: string, handleId: string, pos: Point = { x: 100, y: 100 }): void {
-  ctx.handleRegistry.register(nodeId, handleId, pos, 'source')
+  ctx.handleRegistry.register(nodeId, handleId, () => pos, 'source')
 }
 
 const tick = () => new Promise<void>(resolve => setTimeout(resolve, 0))

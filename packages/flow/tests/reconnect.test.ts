@@ -27,10 +27,10 @@ function makeCtx(overrides: Partial<FlowContextValue> = {}): FlowContextValue {
   const stateMgr = createInteractionState()
   const handleRegistry = createHandleRegistry()
   // Register handles with known offsets
-  handleRegistry.register('n1', 'out',  { x: 80, y: 20 }, 'source')
-  handleRegistry.register('n2', 'in',   { x: 0,  y: 20 }, 'target')
-  handleRegistry.register('n3', 'in',   { x: 0,  y: 20 }, 'target')
-  handleRegistry.register('n3', 'out',  { x: 80, y: 20 }, 'source')
+  handleRegistry.register('n1', 'out',  () => ({ x: 80, y: 20 }), 'source')
+  handleRegistry.register('n2', 'in',   () => ({ x: 0,  y: 20 }), 'target')
+  handleRegistry.register('n3', 'in',   () => ({ x: 0,  y: 20 }), 'target')
+  handleRegistry.register('n3', 'out',  () => ({ x: 80, y: 20 }), 'source')
   const transform = signal<Transform>({ x: 0, y: 0, scale: 1 })
 
   const ctx: FlowContextValue = {

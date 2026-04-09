@@ -28,18 +28,20 @@ export function createHandle(
   handleEl.dataset['handleId']   = handleId
   handleEl.dataset['handleType'] = type
 
-  // Measure position relative to node wrapper after layout has settled.
-  // getBoundingClientRect() is in screen-space, so divide by scale to get canvas-space.
-  queueMicrotask(() => {
+  // Register a live measure function — called by the EdgeLayer each time it needs
+  // the handle position. No timing issue: measurement happens when the edge geometry
+  // is actually needed (after layout), not at mount time.
+  const measureFn = (): Point => {
     const handleRect = handleEl.getBoundingClientRect()
     const nodeRect   = nodeWrapperEl.getBoundingClientRect()
     const scale      = ctx.transform.peek().scale
-    const offset: Point = {
+    if (nodeRect.width === 0) return { x: 0, y: 0 }
+    return {
       x: (handleRect.left - nodeRect.left + handleRect.width  / 2) / scale,
       y: (handleRect.top  - nodeRect.top  + handleRect.height / 2) / scale,
     }
-    ctx.handleRegistry.register(nodeId, handleId, offset, type)
-  })
+  }
+  ctx.handleRegistry.register(nodeId, handleId, measureFn, type)
 
   // Pointer down — start a connecting interaction
   const onPointerDown = (e: PointerEvent) => {

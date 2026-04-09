@@ -3,12 +3,12 @@ import type { Signal } from '@liteforge/core'
 import type { Point, HandleType, FlowNode } from '../types.js'
 
 export interface HandleEntry {
-  offset: Point
-  type:   HandleType
+  measureFn: () => Point
+  type:      HandleType
 }
 
 export interface HandleRegistry {
-  register:            (nodeId: string, handleId: string, offset: Point, type: HandleType) => void
+  register:            (nodeId: string, handleId: string, measureFn: () => Point, type: HandleType) => void
   unregister:          (nodeId: string, handleId: string) => void
   getEntry:            (nodeId: string, handleId: string) => HandleEntry | undefined
   getAbsolutePosition: (nodeId: string, handleId: string, nodes: FlowNode[]) => Point | undefined
@@ -23,13 +23,13 @@ export function createHandleRegistry(): HandleRegistry {
   return {
     get version() { return version },
 
-    register(nodeId, handleId, offset, type) {
+    register(nodeId, handleId, measureFn, type) {
       let nodeHandles = entries.get(nodeId)
       if (!nodeHandles) {
         nodeHandles = new Map()
         entries.set(nodeId, nodeHandles)
       }
-      nodeHandles.set(handleId, { offset, type })
+      nodeHandles.set(handleId, { measureFn, type })
       version.update(v => v + 1)
     },
 
@@ -52,9 +52,12 @@ export function createHandleRegistry(): HandleRegistry {
       if (!entry) return undefined
       const node = nodes.find(n => n.id === nodeId)
       if (!node) return undefined
+      // Measure live — always reads current DOM geometry at call time.
+      // This avoids the mount-time timing race (getBoundingClientRect → {0,0}).
+      const offset = entry.measureFn()
       return {
-        x: node.position.x + entry.offset.x,
-        y: node.position.y + entry.offset.y,
+        x: node.position.x + offset.x,
+        y: node.position.y + offset.y,
       }
     },
   }

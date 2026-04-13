@@ -2,7 +2,7 @@
  * Tests for h() function and Fragment
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { h, Fragment } from '../src/h.js';
 import { signal } from '@liteforge/core';
 import { createComponent } from '../src/component.js';
@@ -343,5 +343,53 @@ describe('h() - Ref Prop', () => {
     let refEl: HTMLElement | null = null;
     const el = h('div', { ref: (el: HTMLElement) => { refEl = el; } }) as HTMLElement;
     expect(refEl).toBe(el);
+  });
+});
+
+// =============================================================================
+// Unresolved Signal Warning
+// =============================================================================
+
+describe('h() - unresolved signal warning', () => {
+  let errorSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    errorSpy.mockRestore();
+  });
+
+  it('warns when a signal is passed as a child without being called', () => {
+    const name = signal('Alice');
+    // Simulate what the vite-plugin emits: () => name (signal passed unresolved)
+    h('span', null, (() => name) as unknown as () => string);
+    expect(errorSpy).toHaveBeenCalledOnce();
+    expect(errorSpy.mock.calls[0]![0]).toContain('[LiteForge]');
+    expect(errorSpy.mock.calls[0]![0]).toContain('Signal passed unresolved');
+  });
+
+  it('does NOT warn when a signal is called correctly', () => {
+    const name = signal('Alice');
+    h('span', null, () => name());
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  it('warns when a reactive prop getter returns a signal instead of its value', async () => {
+    const cls = signal('active');
+    // Simulates: class={authStore.emailClass} → vite-plugin emits () => authStore.emailClass
+    // The getter returns the signal itself, not its value
+    h('div', { class: (() => cls) as unknown as () => string });
+    await vi.waitFor(() => expect(errorSpy).toHaveBeenCalledOnce());
+    expect(errorSpy.mock.calls[0]![0]).toContain('[LiteForge]');
+    expect(errorSpy.mock.calls[0]![0]).toContain('prop "class"');
+  });
+
+  it('does NOT warn for a plain function child (render prop)', () => {
+    // A plain function without .set/.peek is not a signal
+    const renderFn = () => document.createTextNode('hello');
+    h('div', null, renderFn);
+    expect(errorSpy).not.toHaveBeenCalled();
   });
 });

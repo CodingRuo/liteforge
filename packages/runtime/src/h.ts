@@ -26,6 +26,30 @@ import type { ComponentFactory, ComponentFactoryInternal, RenderFunction } from 
 import { isComponentFactory } from './component.js';
 
 // =============================================================================
+// Dev Helpers
+// =============================================================================
+
+const isDev = typeof import.meta !== 'undefined' && import.meta.env?.DEV === true;
+
+/** Detect a LiteForge Signal at runtime: a function with .set and .peek methods. */
+function isSignal(value: unknown): boolean {
+  return (
+    typeof value === 'function' &&
+    typeof (value as Record<string, unknown>).set === 'function' &&
+    typeof (value as Record<string, unknown>).peek === 'function'
+  );
+}
+
+function warnUnresolvedSignal(location: string): void {
+  if (isDev) {
+    console.error(
+      `[LiteForge] Signal passed unresolved to JSX ${location}. ` +
+      `Did you mean to call it? Use () => signal() instead of signal.`
+    );
+  }
+}
+
+// =============================================================================
 // Fragment Symbol
 // =============================================================================
 
@@ -256,6 +280,9 @@ function applyProps(element: HTMLElement, props: Props, isSvg = false): void {
  * Set a single prop on an element
  */
 function setProp(element: HTMLElement, key: string, value: unknown, isSvg = false): void {
+  if (isSignal(value)) {
+    warnUnresolvedSignal(`as prop "${key}"`);
+  }
   // SVG elements: always use setAttribute — direct property assignment
   // doesn't work for SVG-specific props (d, points, viewBox, etc. are SVGAnimatedString)
   if (isSvg) {
@@ -422,6 +449,11 @@ function resolveChildToNode(child: HChild): Node | null {
     const fragment = document.createDocumentFragment();
     appendChildren(fragment, child);
     return fragment;
+  }
+
+  // Warn if an unresolved signal ended up here
+  if (isSignal(child)) {
+    warnUnresolvedSignal('as a child node');
   }
 
   // String/number

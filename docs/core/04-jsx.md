@@ -28,7 +28,7 @@ const items = signal(['a', 'b', 'c'])
 const view = (
   <div>
     <Show when={visible}>
-      <p>Hello!</p>
+      {() => <p>Hello!</p>}
     </Show>
     <For each={items}>
       {(item) => <li>{item}</li>}
@@ -66,16 +66,25 @@ JSX Fragment support — `<>...</>` compiles to `Fragment`.
 ```tsx
 import { Show } from '@liteforge/runtime'
 
-<Show when={isLoggedIn}>
-  <Dashboard />
+// Children must be a render function — NOT static JSX
+<Show when={() => isLoggedIn()}>
+  {() => <Dashboard />}
 </Show>
 
-<Show when={isLoggedIn} fallback={<Login />}>
-  <Dashboard />
+<Show when={() => isLoggedIn()} fallback={() => <Login />}>
+  {() => <Dashboard />}
+</Show>
+
+// Value-based: the truthy value is passed into the render function
+<Show when={() => currentUser()}>
+  {(user) => <h1>{user.name}</h1>}
 </Show>
 ```
 
-`when` accepts a signal, a getter function `() => boolean`, or a boolean.
+`when` accepts a signal, a getter function `() => T`, or a static value.
+`children` **must** be a render function `(value) => Node` — passing static JSX
+(e.g. `<Dashboard />`) will throw `TypeError: children is not a function` at runtime
+because Show calls `children(value)` internally.
 
 #### `For`
 
@@ -94,12 +103,12 @@ import { For } from '@liteforge/runtime'
 ```tsx
 import { Switch, Match } from '@liteforge/runtime'
 
-<Switch fallback={<NotFound />}>
-  <Match when={isAdmin}>
-    <AdminPanel />
+<Switch fallback={() => <NotFound />}>
+  <Match when={() => isAdmin()}>
+    {() => <AdminPanel />}
   </Match>
-  <Match when={isUser}>
-    <UserPanel />
+  <Match when={() => isUser()}>
+    {() => <UserPanel />}
   </Match>
 </Switch>
 ```

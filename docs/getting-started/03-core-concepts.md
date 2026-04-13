@@ -107,9 +107,9 @@ const Counter = createComponent({
 ```tsx
 import { Show, For } from '@liteforge/runtime'
 
-// Conditional rendering
-<Show when={isLoggedIn}>
-  <Dashboard />
+// Conditional rendering — children must be a render function
+<Show when={() => isLoggedIn()}>
+  {() => <Dashboard />}
 </Show>
 
 // List rendering

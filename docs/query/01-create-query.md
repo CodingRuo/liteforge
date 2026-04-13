@@ -1,7 +1,7 @@
 ---
 title: "createQuery"
 category: "query"
-tags: ["query", "createQuery", "createMutation", "cache", "fetch", "refetch", "invalidate"]
+tags: ["query", "createQuery", "createMutation", "cache", "fetch", "refetch", "invalidate", "onError", "global error handler"]
 related: ["defineStore", "createForm", "Context"]
 ---
 
@@ -105,6 +105,84 @@ Global cache object.
 | `queryCache.set(key, data)` | Manually set cache data |
 | `queryCache.getEntry(key)` | Read a cache entry |
 | `queryCache.clear()` | Clear all cache entries |
+
+---
+
+### `queryPlugin(options)` — Global Error Handler
+
+Register `queryPlugin` in your app to handle all query and mutation errors in one place — no need to add `onError` to every individual `createQuery` or `createMutation` call.
+
+```ts
+import { createApp } from '@liteforge/runtime'
+import { queryPlugin } from '@liteforge/query'
+
+createApp({ root: App, target: '#app' })
+  .use(queryPlugin({
+    onError: (error, ctx) => {
+      if (ctx.type === 'query') {
+        console.error(`[Query ${ctx.key}]`, error.message)
+      } else {
+        console.error('[Mutation]', error.message)
+      }
+    },
+  }))
+  .mount()
+```
+
+**`QueryPluginOptions`:**
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `onError` | `(error: Error, ctx: QueryErrorContext) => void` | Called for every unhandled query or mutation error |
+| `defaultStaleTime` | `number` | — |
+| `defaultCacheTime` | `number` | — |
+
+**`QueryErrorContext`:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `type` | `'query' \| 'mutation'` | Source of the error |
+| `key` | `string \| undefined` | Serialized cache key (queries only) |
+
+**Execution order for query errors:** retries exhausted → `onError` (global handler).
+
+**Execution order for mutation errors:** per-mutation `onError` callback → global `onError` handler.
+
+The handler is automatically cleared when the app is destroyed (plugin cleanup).
+
+#### Common pattern — show a toast on every error
+
+```ts
+import { toastPlugin, createToast } from '@liteforge/toast'
+import { queryPlugin } from '@liteforge/query'
+
+const toast = createToast()
+
+createApp({ root: App, target: '#app' })
+  .use(toastPlugin())
+  .use(queryPlugin({
+    onError: (error) => toast.error(error.message),
+  }))
+  .mount()
+```
+
+#### Redirect to login on 401
+
+```ts
+import { routerPlugin, createRouter } from '@liteforge/router'
+import { queryPlugin } from '@liteforge/query'
+
+const router = createRouter({ routes })
+
+createApp({ root: App, target: '#app' })
+  .use(routerPlugin(router))
+  .use(queryPlugin({
+    onError: (error) => {
+      if ((error as any).status === 401) router.navigate('/login')
+    },
+  }))
+  .mount()
+```
 
 ## Examples
 

@@ -7,6 +7,7 @@
 import { signal, effect } from '@liteforge/core';
 import { onSetupCleanup } from '@liteforge/runtime';
 import { queryCache, serializeKey } from './cache.js';
+import { notifyGlobalQueryError } from './global-error-handler.js';
 import type {
   CreateQueryOptions,
   ResolvedQueryOptions,
@@ -201,6 +202,7 @@ export function createQuery<T>(options: CreateQueryOptions<T>): QueryResult<T> {
     if (!isDisposed && serializeCurrentKey() === serializedKey) {
       errorSignal.set(lastError);
       isLoadingSignal.set(false);
+      notifyGlobalQueryError(lastError, { type: 'query', key: serializedKey });
     }
   }
 

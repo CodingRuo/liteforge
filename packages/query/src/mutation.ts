@@ -6,6 +6,7 @@
 
 import { signal } from '@liteforge/core';
 import { queryCache } from './cache.js';
+import { notifyGlobalQueryError } from './global-error-handler.js';
 import type {
   CreateMutationOptions,
   MutationResult,
@@ -110,7 +111,7 @@ export function createMutation<TData, TVariables = void>(
       errorSignal.set(error);
       isLoadingSignal.set(false);
 
-      // Call onError with rollback data
+      // Call per-mutation onError with rollback data
       if (onError) {
         try {
           onError(error, variables, rollbackData);
@@ -119,6 +120,9 @@ export function createMutation<TData, TVariables = void>(
           console.error('[Query] onError error:', e);
         }
       }
+
+      // Fire global error handler after per-mutation handler
+      notifyGlobalQueryError(error, { type: 'mutation' });
 
       throw error;
     }

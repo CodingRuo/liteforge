@@ -10,7 +10,12 @@ import type { LiteForgePlugin, PluginContext } from '@liteforge/runtime';
 import { queryCache } from './cache.js';
 import { createQuery } from './query.js';
 import { createMutation } from './mutation.js';
+import {
+  setGlobalQueryErrorHandler,
+  clearGlobalQueryErrorHandler,
+} from './global-error-handler.js';
 import type { QueryCacheInterface } from './types.js';
+import type { GlobalQueryErrorHandler } from './global-error-handler.js';
 
 export interface QueryApi {
   cache: QueryCacheInterface;
@@ -21,6 +26,8 @@ export interface QueryApi {
 export interface QueryPluginOptions {
   defaultStaleTime?: number;
   defaultCacheTime?: number;
+  /** Global error handler called for every query and mutation error. */
+  onError?: GlobalQueryErrorHandler;
 }
 
 export function queryPlugin(options: QueryPluginOptions = {}): LiteForgePlugin {
@@ -31,13 +38,15 @@ export function queryPlugin(options: QueryPluginOptions = {}): LiteForgePlugin {
       const _toast = context.resolve<{ error: (msg: string) => void }>('toast');
       void _toast; // reserved for future global error handling
 
-      // options stored for future per-instance configuration
-      void options;
+      if (options.onError) {
+        setGlobalQueryErrorHandler(options.onError);
+      }
 
       const api: QueryApi = { cache: queryCache, createQuery, createMutation };
       context.provide('query', api);
 
       return () => {
+        clearGlobalQueryErrorHandler();
         queryCache.clear();
       };
     },

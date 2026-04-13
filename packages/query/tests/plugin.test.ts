@@ -2,6 +2,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { queryPlugin } from '../src/plugin.js';
 import { queryCache } from '../src/cache.js';
 import { createPluginContext } from '../../runtime/src/plugin-registry.js';
+import { createQuery } from '../src/query.js';
+import { createMutation } from '../src/mutation.js';
+import { clearGlobalQueryErrorHandler } from '../src/global-error-handler.js';
 
 describe('queryPlugin', () => {
   // Use a plain object cast as HTMLElement — queryPlugin never accesses DOM on target
@@ -16,6 +19,7 @@ describe('queryPlugin', () => {
 
   afterEach(() => {
     queryCache.clear();
+    clearGlobalQueryErrorHandler();
   });
 
   it('plugin name is "query"', () => {
@@ -65,6 +69,85 @@ describe('queryPlugin', () => {
     // We verify indirectly: the plugin should not throw and still register 'query'
     capturedToast = ctx.resolve('toast');
     expect(capturedToast).toBe(toast);
+  });
+
+  describe('onError — global error handler', () => {
+    it('registers onError handler on install', async () => {
+      const handler = vi.fn();
+      const plugin = queryPlugin({ onError: handler });
+      const ctx = createPluginContext(fakeTarget, appContext);
+      plugin.install(ctx);
+
+      const error = new Error('boom');
+      const query = createQuery({
+        key: 'err-q',
+        fn: () => Promise.reject(error),
+        retry: 0,
+      });
+
+      await vi.waitFor(() => expect(query.error()).not.toBeNull());
+
+      expect(handler).toHaveBeenCalledOnce();
+      expect(handler).toHaveBeenCalledWith(error, { type: 'query', key: 'err-q' });
+
+      query.dispose();
+    });
+
+    it('handler receives mutation errors', async () => {
+      const handler = vi.fn();
+      const plugin = queryPlugin({ onError: handler });
+      const ctx = createPluginContext(fakeTarget, appContext);
+      plugin.install(ctx);
+
+      const error = new Error('mutation failed');
+      const mut = createMutation({
+        fn: () => Promise.reject(error),
+      });
+
+      await expect(mut.mutate()).rejects.toThrow('mutation failed');
+
+      expect(handler).toHaveBeenCalledOnce();
+      expect(handler).toHaveBeenCalledWith(error, { type: 'mutation' });
+    });
+
+    it('does not call handler when onError not provided', async () => {
+      const plugin = queryPlugin();
+      const ctx = createPluginContext(fakeTarget, appContext);
+      plugin.install(ctx);
+
+      const query = createQuery({
+        key: 'no-handler-q',
+        fn: () => Promise.reject(new Error('fail')),
+        retry: 0,
+      });
+
+      await vi.waitFor(() => expect(query.error()).not.toBeNull());
+      // No assertion needed — just must not throw
+      query.dispose();
+    });
+
+    it('clears handler on plugin cleanup', async () => {
+      const handler = vi.fn();
+      const plugin = queryPlugin({ onError: handler });
+      const ctx = createPluginContext(fakeTarget, appContext);
+      const cleanup = plugin.install(ctx);
+
+      if (typeof cleanup === 'function') {
+        cleanup();
+      }
+
+      // After cleanup, a new query error should NOT reach the handler
+      const query = createQuery({
+        key: 'post-cleanup-q',
+        fn: () => Promise.reject(new Error('after cleanup')),
+        retry: 0,
+      });
+
+      await vi.waitFor(() => expect(query.error()).not.toBeNull());
+
+      expect(handler).not.toHaveBeenCalled();
+      query.dispose();
+    });
   });
 
   it('cleanup calls queryCache.clear()', () => {

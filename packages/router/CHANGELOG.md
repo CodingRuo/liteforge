@@ -1,5 +1,36 @@
 # @liteforge/router
 
+## 0.9.0
+
+### Minor Changes
+
+- Built-in guard factories now use options objects (breaking change)
+
+  `createAuthGuard`, `createRoleGuard`, `createConfirmGuard`, and `createGuestGuard` now
+  accept an options object instead of positional parameters — consistent with the
+  LiteForge object-style API convention and fixing a silent auth bypass where passing
+  an options object to the old positional signature made `isAuthenticated` always truthy.
+
+  **Before:**
+
+  ```ts
+  createAuthGuard(() => !!user(), "/login");
+  createRoleGuard((role) => hasRole(role), "/forbidden");
+  ```
+
+  **After:**
+
+  ```ts
+  createAuthGuard({ isAuthenticated: () => !!user(), loginPath: "/login" });
+  createRoleGuard({
+    hasRole: (role) => hasRole(role),
+    unauthorizedPath: "/forbidden",
+  });
+  ```
+
+  New option type exports: `CreateAuthGuardOptions`, `CreateRoleGuardOptions`,
+  `CreateConfirmGuardOptions`, `CreateGuestGuardOptions`.
+
 ## 0.8.0
 
 ### Minor Changes

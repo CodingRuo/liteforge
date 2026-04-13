@@ -78,12 +78,49 @@ const SlowPage = lazy(() => import('./pages/Slow'), {
 
 ### Built-in guards
 
+All guard factories use an options object.
+
 | Guard | Factory | Description |
 |-------|---------|-------------|
-| Auth | `createAuthGuard({ isAuthenticated, loginPath })` | Redirect to login if not authenticated |
-| Role | `createRoleGuard({ hasRole, forbidden })` | Require a specific role |
-| Confirm | `createConfirmGuard({ message })` | Confirm before leaving |
-| Guest | `createGuestGuard({ isAuthenticated, homePath })` | Redirect authenticated users |
+| Auth | `createAuthGuard({ isAuthenticated, loginPath? })` | Redirect to login if not authenticated |
+| Role | `createRoleGuard({ hasRole, unauthorizedPath? })` | Require a specific role (`guard: 'role:admin'`) |
+| Confirm | `createConfirmGuard({ shouldConfirm, message? })` | Confirm dialog before leaving |
+| Guest | `createGuestGuard({ isAuthenticated, homePath? })` | Redirect already-authenticated users |
+
+```ts
+import {
+  createAuthGuard,
+  createRoleGuard,
+  createGuestGuard,
+  createConfirmGuard,
+} from '@liteforge/router'
+
+const router = createRouter({
+  routes,
+  guards: [
+    createAuthGuard({
+      isAuthenticated: () => !!authStore.user(),
+      loginPath: '/login',           // default: '/login'
+    }),
+    createRoleGuard({
+      hasRole: (role) => authStore.roles().includes(role),
+      unauthorizedPath: '/forbidden', // default: '/unauthorized'
+    }),
+  ],
+})
+
+// Guest-only route (login page):
+createGuestGuard({
+  isAuthenticated: () => !!authStore.user(),
+  homePath: '/dashboard',            // default: '/'
+})
+
+// Unsaved-changes guard:
+createConfirmGuard({
+  shouldConfirm: () => form.isDirty(),
+  message: 'Discard unsaved changes?', // default: 'You have unsaved changes...'
+})
+```
 
 ### `defineGuard(name, fn)` → `RouteGuard`
 

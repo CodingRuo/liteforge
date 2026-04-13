@@ -268,25 +268,25 @@ describe('createAuthGuard', () => {
   };
 
   it('allows when authenticated', async () => {
-    const guard = createAuthGuard(() => true);
+    const guard = createAuthGuard({ isAuthenticated: () => true });
     const result = await guard.handler(mockContext);
     expect(result).toBe(true);
   });
 
   it('redirects to login when not authenticated', async () => {
-    const guard = createAuthGuard(() => false);
+    const guard = createAuthGuard({ isAuthenticated: () => false });
     const result = await guard.handler(mockContext);
     expect(result).toBe('/login?redirect=%2Fadmin');
   });
 
   it('uses custom login path', async () => {
-    const guard = createAuthGuard(() => false, '/auth/signin');
+    const guard = createAuthGuard({ isAuthenticated: () => false, loginPath: '/auth/signin' });
     const result = await guard.handler(mockContext);
     expect(result).toContain('/auth/signin');
   });
 
   it('includes search in redirect URL', async () => {
-    const guard = createAuthGuard(() => false);
+    const guard = createAuthGuard({ isAuthenticated: () => false });
     const contextWithSearch = {
       ...mockContext,
       to: { ...mockContext.to, path: '/admin', search: 'tab=users' },
@@ -298,7 +298,7 @@ describe('createAuthGuard', () => {
 
 describe('createRoleGuard', () => {
   it('allows when user has role', async () => {
-    const guard = createRoleGuard((role) => role === 'admin');
+    const guard = createRoleGuard({ hasRole: (role) => role === 'admin' });
     const result = await guard.handler({
       to: { path: '/admin', href: '/admin', search: '', query: {}, hash: '', state: null },
       from: null,
@@ -311,7 +311,7 @@ describe('createRoleGuard', () => {
   });
 
   it('redirects when user lacks role', async () => {
-    const guard = createRoleGuard((role) => role === 'admin');
+    const guard = createRoleGuard({ hasRole: (role) => role === 'admin' });
     const result = await guard.handler({
       to: { path: '/admin', href: '/admin', search: '', query: {}, hash: '', state: null },
       from: null,
@@ -324,7 +324,7 @@ describe('createRoleGuard', () => {
   });
 
   it('uses custom unauthorized path', async () => {
-    const guard = createRoleGuard(() => false, '/403');
+    const guard = createRoleGuard({ hasRole: () => false, unauthorizedPath: '/403' });
     const result = await guard.handler({
       to: { path: '/admin', href: '/admin', search: '', query: {}, hash: '', state: null },
       from: null,
@@ -338,7 +338,7 @@ describe('createRoleGuard', () => {
 
   it('warns and blocks when no param provided', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const guard = createRoleGuard(() => true);
+    const guard = createRoleGuard({ hasRole: () => true });
     const result = await guard.handler({
       to: { path: '/admin', href: '/admin', search: '', query: {}, hash: '', state: null },
       from: null,
@@ -362,19 +362,19 @@ describe('createGuestGuard', () => {
   };
 
   it('allows when not authenticated', async () => {
-    const guard = createGuestGuard(() => false);
+    const guard = createGuestGuard({ isAuthenticated: () => false });
     const result = await guard.handler(mockContext);
     expect(result).toBe(true);
   });
 
   it('redirects when authenticated', async () => {
-    const guard = createGuestGuard(() => true);
+    const guard = createGuestGuard({ isAuthenticated: () => true });
     const result = await guard.handler(mockContext);
     expect(result).toBe('/');
   });
 
   it('uses custom home path', async () => {
-    const guard = createGuestGuard(() => true, '/dashboard');
+    const guard = createGuestGuard({ isAuthenticated: () => true, homePath: '/dashboard' });
     const result = await guard.handler(mockContext);
     expect(result).toBe('/dashboard');
   });
@@ -390,16 +390,26 @@ describe('createConfirmGuard', () => {
   };
 
   it('allows when no confirmation needed', async () => {
-    const guard = createConfirmGuard(() => false);
+    const guard = createConfirmGuard({ shouldConfirm: () => false });
     const result = await guard.handler(mockContext);
     expect(result).toBe(true);
   });
 
   it('allows in non-browser environment when confirmation needed', async () => {
-    // In Node.js, window.confirm doesn't exist
-    const guard = createConfirmGuard(() => true);
+    const guard = createConfirmGuard({ shouldConfirm: () => true });
     const result = await guard.handler(mockContext);
-    // Should return true because we're not in a browser
     expect(result).toBe(true);
+  });
+
+  it('uses custom message', async () => {
+    // In happy-dom window.confirm may exist — mock it
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const guard = createConfirmGuard({
+      shouldConfirm: () => true,
+      message: 'Custom message',
+    });
+    await guard.handler(mockContext);
+    expect(confirmSpy).toHaveBeenCalledWith('Custom message');
+    confirmSpy.mockRestore();
   });
 });

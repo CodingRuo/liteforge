@@ -261,31 +261,50 @@ export function collectRouteGuards(route: CompiledRoute, registry?: GuardRegistr
 // Built-in Guards
 // =============================================================================
 
+export interface CreateAuthGuardOptions {
+  /** Returns true when the user is authenticated. */
+  isAuthenticated: () => boolean;
+  /** Path to redirect unauthenticated users to. @default '/login' */
+  loginPath?: string;
+}
+
 /**
- * Create a simple authentication guard
+ * Create a simple authentication guard.
+ *
+ * @example
+ * ```ts
+ * createAuthGuard({ isAuthenticated: () => !!currentUser(), loginPath: '/login' })
+ * ```
  */
-export function createAuthGuard(
-  isAuthenticated: () => boolean,
-  loginPath: string = '/login'
-): RouteGuard {
+export function createAuthGuard(options: CreateAuthGuardOptions): RouteGuard {
+  const { isAuthenticated, loginPath = '/login' } = options;
   return defineGuard('auth', ({ to }) => {
     if (isAuthenticated()) {
       return true;
     }
-    // Redirect to login with return URL
     const redirectTo = encodeURIComponent(to.path + to.search);
     return `${loginPath}?redirect=${redirectTo}`;
   });
 }
 
+export interface CreateRoleGuardOptions {
+  /** Returns true when the user has the given role. */
+  hasRole: (role: string) => boolean;
+  /** Path to redirect users without the required role to. @default '/unauthorized' */
+  unauthorizedPath?: string;
+}
+
 /**
- * Create a role-based guard
- * Usage: guard: 'role:admin' or guard: 'role:editor'
+ * Create a role-based guard.
+ * Usage: `guard: 'role:admin'` or `guard: 'role:editor'`
+ *
+ * @example
+ * ```ts
+ * createRoleGuard({ hasRole: (role) => authStore.roles().includes(role) })
+ * ```
  */
-export function createRoleGuard(
-  hasRole: (role: string) => boolean,
-  unauthorizedPath: string = '/unauthorized'
-): RouteGuard {
+export function createRoleGuard(options: CreateRoleGuardOptions): RouteGuard {
+  const { hasRole, unauthorizedPath = '/unauthorized' } = options;
   return defineGuard('role', ({ param }) => {
     if (!param) {
       console.warn('Role guard requires a role parameter (e.g., "role:admin")');
@@ -295,33 +314,54 @@ export function createRoleGuard(
   });
 }
 
+export interface CreateConfirmGuardOptions {
+  /** Returns true when the user should be prompted before leaving. */
+  shouldConfirm: () => boolean;
+  /** Message shown in the confirm dialog. @default 'You have unsaved changes. Are you sure you want to leave?' */
+  message?: string;
+}
+
 /**
- * Create a confirmation guard that can be used for unsaved changes
+ * Create a confirmation guard for unsaved changes.
+ *
+ * @example
+ * ```ts
+ * createConfirmGuard({ shouldConfirm: () => form.isDirty() })
+ * ```
  */
-export function createConfirmGuard(
-  shouldConfirm: () => boolean,
-  message: string = 'You have unsaved changes. Are you sure you want to leave?'
-): RouteGuard {
+export function createConfirmGuard(options: CreateConfirmGuardOptions): RouteGuard {
+  const {
+    shouldConfirm,
+    message = 'You have unsaved changes. Are you sure you want to leave?',
+  } = options;
   return defineGuard('confirm', () => {
     if (!shouldConfirm()) {
       return true;
     }
-    // In browser environment, use confirm dialog
     if (typeof window !== 'undefined' && window.confirm) {
       return window.confirm(message);
     }
-    // In non-browser environment, allow navigation
     return true;
   });
 }
 
+export interface CreateGuestGuardOptions {
+  /** Returns true when the user is authenticated (guest guard blocks authenticated users). */
+  isAuthenticated: () => boolean;
+  /** Path to redirect authenticated users to. @default '/' */
+  homePath?: string;
+}
+
 /**
- * Create a guest-only guard (redirects authenticated users)
+ * Create a guest-only guard (redirects already-authenticated users).
+ *
+ * @example
+ * ```ts
+ * createGuestGuard({ isAuthenticated: () => !!currentUser(), homePath: '/dashboard' })
+ * ```
  */
-export function createGuestGuard(
-  isAuthenticated: () => boolean,
-  homePath: string = '/'
-): RouteGuard {
+export function createGuestGuard(options: CreateGuestGuardOptions): RouteGuard {
+  const { isAuthenticated, homePath = '/' } = options;
   return defineGuard('guest', () => {
     if (!isAuthenticated()) {
       return true;

@@ -127,6 +127,13 @@ export {
   createGuestGuard,
 } from './guards.js';
 
+export type {
+  CreateAuthGuardOptions,
+  CreateRoleGuardOptions,
+  CreateConfirmGuardOptions,
+  CreateGuestGuardOptions,
+} from './guards.js';
+
 // =============================================================================
 // Middleware
 // =============================================================================

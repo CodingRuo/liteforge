@@ -224,7 +224,11 @@ importers:
         specifier: workspace:*
         version: link:../core
 
-  packages/theme: {}
+  packages/theme:
+    dependencies:
+      '@liteforge/core':
+        specifier: workspace:*
+        version: link:../core
 
   packages/toast:
     devDependencies:

@@ -19,3 +19,5 @@ export { injectTheme, resetThemeInjection } from './inject.js';
 export type { InjectThemeOptions } from './inject.js';
 export { TOKEN_MAP } from './tokens.js';
 export type { ThemeTokens } from './tokens.js';
+export { colorScheme, resetColorScheme } from './scheme.js';
+export type { ColorScheme } from './scheme.js';

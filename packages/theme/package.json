@@ -55,6 +55,9 @@
   "sideEffects": [
     "css/*.css"
   ],
+  "peerDependencies": {
+    "@liteforge/core": "workspace:*"
+  },
   "engines": {
     "node": ">=18"
   },

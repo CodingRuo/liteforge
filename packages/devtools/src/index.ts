@@ -7,12 +7,8 @@
 // Plugin
 export { devtoolsPlugin, createDevTools } from './plugin.js';
 
-// Types from plugin (time-travel related)
-export type {
-  DevToolsStore,
-  DevToolsStoreMap,
-  StandaloneDevToolsConfig,
-} from './plugin.js';
+// Types from plugin
+export type { StandaloneDevToolsConfig } from './plugin.js';
 
 // Types
 export type {
@@ -32,6 +28,8 @@ export type {
   NavigationInfo,
   ComponentInfo,
   PerformanceCounters,
+  DevToolsStore,
+  DevToolsStoreMap,
 } from './types.js';
 
 // Buffer (for advanced usage)

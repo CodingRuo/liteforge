@@ -5,6 +5,7 @@ import { DataTable } from '../components/DataTable.js';
 import { DetailView } from '../components/DetailView.js';
 import { ResourceForm } from '../components/ResourceForm.js';
 import { AdminLayout } from '../components/AdminLayout.js';
+import type { AdminLayoutProps } from '../components/AdminLayout.js';
 import { Dashboard } from '../components/Dashboard.js';
 import { ActivityLogView } from '../components/ActivityLogView.js';
 
@@ -119,7 +120,7 @@ export function buildAdminRoutes(opts: BuildAdminRoutesOptions): RouteDefinition
   return [
     {
       path: routePrefix,
-      component: () => LayoutComponent(layoutProps),
+      component: () => LayoutComponent(layoutProps as unknown as AdminLayoutProps),
       children: childRoutes,
     },
   ];

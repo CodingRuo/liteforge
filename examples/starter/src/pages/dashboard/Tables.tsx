@@ -18,6 +18,7 @@ import { createComponent, Show } from 'liteforge';
 import { createQuery } from 'liteforge/query';
 import { createTable } from 'liteforge/table';
 import type { ColumnDef } from 'liteforge/table';
+import { createClient } from 'liteforge/client';
 
 // =============================================================================
 // User Type (JSONPlaceholder schema)
@@ -51,14 +52,12 @@ export const TablesPage = createComponent({
   name: 'TablesPage',
 
   setup() {
+    const jsonClient = createClient({ baseUrl: 'https://jsonplaceholder.typicode.com' });
+
     // Fetch users from JSONPlaceholder
     const usersQuery = createQuery<User[]>({
       key: 'users-table',
-      fn: async () => {
-        const response = await fetch('https://jsonplaceholder.typicode.com/users');
-        if (!response.ok) throw new Error('Failed to fetch users');
-        return response.json();
-      },
+      fn: () => jsonClient.get<User[]>('/users'),
     });
 
     // Column definitions
@@ -93,7 +92,8 @@ export const TablesPage = createComponent({
       { 
         key: 'website', 
         header: 'Website',
-        cell: (value) => {
+        cell: ({ getValue }) => {
+          const value = getValue();
           const link = document.createElement('a');
           link.href = `https://${value}`;
           link.target = '_blank';
@@ -113,7 +113,7 @@ export const TablesPage = createComponent({
       {
         key: '_actions',
         header: 'Actions',
-        cell: (_, row) => {
+        cell: ({ row }) => {
           const container = document.createElement('div');
           container.style.display = 'flex';
           container.style.gap = '8px';

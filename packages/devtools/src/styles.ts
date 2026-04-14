@@ -56,7 +56,7 @@ export const commonStyles = {
 // ============================================================================
 
 export function getPanelStyles(
-  position: 'right' | 'bottom' | 'floating',
+  position: 'right' | 'bottom' | 'floating' | 'bottom-right',
   width: number,
   height: number,
   isOpen: boolean
@@ -96,6 +96,22 @@ export function getPanelStyles(
       height: ${height}px;
       transform: translateY(${isOpen ? '0' : '100%'});
       border-top: 1px solid ${colors.border};
+    `;
+  }
+
+  if (position === 'bottom-right') {
+    return `
+      ${base}
+      bottom: 16px;
+      right: 16px;
+      width: ${width}px;
+      height: ${height}px;
+      transform: scale(${isOpen ? '1' : '0.9'}) translateY(${isOpen ? '0' : '20px'});
+      transform-origin: bottom right;
+      opacity: ${isOpen ? '1' : '0'};
+      pointer-events: ${isOpen ? 'auto' : 'none'};
+      border-radius: 8px;
+      border: 1px solid ${colors.border};
     `;
   }
 

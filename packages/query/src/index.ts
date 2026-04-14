@@ -40,11 +40,3 @@ export {
 } from './global-error-handler.js';
 export type { GlobalQueryErrorHandler, QueryErrorContext } from './global-error-handler.js';
 
-// Declaration Merging — augments @liteforge/runtime's PluginRegistry so that
-// use('query') returns QueryApi without a cast whenever @liteforge/query is imported.
-import type { QueryApi } from './plugin.js';
-declare module '@liteforge/runtime' {
-  interface PluginRegistry {
-    query: QueryApi;
-  }
-}

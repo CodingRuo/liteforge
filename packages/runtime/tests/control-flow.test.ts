@@ -117,6 +117,45 @@ describe('control flow components', () => {
       expect(spy.mock.calls[0]![0]).toContain('children')
       spy.mockRestore()
     });
+
+    it('passes narrowed truthy value to children callback', async () => {
+      const user = signal<{ name: string } | null>(null);
+      let receivedName = '';
+
+      const node = Show({
+        when: () => user(),
+        children: (u) => {
+          receivedName = u.name;
+          return document.createTextNode(u.name);
+        },
+      });
+
+      container.appendChild(node);
+      await tick();
+      expect(container.textContent).toBe('');
+
+      user.set({ name: 'Alice' });
+      await tick();
+      expect(container.textContent).toBe('Alice');
+      expect(receivedName).toBe('Alice');
+    });
+
+    it('children with no argument works when only boolean condition is needed', async () => {
+      const show = signal(false);
+
+      const node = Show({
+        when: () => show(),
+        children: () => document.createTextNode('Shown'),
+      });
+
+      container.appendChild(node);
+      await tick();
+      expect(container.textContent).toBe('');
+
+      show.set(true);
+      await tick();
+      expect(container.textContent).toBe('Shown');
+    });
   });
 
   describe('For', () => {

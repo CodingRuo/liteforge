@@ -1,5 +1,21 @@
 # @liteforge/client
 
+## 6.0.1
+
+### Patch Changes
+
+- Fix `resource<T>().useList()` returning `unknown` instead of `QueryResult<T[]>`.
+
+  The internal `resource()` function now always returns `QueryResource<T, TCreate, TUpdate>`, so `.useList()`, `.useOne()`, and `.useMutation()` are correctly typed when using `QueryClient`.
+
+## 6.0.0
+
+### Patch Changes
+
+- Updated dependencies
+  - @liteforge/runtime@0.7.0
+  - @liteforge/query@4.0.0
+
 ## 5.0.0
 
 ### Patch Changes

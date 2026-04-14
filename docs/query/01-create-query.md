@@ -48,7 +48,7 @@ await addUser.mutate({ name: 'Alice' })
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `key` | `string \| (() => QueryKey)` | required | Cache key. Reactive when a function. |
+| `key` | `string \| QueryKeyPrimitive[] \| (() => QueryKey)` | required | Cache key. Reactive when a function. Array form is serialized automatically. |
 | `fn` | `() => Promise<T>` | required | Fetcher function |
 | `staleTime` | `number` | `0` | ms before data is considered stale |
 | `cacheTime` | `number` | `300000` (5m) | ms to keep inactive cache entry |
@@ -57,6 +57,8 @@ await addUser.mutate({ name: 'Alice' })
 | `retry` | `number` | `3` | Retry count on failure |
 | `retryDelay` | `number` | `1000` | ms between retries |
 | `enabled` | `() => boolean` | `() => true` | Disable query when false |
+| `onSuccess` | `(data: T) => void` | — | Called after every successful fetch |
+| `onError` | `(error: Error) => void` | — | Called after all retries fail |
 
 **Returns (`QueryResult<T>`):**
 
@@ -139,6 +141,7 @@ createApp({ root: App, target: '#app' })
 | `defaultRefetchInterval` | `number` | `undefined` | Global poll interval in ms |
 | `defaultRetry` | `number` | `3` | Global retry count on failure |
 | `defaultRetryDelay` | `number` | `1000` | Global delay between retries in ms |
+| `defaultEnabled` | `() => boolean` | — | Gate all queries (e.g. behind auth check). Per-query `enabled` wins. |
 | `onError` | `(error: Error, ctx: QueryErrorContext) => void` | — | Called for every unhandled query or mutation error |
 
 Per-query options always win over global defaults — `queryPlugin` only sets the fallback.
@@ -236,6 +239,42 @@ const profile = createQuery({
   key: 'profile',
   fn: () => fetch('/api/me').then(r => r.json()),
   enabled: () => isLoggedIn(),
+})
+```
+
+### onSuccess / onError callbacks
+
+```ts
+const orders = createQuery({
+  key: 'orders',
+  fn: fetchOrders,
+  onSuccess: (data) => {
+    console.log(`Loaded ${data.length} orders`)
+  },
+  onError: (error) => {
+    toast.error(`Orders failed: ${error.message}`)
+  },
+})
+```
+
+### Gate all queries behind auth (defaultEnabled)
+
+```ts
+createApp({ root: App, target: '#app' })
+  .use(queryPlugin({
+    defaultEnabled: () => !!authStore.token(),  // no query fires until logged in
+  }))
+  .mount()
+```
+
+### Array query key
+
+```ts
+const postId = signal(1)
+
+const post = createQuery({
+  key: () => ['post', postId()],   // array form — automatically serialized
+  fn: () => fetch(`/api/posts/${postId()}`).then(r => r.json()),
 })
 ```
 

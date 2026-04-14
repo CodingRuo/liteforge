@@ -11,6 +11,7 @@
 import { createComponent, Show, For } from 'liteforge';
 import { Link, useParam } from 'liteforge/router';
 import type { QueryApi } from 'liteforge/query';
+import { createClient } from 'liteforge/client';
 
 // =============================================================================
 // Types
@@ -32,20 +33,16 @@ interface Comment {
 }
 
 // =============================================================================
-// API Functions
+// API Client
 // =============================================================================
 
-async function fetchPost(id: string): Promise<Post> {
-  const response = await fetch(`https://jsonplaceholder.typicode.com/posts/${id}`);
-  if (!response.ok) throw new Error('Failed to fetch post');
-  return response.json();
-}
+const jsonClient = createClient({ baseUrl: 'https://jsonplaceholder.typicode.com' });
 
-async function fetchComments(postId: string): Promise<Comment[]> {
-  const response = await fetch(`https://jsonplaceholder.typicode.com/posts/${postId}/comments`);
-  if (!response.ok) throw new Error('Failed to fetch comments');
-  return response.json();
-}
+const fetchPost = (id: string): Promise<Post> =>
+  jsonClient.get<Post>(`/posts/${id}`);
+
+const fetchComments = (postId: string): Promise<Comment[]> =>
+  jsonClient.get<Comment[]>(`/posts/${postId}/comments`);
 
 // =============================================================================
 // Post Detail Page Component

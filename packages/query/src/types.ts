@@ -45,6 +45,10 @@ export interface CreateQueryOptions<T> {
   retryDelay?: number;
   /** Reactive guard - query only runs when truthy */
   enabled?: () => boolean;
+  /** Called once after a successful fetch with the returned data. */
+  onSuccess?: (data: T) => void;
+  /** Called after all retries fail with the final error. */
+  onError?: (error: Error) => void;
 }
 
 /**

@@ -14,6 +14,7 @@ import { createComponent, Show, For } from 'liteforge';
 import { signal } from 'liteforge';
 import { Link } from 'liteforge/router';
 import { createQuery, createMutation } from 'liteforge/query';
+import { createClient } from 'liteforge/client';
 
 // =============================================================================
 // Types
@@ -33,24 +34,16 @@ interface NewPost {
 }
 
 // =============================================================================
-// API Functions
+// API Client
 // =============================================================================
 
-async function fetchPosts(): Promise<Post[]> {
-  const response = await fetch('https://jsonplaceholder.typicode.com/posts?_limit=10');
-  if (!response.ok) throw new Error('Failed to fetch posts');
-  return response.json();
-}
+const jsonClient = createClient({ baseUrl: 'https://jsonplaceholder.typicode.com' });
 
-async function createPost(post: NewPost): Promise<Post> {
-  const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(post),
-  });
-  if (!response.ok) throw new Error('Failed to create post');
-  return response.json();
-}
+const fetchPosts = (): Promise<Post[]> =>
+  jsonClient.get<Post[]>('/posts', { params: { _limit: 10 } });
+
+const createPost = (post: NewPost): Promise<Post> =>
+  jsonClient.post<Post>('/posts', post);
 
 // =============================================================================
 // Posts Page Component

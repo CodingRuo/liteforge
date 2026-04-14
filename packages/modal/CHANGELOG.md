@@ -1,5 +1,12 @@
 # @liteforge/modal
 
+## 4.0.0
+
+### Patch Changes
+
+- Updated dependencies
+  - @liteforge/runtime@0.7.0
+
 ## 3.1.0
 
 ### Minor Changes

@@ -317,7 +317,7 @@ function setupKeyboardShortcut(
  * Get the CSS transform for panel visibility.
  */
 function getTransform(
-  position: 'right' | 'bottom' | 'floating',
+  position: 'right' | 'bottom' | 'floating' | 'bottom-right',
   isOpen: boolean,
 ): string {
   if (position === 'right') {
@@ -325,6 +325,9 @@ function getTransform(
   }
   if (position === 'bottom') {
     return isOpen ? 'translateY(0)' : 'translateY(100%)';
+  }
+  if (position === 'bottom-right') {
+    return isOpen ? 'scale(1) translateY(0)' : 'scale(0.9) translateY(20px)';
   }
   // Floating
   return isOpen

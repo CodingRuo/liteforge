@@ -1,6 +1,6 @@
 {
   "name": "@liteforge/store",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Global state management with defineStore. Type-safe, reactive, with built-in devtools support.",
   "author": "SchildW3rk <contact@schildw3rk.dev>",
   "license": "MIT",

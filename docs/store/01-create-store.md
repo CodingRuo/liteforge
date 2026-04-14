@@ -142,6 +142,38 @@ import { storeRegistry } from '@liteforge/store'
 const store = storeRegistry.get<typeof counterStore>('counter')
 ```
 
+### Typed `use('store:name')` — Declaration Merging
+
+By default `use('store:auth')` returns `unknown`. Add a Declaration Merging block next to your store definition to get full types everywhere — no casts needed:
+
+```ts
+// auth.ts
+export const authStore = defineStore('auth', {
+  state: { token: null as string | null },
+  getters: (state) => ({
+    isLoggedIn: () => state.token() !== null,
+  }),
+  actions: (state) => ({
+    login(token: string) { state.token.set(token) },
+    logout() { state.token.set(null) },
+  }),
+})
+
+// ✅ Augment the PluginRegistry so use() is fully typed:
+declare module '@liteforge/runtime' {
+  interface PluginRegistry {
+    'store:auth': typeof authStore
+  }
+}
+
+// In any component setup():
+const auth = use('store:auth')  // → typeof authStore (fully typed)
+auth.login('my-token')          // ✓ type-checked
+auth.isLoggedIn()               // ✓ type-checked
+```
+
+The naming convention `'store:name'` is not enforced — use whatever key you register the store under. The merge just needs to match the key you pass to `use()`.
+
 ## Notes
 
 - `defineStore` is singleton: calling it twice with the same name returns the existing store.

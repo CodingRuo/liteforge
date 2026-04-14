@@ -1,5 +1,21 @@
 # @liteforge/router
 
+## 0.12.1
+
+### Patch Changes
+
+- feat(@liteforge/form): Input and Textarea field-bound components (#39)
+
+  Add `Input` and `Textarea` factory functions that accept a `field` prop (`FieldResult<string>`) and automatically wire up `value ← field.value()`, `oninput → field.set()`, `onblur → field.touch()`, and reactive `aria-invalid`. Both components forward all standard HTML attributes.
+
+  feat(@liteforge/router): useEditParam helper (#40)
+
+  Add `useEditParam(param?)` composable that returns `{ editId: number | null, isEdit: boolean }`. Guards against absent, empty, non-numeric, NaN, zero, and negative param values. Default param name is `'id'`.
+
+  feat(@liteforge/table): CellContext + columnHelper (#36)
+
+  Migrate `cell` renderer from `(value, row)` positional args to a single `CellContext<T, TValue>` object with `getValue`, `renderValue`, `row`, `column`, `rowIndex`, `isSelected`. Add `columnHelper<T>()` for per-column type inference. Column container type is now `ColumnDef<T, any>[]` for `exactOptionalPropertyTypes` compat.
+
 ## 0.12.0
 
 ### Minor Changes

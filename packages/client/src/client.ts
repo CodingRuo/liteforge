@@ -12,7 +12,6 @@ import type {
   InterceptorHandlers,
   Middleware,
   ResourceOptions,
-  Resource,
   QueryResource,
 } from './types.js';
 import { executeFetch } from './request.js';
@@ -115,14 +114,17 @@ export function createClient(opts: InternalOpts): Client | QueryClient {
   function resource<T, TCreate = Partial<T>, TUpdate = Partial<T>>(
     name: string,
     options: ResourceOptions = {},
-  ): Resource<T, TCreate, TUpdate> | QueryResource<T, TCreate, TUpdate> {
+  ): QueryResource<T, TCreate, TUpdate> {
     const resourceBasePath = buildUrl(opts.baseUrl, options.path ?? name);
     const resourceOpts: ResourceOptions = { ...options, path: resourceBasePath };
 
     if (opts.query !== undefined) {
       return createResource<T, TCreate, TUpdate>(name, resourceOpts, executeRequest, opts.query);
     }
-    return createResource<T, TCreate, TUpdate>(name, resourceOpts, executeRequest);
+    // Safe cast: when query is absent the use* methods are missing at runtime,
+    // but the Client interface (not QueryClient) is what callers get — the
+    // overloads at the top of createClient() ensure the correct external type.
+    return createResource<T, TCreate, TUpdate>(name, resourceOpts, executeRequest) as unknown as QueryResource<T, TCreate, TUpdate>;
   }
 
   function addInterceptor(handlers: InterceptorHandlers): () => void {

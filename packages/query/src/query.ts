@@ -100,7 +100,7 @@ function attachFocusListener(): void {
  * ```
  */
 export function createQuery<T>(options: CreateQueryOptions<T>): QueryResult<T> {
-  const { key, fn: fetcher } = options;
+  const { key, fn: fetcher, onSuccess, onError } = options;
 
   // Resolve options with defaults — per-query options win over global defaults
   const opts: ResolvedQueryOptions = {
@@ -197,6 +197,9 @@ export function createQuery<T>(options: CreateQueryOptions<T>): QueryResult<T> {
         // Update cache
         queryCache.set(serializedKey, result);
 
+        // Fire onSuccess callback
+        if (onSuccess) onSuccess(result);
+
         return;
       } catch (err) {
         lastError = err instanceof Error ? err : new Error(String(err));
@@ -220,6 +223,7 @@ export function createQuery<T>(options: CreateQueryOptions<T>): QueryResult<T> {
       isLoadingSignal.set(false);
       if (lastError) {
         notifyGlobalQueryError(lastError, { type: 'query', key: serializedKey });
+        if (onError) onError(lastError);
       }
     }
   }
@@ -231,7 +235,7 @@ export function createQuery<T>(options: CreateQueryOptions<T>): QueryResult<T> {
     if (typeof key === 'function') {
       return serializeKey(key());
     }
-    return key;
+    return serializeKey(key);
   }
 
   /**
@@ -327,7 +331,7 @@ export function createQuery<T>(options: CreateQueryOptions<T>): QueryResult<T> {
     });
   } else {
     // Static key - initialize immediately
-    initialize(key);
+    initialize(serializeKey(key));
   }
 
   // Set up enabled guard tracking

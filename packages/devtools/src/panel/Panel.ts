@@ -22,7 +22,7 @@ import type {
   TabId,
   EventBuffer,
 } from '../types.js';
-import type { DevToolsStoreMap } from '../plugin.js';
+import type { DevToolsStoreMap } from '../types.js';
 import { createSignalInspector } from '../tabs/SignalInspector.js';
 import { createStoreExplorer } from '../tabs/StoreExplorer.js';
 import { createRouterInspector } from '../tabs/RouterInspector.js';

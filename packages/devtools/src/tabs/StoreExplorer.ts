@@ -21,7 +21,7 @@ import {
   restoredIndicatorStyles,
 } from '../styles.js';
 import type { EventBuffer, PanelState, StoreInfo, StoredEvent, StoreHistoryEntry } from '../types.js';
-import type { DevToolsStoreMap, DevToolsStore } from '../plugin.js';
+import type { DevToolsStoreMap, DevToolsStore } from '../types.js';
 
 // ============================================================================
 // Store Explorer

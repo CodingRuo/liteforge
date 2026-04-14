@@ -39,6 +39,25 @@ import { storeRegistry } from './registry.js';
  * @param definition - Store definition with state, getters, and actions
  * @returns A store object with reactive state, getters, and actions
  *
+ * ## Typed `use()` — Declaration Merging
+ *
+ * Add this block next to your store definition so `use('store:auth')` returns the
+ * correct type everywhere — no `as any` casts needed:
+ *
+ * ```ts
+ * export const authStore = defineStore('auth', { ... })
+ *
+ * declare module '@liteforge/runtime' {
+ *   interface PluginRegistry {
+ *     'store:auth': typeof authStore
+ *   }
+ * }
+ *
+ * // In any component:
+ * const auth = use('store:auth')  // fully typed
+ * auth.login(email, password)     // ✓ type-checked
+ * ```
+ *
  * @example
  * ```ts
  * const userStore = defineStore('users', {

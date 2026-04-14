@@ -52,7 +52,7 @@ function discriminateDynamicComponent<P extends Record<string, unknown>>(
 export interface ShowConfig<T = unknown> {
   when: (() => T) | T;
   fallback?: () => Node;
-  children: (value: NonNullable<T>) => Node;
+  children: ((value: NonNullable<T>) => Node) | (() => Node);
 }
 
 /**
@@ -138,8 +138,8 @@ export function Show<T>(config: ShowConfig<T>): Node {
 
     // Create and insert new node
     const isTruthy = Boolean(value);
-    const newNode = isTruthy 
-      ? children(value as NonNullable<T>) 
+    const newNode = isTruthy
+      ? (children as (v: NonNullable<T>) => Node)(value as NonNullable<T>)
       : fallback?.() ?? null;
 
     if (newNode) {

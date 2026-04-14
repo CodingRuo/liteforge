@@ -552,24 +552,34 @@ export type Falsy = false | 0 | '' | null | undefined;
 export interface ShowProps<T> {
   /**
    * Reactive condition. When the returned value is truthy,
-   * children is called with that value.
+   * children is called with that value (or with no arguments if the
+   * callback takes no parameters).
    */
   when: (() => T) | T;
 
   /**
-   * Render function called with the truthy value.
-   * The value is guaranteed to be non-null/non-undefined.
+   * Render function called when the condition is truthy.
+   *
+   * Two forms are supported:
+   *
+   * **With value binding** — receives the narrowed truthy value:
+   * ```tsx
+   * <Show when={() => user()}>{(u) => <Profile user={u} />}</Show>
+   * ```
+   *
+   * **Without binding** — no argument needed when you only care about
+   * the boolean condition:
+   * ```tsx
+   * <Show when={() => isLoggedIn()}>{() => <Dashboard />}</Show>
+   * ```
    *
    * **Must be a function** — passing static JSX nodes will throw at runtime:
    * ```tsx
-   * // ✅ Correct
-   * <Show when={() => user()}>{(u) => <Profile user={u} />}</Show>
-   *
    * // ❌ Wrong — crashes with "children is not a function"
    * <Show when={() => user()}><Profile /></Show>
    * ```
    */
-  children: (value: NonNullable<T>) => Node;
+  children: ((value: NonNullable<T>) => Node) | (() => Node);
 
   /** Rendered when the condition is falsy. Must also be a render function. */
   fallback?: () => Node;

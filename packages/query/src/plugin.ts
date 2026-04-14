@@ -37,6 +37,12 @@ export interface QueryPluginOptions {
   defaultRetry?: number;
   /** Default delay between retries in ms. Per-query `retryDelay` wins. @default 1000 */
   defaultRetryDelay?: number;
+  /**
+   * Default enabled guard for all queries. Per-query `enabled` wins.
+   * Use to gate all queries behind an auth check:
+   * @example `defaultEnabled: () => !!authStore.token()`
+   */
+  defaultEnabled?: () => boolean;
   /** Global error handler called for every query and mutation error. */
   onError?: GlobalQueryErrorHandler;
 }
@@ -62,6 +68,8 @@ export function queryPlugin(options: QueryPluginOptions = {}): LiteForgePlugin {
         globalQueryDefaults.retry = options.defaultRetry;
       if (options.defaultRetryDelay !== undefined)
         globalQueryDefaults.retryDelay = options.defaultRetryDelay;
+      if (options.defaultEnabled !== undefined)
+        globalQueryDefaults.enabled = options.defaultEnabled;
 
       if (options.onError) {
         setGlobalQueryErrorHandler(options.onError);

@@ -418,3 +418,53 @@ describe('h() - unresolved signal warning', () => {
     expect(errorSpy).not.toHaveBeenCalled();
   });
 });
+
+// =============================================================================
+// Issue #43 — function children resolved through reactive wrappers
+// =============================================================================
+
+describe('h() - function children resolved correctly (#43)', () => {
+  it('renders string returned by reactive child getter', () => {
+    const label = signal('Hello');
+    // <div>{() => label()}</div>
+    const el = h('div', null, () => label()) as HTMLElement;
+    expect(el.textContent).toBe('Hello');
+  });
+
+  it('renders component child when props.children is a getter returning a function', () => {
+    // Simulates: <Button>{() => label()}</Button>
+    // The vite-plugin passes the arrow fn as children (a function).
+    // The component does: h('button', null, () => props.children)
+    // That outer getter returns the inner function — resolveChildToNode must call it.
+    function Button(props: { children: unknown }): Node {
+      return h('button', null, (() => props.children) as () => unknown);
+    }
+
+    const label = signal('Click me');
+    const el = h(Button, { children: () => label() }) as HTMLButtonElement;
+    expect(el.textContent).toBe('Click me');
+  });
+
+  it('updates reactively when signal inside nested function child changes', async () => {
+    const label = signal('Before');
+
+    function Button(props: { children: unknown }): Node {
+      return h('button', null, (() => props.children) as () => unknown);
+    }
+
+    const el = h(Button, { children: () => label() }) as HTMLButtonElement;
+    expect(el.textContent).toBe('Before');
+
+    label.set('After');
+    await Promise.resolve();
+    expect(el.textContent).toBe('After');
+  });
+
+  it('resolves a deeply nested function chain to a text node', () => {
+    // Edge case: getter returning getter returning string
+    const inner = () => 'deep';
+    const outer = () => inner;
+    const el = h('span', null, outer as () => unknown);
+    expect(el.textContent).toBe('deep');
+  });
+});

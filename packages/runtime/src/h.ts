@@ -463,6 +463,14 @@ function resolveChildToNode(child: HChild): Node | null {
     warnUnresolvedSignal('as a child node');
   }
 
+  // If a plain function ends up here it means props.children was itself a
+  // reactive getter (e.g. <Button>{() => label()}</Button> passes the arrow fn
+  // as children; the component does {() => props.children} which calls the
+  // outer getter and returns the inner fn). Call it once to get the real value.
+  if (typeof child === 'function') {
+    return resolveChildToNode((child as () => HChild)());
+  }
+
   // String/number
   return document.createTextNode(String(child));
 }

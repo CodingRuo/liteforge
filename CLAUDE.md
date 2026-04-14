@@ -368,6 +368,8 @@ If a new DOM event isn't recognized as an event handler and gets wrapped in a ge
 4. **Store signals** use `.set()` for updates, not direct assignment: `state.value.set(newVal)` not `state.value = newVal`.
 5. **`Show` `when` prop — pass signals directly**: The vite-plugin compiles `when: mySignal` to `when: () => mySignal` (wraps the identifier). `Show`'s `getValue()` then returns the signal function object itself — always truthy, never changing. Fix applied in `control-flow.ts`: `getValue` double-resolves if the result is itself a function. This means both `when: mySignal` and `when: () => mySignal()` work correctly.
 6. **`Show` vs. `display:none`** — Use `<Show>` when content is expensive and shouldn't be in the DOM. Use `style={() => open() ? '' : 'display:none'}` when content has reactive nodes that must stay alive while hidden (e.g. a panel with live-updating signals). Removing a node from the DOM disposes its effects — re-inserting the same node does NOT re-attach them.
+7. **`load()` vs `createQuery()` in `setup()`** — `load()` runs on every mount with no cache (use for detail/edit views). `createQuery()` in `setup()` uses the staleTime cache (use for list views — prevents refetch on back-navigation). Never call `createTable()` after awaiting in `load()`; wire `data: () => setup.query.data() ?? []` so the table reacts reactively.
+8. **`table.search()` (not `searchQuery()`)** — The signal accessor on `TableResult` is `.search()`. `setSearch()` is a silent no-op if `search: { enabled: true }` is not passed to `createTable()` — a console warning is emitted in that case.
 
 ---
 

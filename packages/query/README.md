@@ -213,6 +213,58 @@ const UserList = createComponent({
 })
 ```
 
+## Data Fetching Patterns
+
+### When to use `load()` vs `createQuery()` in `setup()`
+
+**Use `load()` for one-shot fetches where caching is not needed:**
+
+- Detail views (`/customers/:id`)
+- Edit forms (pre-fill existing record)
+
+```ts
+createComponent({
+  async load({ props }) {
+    const customer = await client.get(`/customers/${props.id}`)
+    return { customer }
+  },
+  component({ data }) {
+    return <div>{data.customer.name}</div>
+  }
+})
+```
+
+`load()` runs on every component mount. There is no cache — navigating away and back triggers a new fetch each time.
+
+**Use `createQuery()` in `setup()` for list views and views where caching matters:**
+
+- List views (`/customers`, `/invoices`, ...)
+- Dashboard aggregations
+
+```ts
+createComponent({
+  setup() {
+    const customers = createQuery({
+      key: 'customers',
+      fn: () => fetch('/api/customers').then(r => r.json()),
+      staleTime: 30_000,  // 30s cache — navigating back does NOT refetch if fresh
+    })
+    return { customers }
+  },
+  component({ setup }) {
+    const table = createTable({
+      data: () => setup.customers.data() ?? [],  // reactive — updates when query resolves
+      columns: [...],
+    })
+    return <div>{table.Root()}</div>
+  }
+})
+```
+
+**Key difference:** `createQuery()` in `setup()` uses the cache. Navigating away and back within the `staleTime` window does **not** trigger a new network request. `load()` always fetches.
+
+> **Important:** Do not call `createTable()` inside `load()` or after awaiting — `setup()` must be synchronous and run before data arrives. Use `data: () => setup.query.data() ?? []` so the table reacts to the query signal.
+
 ## Types
 
 ```ts

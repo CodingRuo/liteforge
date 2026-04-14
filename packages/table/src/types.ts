@@ -256,7 +256,7 @@ export interface TableResult<T> {
 
   // ── Search ──
   /** Current search query signal */
-  searchQuery: () => string
+  search: () => string
   /** Set search query */
   setSearch: (query: string) => void
 

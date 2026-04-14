@@ -300,7 +300,15 @@ export function createTable<T>(options: TableOptions<T>): TableResult<T> {
   const clearSort = () => sortingState.set(null)
 
   // Search
-  const setSearch = (query: string) => searchQueryState.set(query)
+  const setSearch = (query: string) => {
+    if (!searchOptions?.enabled) {
+      console.warn(
+        '[LiteForge/table] setSearch() called but search is not enabled. ' +
+        'Pass search: { enabled: true, columns: [...] } to createTable().'
+      )
+    }
+    searchQueryState.set(query)
+  }
 
   // Filters
   const setFilter = (key: string, value: unknown) => {
@@ -913,7 +921,7 @@ export function createTable<T>(options: TableOptions<T>): TableResult<T> {
     clearSort,
 
     // Search
-    searchQuery: () => searchQueryState(),
+    search: () => searchQueryState(),
     setSearch,
 
     // Filters

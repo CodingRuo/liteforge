@@ -373,7 +373,7 @@ describe('createTable - Search', () => {
     expect(table.rows().length).toBe(1) // case insensitive
   })
 
-  it('searchQuery() returns current search value', () => {
+  it('search() returns current search value', () => {
     const table = createTable({
       data: () => testUsers,
       columns: basicColumns,
@@ -381,10 +381,10 @@ describe('createTable - Search', () => {
       unstyled: true,
     })
 
-    expect(table.searchQuery()).toBe('')
+    expect(table.search()).toBe('')
 
     table.setSearch('test')
-    expect(table.searchQuery()).toBe('test')
+    expect(table.search()).toBe('test')
   })
 
   it('clears search with clearAllFilters()', () => {
@@ -399,8 +399,41 @@ describe('createTable - Search', () => {
     expect(table.rows().length).toBe(1)
 
     table.clearAllFilters()
-    expect(table.searchQuery()).toBe('')
+    expect(table.search()).toBe('')
     expect(table.rows().length).toBe(5)
+  })
+
+  it('warns when setSearch() is called without search: { enabled: true }', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    const table = createTable({
+      data: () => testUsers,
+      columns: basicColumns,
+      unstyled: true,
+    })
+
+    table.setSearch('test')
+    expect(warnSpy).toHaveBeenCalledOnce()
+    expect(warnSpy.mock.calls[0]![0]).toContain('[LiteForge/table]')
+    expect(warnSpy.mock.calls[0]![0]).toContain('search: { enabled: true')
+
+    warnSpy.mockRestore()
+  })
+
+  it('does NOT warn when setSearch() is called with search: { enabled: true }', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    const table = createTable({
+      data: () => testUsers,
+      columns: basicColumns,
+      search: { enabled: true },
+      unstyled: true,
+    })
+
+    table.setSearch('test')
+    expect(warnSpy).not.toHaveBeenCalled()
+
+    warnSpy.mockRestore()
   })
 })
 

@@ -24,13 +24,13 @@ emailField.touched()  // was field blurred?
 emailField.dirty()    // was field modified?
 
 emailField.set('anna@example.com');  // programmatic update
-emailField.blur();    // trigger validation
+emailField.touch();   // mark as touched (triggers validation on 'blur' mode)
 
 // In JSX:
 <input
   value={() => emailField.value()}
   oninput={e => emailField.set(e.target.value)}
-  onblur={() => emailField.blur()}
+  onblur={() => emailField.touch()}
 />
 {() => emailField.error()
   ? <p class="error">{emailField.error()}</p>
@@ -96,7 +96,7 @@ const email = form.field('email');
 
 <input
   oninput={e => email.set(e.target.value)}
-  onblur={() => email.blur()}
+  onblur={() => email.touch()}
 />
 {() => email.error() ? <p>{email.error()}</p> : null}
 <button onclick={() => form.submit()}>

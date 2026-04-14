@@ -162,6 +162,42 @@ const MyComponent = () => {
 }
 ```
 
+### Route Helpers
+
+```ts
+import { useParam, useParams, usePath, useQuery, useEditParam } from '@liteforge/router'
+
+// Read a single route parameter as a signal
+const id = useParam('id')   // () => string | undefined
+
+// Read all route parameters
+const params = useParams()  // () => Record<string, string>
+
+// Current path signal
+const path = usePath()      // () => string
+
+// Current query string as parsed object
+const query = useQuery()    // () => Record<string, string>
+```
+
+#### useEditParam
+
+Convenience helper for edit-form routes that carry a numeric `id` parameter:
+
+```ts
+import { useEditParam } from '@liteforge/router'
+
+// Route: /patients/:id/edit  OR  /patients/new
+const { editId, isEdit } = useEditParam()
+// editId: number | null  — null on /new routes or if param is absent/invalid
+// isEdit: boolean        — true when editId is a positive finite integer
+
+// Custom param name
+const { editId } = useEditParam('patientId')
+```
+
+Guards against absent, empty, non-numeric, NaN, zero, and negative values — only positive finite integers produce a non-null `editId`.
+
 ### Link and NavLink
 
 ```tsx

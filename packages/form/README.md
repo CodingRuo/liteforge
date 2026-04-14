@@ -240,6 +240,58 @@ const ContactForm = createComponent({
 })
 ```
 
+## Field-bound Components
+
+`@liteforge/form` ships two pre-built field components that remove the boilerplate of wiring up `value`, `oninput`, `onblur`, and `aria-invalid` manually.
+
+### Input
+
+A reactive `<input>` element bound to a `FieldResult<string>`.
+
+```tsx
+import { Input } from '@liteforge/form'
+
+const email = form.field('email')
+
+<Input
+  field={email}
+  type="email"
+  placeholder="name@example.com"
+  class="my-input"
+/>
+<Show when={() => !!email.error()}>
+  <span class="error">{() => email.error()}</span>
+</Show>
+```
+
+Automatically wires:
+- `value` ← `field.value()` (reactive, skips update when element is focused)
+- `oninput` → `field.set(el.value)`
+- `onblur` → `field.touch()`
+- `aria-invalid="true"` when `field.error()` is truthy
+
+**Supported types:** `text`, `email`, `password`, `search`, `tel`, `url`, `number`, `date`, `time`
+
+### Textarea
+
+A reactive `<textarea>` element bound to a `FieldResult<string>`.
+
+```tsx
+import { Textarea } from '@liteforge/form'
+
+<Textarea
+  field={form.field('bio')}
+  rows={4}
+  placeholder="Tell us about yourself"
+/>
+```
+
+Same auto-wiring as `Input`. Accepts `rows` and `cols` props in addition to the shared attributes.
+
+### Shared Props
+
+Both components accept: `class`, `id`, `placeholder`, `name`, `disabled`, `readonly`, `tabindex`, `autocomplete`, `aria-label`, `aria-describedby`, `ref`.
+
 ## Types
 
 ```ts
@@ -252,7 +304,9 @@ import type {
   ValidateOn,
   RevalidateOn,
   FieldPaths,
-  PathValue
+  PathValue,
+  InputProps,
+  TextareaProps
 } from '@liteforge/form'
 ```
 

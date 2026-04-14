@@ -1,5 +1,6 @@
 import { createComponent, Show } from 'liteforge';
 import { createForm } from '@liteforge/form';
+import type { FieldResult } from '@liteforge/form';
 import { z } from 'zod';
 import { Button } from '../../components/Button.js';
 import { inputClass } from '../../components/Input.js';
@@ -24,7 +25,7 @@ export const LoginFormExample = createComponent({
     const email    = form.field('email');
     const password = form.field('password');
 
-    function FieldRow(f: ReturnType<typeof form.field>, type: string, label: string): Node {
+    function FieldRow(f: FieldResult<string>, type: string, label: string): Node {
       return (
         <div class="space-y-1">
           <label class="block text-xs text-[var(--content-secondary)]">{label}</label>
@@ -33,7 +34,7 @@ export const LoginFormExample = createComponent({
             placeholder={label}
             class={() => inputClass({ error: f.error() !== undefined })}
             oninput={(e: Event) => f.set((e.target as HTMLInputElement).value)}
-            onblur={() => f.blur()}
+            onblur={() => f.touch()}
           />
           {Show({
             when: () => f.error() !== undefined,

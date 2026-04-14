@@ -119,8 +119,8 @@ table.sorting()              // { key: string, direction: 'asc' | 'desc' } | nul
 table.sort('name', 'asc')    // Set sort
 table.clearSort()            // Remove sort
 
-// Search
-table.searchQuery()          // Current search text
+// Search (requires search: { enabled: true } in createTable options)
+table.search()               // Current search text
 table.setSearch('query')     // Set search text
 
 // Filters

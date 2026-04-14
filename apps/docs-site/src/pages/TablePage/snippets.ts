@@ -58,24 +58,20 @@ export const COLUMNS_CODE = `columns: [
 export const FILTER_CODE = `createTable({
   data: () => patients(),
   columns: [...],
-  filters: [
-    {
-      type: 'text',
-      key: 'name',
-      label: 'Search by name',
-      placeholder: 'Anna…',
-    },
-    {
-      type: 'select',
-      key: 'status',
-      label: 'Status',
-      options: [
-        { label: 'Active',   value: 'active'   },
-        { label: 'Inactive', value: 'inactive' },
-      ],
-    },
-  ],
-})`
+  // filters is Record<columnKey, FilterDef>
+  filters: {
+    name:   { type: 'text',   debounce: 300 },
+    status: { type: 'select', options: ['active', 'inactive'] },
+    active: { type: 'boolean' },
+    age:    { type: 'number-range', min: 0, max: 120 },
+  },
+})
+
+// Read / set column filters at runtime:
+table.filters()                      // Record<string, unknown>
+table.setFilter('status', 'active')  // apply a filter
+table.clearFilter('status')          // remove one filter
+table.clearAllFilters()              // reset all`
 
 export const SELECTION_CODE = `const table = createTable({
   data: () => patients(),
@@ -87,19 +83,19 @@ export const SELECTION_CODE = `const table = createTable({
 });
 
 // React to selection
-table.selectedRows()  // Signal: Patient[]
-table.isSelected(row) // Signal: boolean
+table.selected()      // Signal: Patient[]
+table.isSelected(row) // boolean
 
 table.selectAll();
-table.clearSelection();`
+table.deselectAll();`
 
-export const STATE_CODE = `table.sortState()        // { key, direction } | null
-table.currentPage()      // number
-table.totalPages()       // number
-table.pageData()         // current page rows
-table.filteredCount()    // total after filters
+export const STATE_CODE = `table.sorting()          // { key, direction } | null
+table.page()             // current page number (1-indexed)
+table.pageCount()        // total number of pages
+table.rows()             // current page rows (filtered + sorted + paginated)
+table.filteredRows()     // total rows after filtering (before pagination)
 
-table.setSort('name', 'asc');
+table.sort('name', 'asc');
 table.setPage(2);
 table.setFilter('status', 'active');`
 

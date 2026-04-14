@@ -156,6 +156,43 @@ describe('control flow components', () => {
       await tick();
       expect(container.textContent).toBe('Shown');
     });
+
+    it('renders without flash when marker is inserted after Show() — queueMicrotask path', async () => {
+      // This is the template-compiler path: Show() is called, the marker is
+      // returned, and the parent tree is appended to the DOM only afterwards.
+      // The effect fires while the marker is disconnected → deferred path.
+      // Previously: requestAnimationFrame — fires AFTER paint → visible 1-frame flash.
+      // Now: queueMicrotask — fires BEFORE paint → no flash.
+      //
+      // Timing in the test:
+      //   1. Show() + effect registration
+      //   2. effect runs (microtask flush) → marker disconnected → queueMicrotask scheduled
+      //   3. container.appendChild(node) → marker now connected
+      //   4. queueMicrotask fires → updateContent() → content visible
+      //   5. await tick() (setTimeout 0) → after all microtasks
+      const node = Show({
+        when: true,
+        children: () => document.createTextNode('NoFlash'),
+        fallback: () => document.createTextNode('Fallback'),
+      });
+
+      container.appendChild(node);
+      // queueMicrotask fires before setTimeout(0) — content visible before macrotask
+      await tick();
+      expect(container.textContent).toBe('NoFlash');
+    });
+
+    it('renders fallback without flash when condition is false — queueMicrotask path', async () => {
+      const node = Show({
+        when: false,
+        children: () => document.createTextNode('Content'),
+        fallback: () => document.createTextNode('FallbackVisible'),
+      });
+
+      container.appendChild(node);
+      await tick();
+      expect(container.textContent).toBe('FallbackVisible');
+    });
   });
 
   describe('For', () => {

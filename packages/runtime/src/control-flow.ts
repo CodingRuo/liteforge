@@ -157,10 +157,13 @@ export function Show<T>(config: ShowConfig<T>): Node {
       // Marker already in DOM — update synchronously
       updateContent();
     } else {
-      // Marker not in DOM yet (Show() called before _insert) — defer one frame.
-      // Use isConnected (not parentNode) so the RAF is a no-op if the router
-      // has already unmounted the outlet before the frame fires.
-      requestAnimationFrame(() => {
+      // Marker not yet in DOM (Show() called before the parent node is inserted,
+      // e.g. in the template-compiler path where the whole tree is built first).
+      // queueMicrotask fires before the next paint — no visible flash.
+      // rAF was used previously but fires AFTER paint, causing a one-frame gap
+      // where neither content nor fallback is visible (most noticeable in auth
+      // flows: Show when={() => isLoggedIn()}).
+      queueMicrotask(() => {
         if (marker.isConnected) {
           updateContent();
         }

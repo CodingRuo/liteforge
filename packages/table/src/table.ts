@@ -844,27 +844,7 @@ export function createTable<T>(options: TableOptions<T>): TableResult<T> {
       const paginationDiv = document.createElement('div')
       paginationDiv.className = classes.pagination ?? 'lf-table-pagination'
 
-      // Info: "Showing 1-10 of 100"
-      const infoSpan = document.createElement('span')
-      infoSpan.className = classes.paginationInfo ?? 'lf-table-pagination-info'
-
-      effect(() => {
-        const page = currentPage()
-        const size = currentPageSize()
-        const total = filteredRowsComputed()
-        const start = (page - 1) * size + 1
-        const end = Math.min(page * size, total)
-
-        if (total === 0) {
-          infoSpan.textContent = lblNoResults
-        } else {
-          infoSpan.textContent = `${lblShowing} ${start}${lblTo}${end} ${lblOf} ${total}`
-        }
-      })
-
-      paginationDiv.appendChild(infoSpan)
-
-      // Controls
+      // LEFT: Controls (prev · page N of N · next)
       const controlsDiv = document.createElement('div')
       controlsDiv.className = classes.paginationControls ?? 'lf-table-pagination-controls'
 
@@ -891,6 +871,26 @@ export function createTable<T>(options: TableOptions<T>): TableResult<T> {
       controlsDiv.appendChild(pageInfo)
       controlsDiv.appendChild(nextBtn)
       paginationDiv.appendChild(controlsDiv)
+
+      // RIGHT: Info "Showing 1–10 of 100" + page-size selector
+      const infoSpan = document.createElement('span')
+      infoSpan.className = classes.paginationInfo ?? 'lf-table-pagination-info'
+
+      effect(() => {
+        const page = currentPage()
+        const size = currentPageSize()
+        const total = filteredRowsComputed()
+        const start = (page - 1) * size + 1
+        const end = Math.min(page * size, total)
+
+        if (total === 0) {
+          infoSpan.textContent = lblNoResults
+        } else {
+          infoSpan.textContent = `${lblShowing} ${start} ${lblTo} ${end} ${lblOf} ${total}`
+        }
+      })
+
+      paginationDiv.appendChild(infoSpan)
 
       // Page size selector
       if (paginationOptions.pageSizes && paginationOptions.pageSizes.length > 1) {

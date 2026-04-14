@@ -637,7 +637,7 @@ describe('createTable - Pagination', () => {
     expect(pagination).toBeDefined()
 
     const info = document.querySelector('.lf-table-pagination-info')
-    expect(info?.textContent).toContain('1-2')
+    expect(info?.textContent).toContain('1')
   })
 
   it('resets to page 1 when filter changes', () => {

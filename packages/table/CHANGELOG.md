@@ -1,5 +1,16 @@
 # @liteforge/table
 
+## 2.2.3
+
+### Patch Changes
+
+- fix(@liteforge/table): pagination layout and label spacing (#55 #56)
+
+  - Controls (Prev/Page N/Next) now render on the LEFT, info text on the RIGHT —
+    matches standard data-table convention (Tanstack Table, AG Grid, MUI DataGrid)
+  - Fixed missing spaces around the `to` separator in info text:
+    `Showing 1-2 of 5` → `Showing 1 - 2 of 5` (or `Zeige 1 bis 2 von 5` with custom labels)
+
 ## 2.2.2
 
 ### Patch Changes

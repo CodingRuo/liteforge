@@ -71,6 +71,44 @@ const MyComponent = ${_cc}({
   },
 });`;
 
+export const PARAM_HELPERS_CODE = `import { useParam, useParams, useQuery, useEditParam } from '@liteforge/router';
+
+// ─── useParam — reactive getter ─────────────────────────────
+// Returns () => string | undefined. Use in effects/computed/JSX.
+component({ use }) {
+  const id = useParam('id');
+  const label = computed(() => \`Patient #\${id() ?? '?'}\`);
+  return <span>{() => label()}</span>;
+}
+
+// ─── useParams — snapshot ────────────────────────────────────
+// Reads once with untrack(). Safe in setup() to avoid reactive loops.
+setup() {
+  const { id } = useParams<{ id: string }>();
+  const patient = resource.useOne(Number(id));  // ✓ no loop
+  return { patient };
+}
+
+// ⚠️  Never pass a useParam() getter to useOne() in setup() — it creates
+// a reactive subscription inside setup(), which refetches on every re-track:
+//
+//   const id = useParam('id');       // ✗ reactive getter
+//   const item = resource.useOne(id) // ✗ id() tracked → infinite refetch loop
+//
+// Use useParams() for one-time reads in setup() and load().
+
+// ─── useEditParam — numeric ID helper ───────────────────────
+setup() {
+  const { editId, isEdit } = useEditParam(); // uses snapshot internally
+  // editId: number | null   (null for /new routes or invalid params)
+  // isEdit: boolean
+}
+
+// ─── useQuery — query string snapshot ───────────────────────
+setup() {
+  const { tab = 'overview' } = useQuery<{ tab?: string }>();
+}`;
+
 export const GUARD_CODE = `import { defineGuard } from '@liteforge/router';
 
 const authGuard = defineGuard('auth', async ({ to }) => {

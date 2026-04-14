@@ -1,6 +1,6 @@
 {
   "name": "@liteforge/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Signals-based reactivity core for LiteForge. Create signals, computed values, and effects with fine-grained DOM updates.",
   "author": "SchildW3rk <contact@schildw3rk.dev>",
   "license": "MIT",

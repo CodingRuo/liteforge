@@ -1,5 +1,16 @@
 # @liteforge/router
 
+## 0.12.2
+
+### Patch Changes
+
+- fix(@liteforge/router): useParams() and useQuery() now always return a plain
+  snapshot — reads are wrapped in untrack() so calling them in setup() or load()
+  never creates a reactive subscription or infinite refetch loop (#46)
+
+- docs(@liteforge/router): add JSDoc loop-danger warning to useParam() with
+  correct vs incorrect usage examples; improve useParams/useQuery docs
+
 ## 0.12.1
 
 ### Patch Changes

@@ -138,6 +138,36 @@ effect(() => {
 })
 ```
 
+### untrack
+
+Executes a function without tracking any signal reads inside it. Use this when you need to read a signal inside an effect without creating a dependency — for example when writing to another signal to avoid infinite loops.
+
+```ts
+import { signal, effect, untrack } from '@liteforge/core'
+
+const source = signal(0)
+const derived = signal(0)
+
+effect(() => {
+  const val = source()                  // tracked — effect re-runs when source changes
+  untrack(() => derived.set(val * 2))   // write without subscribing — no loop
+})
+
+source.set(5)
+derived()  // 10
+```
+
+**Common pattern — prefilling a form from async data:**
+
+```ts
+effect(() => {
+  const data = query.data()            // tracked
+  if (data) untrack(() => form.setValues(data))  // write without re-triggering
+})
+```
+
+Without `untrack`, `form.setValues()` would write form signals which would cause the effect to re-run, creating an infinite loop.
+
 ## Types
 
 ```ts

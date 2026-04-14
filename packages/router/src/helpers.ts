@@ -5,18 +5,38 @@
  */
 
 import { use } from '@liteforge/runtime';
+import { untrack } from '@liteforge/core';
 import type { Signal } from '@liteforge/core';
 import type { Router, RouteParams, QueryParams } from './types.js';
 
 /**
- * Returns a reactive getter for a named route parameter.
+ * Returns a **reactive getter** for a single named route parameter.
  *
- * @example
+ * The returned function re-reads `router.params()` on every call, so reading it
+ * inside an `effect`, `computed`, or JSX getter will subscribe to param changes.
+ *
+ * ⚠️  **Loop danger in `setup()`**
+ * If you pass the getter directly to `useOne()` / `createQuery()` key in `setup()`,
+ * calling `id()` inside the query key function will re-track `router.params` on
+ * every query run, creating an infinite refetch loop.
+ *
  * ```ts
+ * // ✗ BROKEN — infinite loop
  * setup() {
- *   const postId = useParam('id');
- *   const query = createQuery({ key: () => ['post', postId()], fn: () => fetchPost(postId()) });
- *   return { query };
+ *   const id = useParam('id');                           // reactive getter
+ *   const item = resource.useOne(id);                    // id() tracked → loops
+ * }
+ *
+ * // ✓ CORRECT for one-time reads (setup, load)
+ * setup() {
+ *   const id = Number(useParams<{ id: string }>().id);  // snapshot, no tracking
+ *   const item = resource.useOne(id);
+ * }
+ *
+ * // ✓ CORRECT for reactive derived state
+ * component({ use }) {
+ *   const id = useParam('id');
+ *   const label = computed(() => `Editing #${id() ?? '?'}`);
  * }
  * ```
  */
@@ -26,21 +46,28 @@ export function useParam(name: string): () => string | undefined {
 }
 
 /**
- * Returns a typed snapshot of all current route params.
- * The returned object is re-read on every call — use inside reactive contexts
- * (effects, computed, JSX getters) to track param changes.
+ * Returns a **snapshot** of all current route params.
+ *
+ * The read is wrapped in `untrack()` so calling `useParams()` in `setup()` or
+ * `load()` never creates a reactive subscription — it always gives a plain object
+ * with the values at the time of the call.
+ *
+ * Use `useParam()` (reactive getter) when you need the value to update
+ * automatically inside effects, computed, or JSX.
  *
  * @example
  * ```ts
+ * // ✓ Safe in setup() — plain snapshot, no reactive subscription
  * setup() {
  *   const { id } = useParams<{ id: string }>();
- *   return { id };
+ *   const item = resource.useOne(Number(id));
+ *   return { item };
  * }
  * ```
  */
 export function useParams<T extends RouteParams = RouteParams>(): T {
   const router = use<Router>('router');
-  return router.params() as T;
+  return untrack(() => router.params()) as T;
 }
 
 /**
@@ -60,30 +87,30 @@ export function usePath(): Signal<string> {
 }
 
 /**
- * Returns a typed snapshot of the current query string params.
- * The returned object is re-read on every call — use inside reactive contexts.
+ * Returns a **snapshot** of the current query string params.
+ *
+ * The read is wrapped in `untrack()` so calling `useQuery()` in `setup()` or
+ * `load()` never creates a reactive subscription.
  *
  * @example
  * ```ts
  * setup() {
- *   const query = useQuery<{ tab?: string; page?: string }>();
- *   return { query };
+ *   const { tab } = useQuery<{ tab?: string }>();
+ *   return { tab };
  * }
  * ```
  */
 export function useQuery<T extends QueryParams = QueryParams>(): T {
   const router = use<Router>('router');
-  return router.query() as T;
+  return untrack(() => router.query()) as T;
 }
 
 /**
- * Returns the router instance from app context.
- * Prefer the specific composables (`useParam`, `useParams`, `usePath`, `useQuery`)
- * over this for better type safety.
- */
-/**
  * Returns the parsed numeric ID from a route parameter for edit/create forms.
  * Returns `null` when the param is absent, empty, non-numeric, `NaN`, or `≤ 0`.
+ *
+ * Internally uses `useParams()` (snapshot) so it is always safe to call in
+ * `setup()` without risk of a reactive loop.
  *
  * @param param - Route param name (default: `'id'`)
  *

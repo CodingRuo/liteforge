@@ -18,6 +18,8 @@ export { batch } from './batch.js';
 
 export { onCleanup } from './cleanup.js';
 
+export { untrack } from './internals.js';
+
 // Debug utilities
 export {
   enableDebug,

@@ -10,6 +10,7 @@ import {
   LAZY_CODE,
   LINK_CODE,
   USE_ROUTER_CODE,
+  PARAM_HELPERS_CODE,
   GUARD_CODE,
   MIDDLEWARE_CODE,
   TYPED_ROUTES_PHASE1_CODE,
@@ -107,6 +108,14 @@ export const RouterPage = createComponent({
               code={ROUTER_DEMO_CODE}
             />
           </div>
+        </DocSection>
+
+        <DocSection
+          title="useParam vs useParams"
+          id="param-helpers"
+          description="useParam() returns a reactive getter — use it in computed/JSX. useParams() returns a plain snapshot — use it in setup() and load() to avoid reactive loops."
+        >
+          <CodeBlock code={PARAM_HELPERS_CODE} language="typescript" />
         </DocSection>
 
         <DocSection

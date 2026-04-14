@@ -162,6 +162,39 @@ export function notifySubscribers(subscribers: Set<TaggedSubscriber>): void {
 }
 
 /**
+ * Execute `fn` without tracking any signal reads.
+ * Signal reads inside `fn` will NOT subscribe the current observer.
+ *
+ * Use this to read a signal inside an effect/computed without creating a
+ * dependency — for example when writing to a signal that is also read in
+ * the same effect, to prevent infinite loops.
+ *
+ * @example
+ * ```ts
+ * const count = signal(0);
+ * const doubled = signal(0);
+ *
+ * effect(() => {
+ *   const c = count();          // tracked — effect re-runs when count changes
+ *   untrack(() => {
+ *     doubled.set(c * 2);       // writing inside untrack — no extra subscription
+ *   });
+ * });
+ * ```
+ */
+export function untrack<T>(fn: () => T): T {
+  // Temporarily remove the current observer so signal reads are not tracked
+  const current = observerStack.pop();
+  try {
+    return fn();
+  } finally {
+    if (current !== undefined) {
+      observerStack.push(current);
+    }
+  }
+}
+
+/**
  * Register a cleanup function for the current observer.
  * Throws if called outside of an effect.
  */

@@ -392,4 +392,158 @@ describe('For() transform', () => {
       expect(norm(output)).not.toContain('when: () => true');
     });
   });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // JSX tag syntax — <For> and <Show> as tags (#49, #50)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  describe('<For> JSX tag syntax', () => {
+    // JSX tags are converted to h(For, { "each": ... }, children) — the
+    // attribute key is quoted. Use a loose pattern that matches both styles.
+    it('wraps each attribute in a getter', () => {
+      const input = `
+        function List() {
+          return (
+            <ul>
+              <For each={items()}>
+                {(item) => <li>{item.name}</li>}
+              </For>
+            </ul>
+          );
+        }
+      `;
+      const output = norm(transformCode(input));
+      expect(output).toContain('() => items()');
+    });
+
+    it('rewrites item.name to () => item().name in children', () => {
+      const input = `
+        function List() {
+          return (
+            <ul>
+              <For each={items()}>
+                {(item) => <li>{item.name}</li>}
+              </For>
+            </ul>
+          );
+        }
+      `;
+      const output = norm(transformCode(input)).replace(/\(\)\.\s+/g, '().');
+      expect(output).toContain('() => item().name');
+    });
+
+    it('leaves an already-getter each unwrapped', () => {
+      const input = `
+        function List() {
+          return (
+            <ul>
+              <For each={() => items()}>
+                {(item) => <li>{item.name}</li>}
+              </For>
+            </ul>
+          );
+        }
+      `;
+      const output = norm(transformCode(input));
+      // Must not double-wrap: () => () => items()
+      expect(output).not.toContain('() => () => items()');
+    });
+
+    it('rewrites item.id inside onclick handler', () => {
+      const input = `
+        function List() {
+          return (
+            <ul>
+              <For each={items()}>
+                {(item) => <li onclick={() => select(item.id)}>{item.name}</li>}
+              </For>
+            </ul>
+          );
+        }
+      `;
+      const output = norm(transformCode(input)).replace(/\(\)\.\s+/g, '().');
+      expect(output).toContain('select(item().id)');
+      expect(output).toContain('() => item().name');
+    });
+
+    it('passes plain T to children, not () => T (regression for #49)', () => {
+      // The children callback should receive a plain item that the transform has
+      // rewritten to use item() internally — NOT an outer getter wrapping the fn.
+      const input = `
+        function List() {
+          return (
+            <ul>
+              <For each={items()}>
+                {(item) => <li>{item.name}</li>}
+              </For>
+            </ul>
+          );
+        }
+      `;
+      const output = transformCode(input);
+      // The children arrow function must NOT be wrapped in an additional getter
+      // i.e. children prop should NOT be () => (item) => ...
+      expect(norm(output)).not.toMatch(/children:\s*\(\)\s*=>/);
+    });
+  });
+
+  describe('<Show> JSX tag syntax', () => {
+    it('wraps when attribute in a getter', () => {
+      const input = `
+        function App() {
+          return (
+            <Show when={isLoading()}>
+              {() => <div>Loading</div>}
+            </Show>
+          );
+        }
+      `;
+      const output = norm(transformCode(input));
+      expect(output).toContain('() => isLoading()');
+    });
+
+    it('leaves an already-getter when unwrapped', () => {
+      const input = `
+        function App() {
+          return (
+            <Show when={() => isLoading()}>
+              {() => <div>Loading</div>}
+            </Show>
+          );
+        }
+      `;
+      const output = norm(transformCode(input));
+      // Must not double-wrap
+      expect(output).not.toContain('() => () => isLoading()');
+    });
+
+    it('leaves a boolean literal unwrapped', () => {
+      const input = `
+        function App() {
+          return (
+            <Show when={true}>
+              {() => <div>Always</div>}
+            </Show>
+          );
+        }
+      `;
+      const output = transformCode(input);
+      expect(norm(output)).not.toContain('when: () => true');
+    });
+
+    it('passes children function as-is — not wrapped in a getter (regression for #50)', () => {
+      const input = `
+        function App() {
+          return (
+            <Show when={isVisible()}>
+              {() => <div>Content</div>}
+            </Show>
+          );
+        }
+      `;
+      const output = transformCode(input);
+      // children must NOT be double-wrapped: () => () => <div>
+      expect(norm(output)).not.toMatch(/children:\s*\(\)\s*=>\s*\(\)\s*=>/);
+    });
+  });
 });

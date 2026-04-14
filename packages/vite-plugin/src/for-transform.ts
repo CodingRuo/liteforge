@@ -32,9 +32,14 @@ const EVENT_HANDLER_RE = /^on[A-Za-z]/;
 /**
  * Create a Babel visitor that transforms control flow calls.
  * Must run BEFORE JSX transformation.
+ *
+ * Handles two syntaxes:
+ *   For({ each: items(), children: (item) => ... })   ← CallExpression
+ *   <For each={items()}>{(item) => ...}</For>          ← JSXElement
  */
 export function createForTransformVisitor(): Visitor {
   return {
+    // ── Function-call syntax: For({...}), Show({...}) ──────────────────────
     CallExpression(path: NodePath<t.CallExpression>) {
       const callee = path.node.callee;
       if (!t.isIdentifier(callee)) return;
@@ -53,6 +58,31 @@ export function createForTransformVisitor(): Visitor {
       if (WHEN_COMPONENTS.has(callee.name)) {
         const whenProp = findProperty(propsArg, 'when');
         if (whenProp) transformWhen(whenProp);
+      }
+    },
+
+    // ── JSX-tag syntax: <For each={...}>{...}</For>, <Show when={...}> ─────
+    JSXElement(path: NodePath<t.JSXElement>) {
+      const opening = path.node.openingElement;
+      if (!t.isJSXIdentifier(opening.name)) return;
+      const tagName = opening.name.name;
+
+      if (tagName === 'For') {
+        // Transform `each` attribute
+        const eachAttr = findJsxAttribute(opening.attributes, 'each');
+        if (eachAttr) transformJsxEach(eachAttr);
+
+        // Transform children: the arrow/function passed as JSX child
+        //   <For each={...}>{(item) => <li>...</li>}</For>
+        //                    ↑ JSXExpressionContainer wrapping an ArrowFunctionExpression
+        const childFn = getJsxChildFunction(path.node.children);
+        if (childFn) transformChildrenProp(makeSyntheticProp(childFn));
+        return;
+      }
+
+      if (WHEN_COMPONENTS.has(tagName)) {
+        const whenAttr = findJsxAttribute(opening.attributes, 'when');
+        if (whenAttr) transformJsxWhen(whenAttr);
       }
     },
   };
@@ -452,4 +482,85 @@ function findProperty(obj: t.ObjectExpression, key: string): t.ObjectProperty | 
     if (k === key) return prop;
   }
   return null;
+}
+
+// =============================================================================
+// JSX-tag helpers (for <For>, <Show>, <Switch>, <Match> tag syntax)
+// =============================================================================
+
+/**
+ * Find a JSX attribute by name in an attribute list.
+ */
+function findJsxAttribute(
+  attrs: Array<t.JSXAttribute | t.JSXSpreadAttribute>,
+  name: string,
+): t.JSXAttribute | null {
+  for (const attr of attrs) {
+    if (t.isJSXAttribute(attr) && t.isJSXIdentifier(attr.name) && attr.name.name === name) {
+      return attr;
+    }
+  }
+  return null;
+}
+
+/**
+ * Transform the `each` JSX attribute value in-place.
+ * <For each={items()}> → each={()=>items()}
+ */
+function transformJsxEach(attr: t.JSXAttribute): void {
+  if (!t.isJSXExpressionContainer(attr.value)) return;
+  const expr = attr.value.expression;
+  if (t.isJSXEmptyExpression(expr)) return;
+  // Already a function — leave as-is
+  if (t.isArrowFunctionExpression(expr) || t.isFunctionExpression(expr)) return;
+  // Plain identifier — don't wrap (same rule as transformEach)
+  if (t.isIdentifier(expr)) return;
+  if (!shouldWrapExpression(expr)) return;
+  attr.value = t.jsxExpressionContainer(wrapInGetter(expr));
+}
+
+/**
+ * Transform the `when` JSX attribute value in-place.
+ * <Show when={cond()}> → when={()=>cond()}
+ */
+function transformJsxWhen(attr: t.JSXAttribute): void {
+  if (!t.isJSXExpressionContainer(attr.value)) return;
+  const expr = attr.value.expression;
+  if (t.isJSXEmptyExpression(expr)) return;
+  // Already a getter — leave as-is
+  if (t.isArrowFunctionExpression(expr) || t.isFunctionExpression(expr)) return;
+  // Static literal — no getter needed
+  if (!shouldWrapExpression(expr)) return;
+  attr.value = t.jsxExpressionContainer(wrapInGetter(expr));
+}
+
+/**
+ * Extract the first ArrowFunctionExpression/FunctionExpression child from JSX children.
+ *
+ *   <For each={...}>{(item) => <li>...</li>}</For>
+ *                    ↑ this — inside a JSXExpressionContainer
+ *
+ * Returns null if no function child is found.
+ */
+function getJsxChildFunction(
+  children: t.JSXElement['children'],
+): t.ArrowFunctionExpression | t.FunctionExpression | null {
+  for (const child of children) {
+    if (!t.isJSXExpressionContainer(child)) continue;
+    const expr = child.expression;
+    if (t.isArrowFunctionExpression(expr) || t.isFunctionExpression(expr)) {
+      return expr;
+    }
+  }
+  return null;
+}
+
+/**
+ * Wrap a function expression in a synthetic ObjectProperty so it can be
+ * passed to transformChildrenProp(), which expects `prop.value` to be the fn.
+ */
+function makeSyntheticProp(
+  fn: t.ArrowFunctionExpression | t.FunctionExpression,
+): t.ObjectProperty {
+  return t.objectProperty(t.identifier('children'), fn);
 }

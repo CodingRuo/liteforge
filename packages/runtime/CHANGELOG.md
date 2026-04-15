@@ -1,5 +1,11 @@
 # @liteforge/runtime
 
+## 0.7.4
+
+### Patch Changes
+
+- 0d5d117: fix(runtime): reactive children in `<textarea>` now set `textContent` instead of inserting a comment node (#58)
+
 ## 0.7.3
 
 ### Patch Changes

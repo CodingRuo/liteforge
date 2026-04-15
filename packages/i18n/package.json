@@ -52,7 +52,7 @@
   },
   "peerDependencies": {
     "@liteforge/core": ">=0.1.0",
-    "@liteforge/runtime": ">=0.7.3"
+    "@liteforge/runtime": ">=0.7.4"
   },
   "peerDependenciesMeta": {
     "@liteforge/runtime": {

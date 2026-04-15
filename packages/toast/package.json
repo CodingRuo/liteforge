@@ -1,6 +1,6 @@
 {
   "name": "@liteforge/toast",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Signal-based toast notification system. Imperative API, multiple positions, promise support.",
   "author": "SchildW3rk <contact@schildw3rk.dev>",
   "license": "MIT",
@@ -55,7 +55,7 @@
   },
   "peerDependencies": {
     "@liteforge/core": ">=0.1.0",
-    "@liteforge/runtime": ">=0.7.3"
+    "@liteforge/runtime": ">=0.7.4"
   },
   "peerDependenciesMeta": {
     "@liteforge/runtime": {

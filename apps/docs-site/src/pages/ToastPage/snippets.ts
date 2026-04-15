@@ -44,6 +44,24 @@ export const CSS_CODE = `:root {
   --lf-toast-gap:     10px;
 }`;
 
+export const ICONS_CODE = `// Provider-level icon overrides (HTML string, Node, or factory)
+<ToastProvider
+  icons={{
+    success: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>',
+    error:   () => {
+      const s = document.createElement('span');
+      s.textContent = '✕';
+      return s;
+    },
+  }}
+/>
+
+// Per-toast icon override (highest priority)
+toast.success('Gespeichert', { icon: '<svg ...>...</svg>' });
+toast.info('FYI', { icon: myIconNode });
+
+// Resolution order: per-toast icon → provider icons[type] → built-in default`;
+
 export const STYLING_CODE = `// Provider-level styles + classes
 <ToastProvider
   styles={{

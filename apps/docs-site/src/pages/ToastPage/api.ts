@@ -22,6 +22,14 @@ export const getOptsApi = (t: (key: string) => string): ApiRow[] => [
   { name: 'id', type: 'string', description: t('toast.apiId') },
   { name: 'class', type: 'string', description: t('toast.apiOptClass') },
   { name: 'styles', type: "Pick<ToastStyles, 'toast' | 'icon' | 'close'>", description: t('toast.apiOptStyles') },
+  { name: 'icon', type: 'ToastIcon', description: t('toast.apiOptIcon') },
+];
+
+export const getIconsApi = (t: (key: string) => string): ApiRow[] => [
+  { name: 'success', type: 'ToastIcon', description: t('toast.apiIconsSuccess') },
+  { name: 'error',   type: 'ToastIcon', description: t('toast.apiIconsError') },
+  { name: 'warning', type: 'ToastIcon', description: t('toast.apiIconsWarning') },
+  { name: 'info',    type: 'ToastIcon', description: t('toast.apiIconsInfo') },
 ];
 
 export const getProviderStylesApi = (t: (key: string) => string): ApiRow[] => [

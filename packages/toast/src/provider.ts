@@ -1,7 +1,7 @@
 import { effect } from '@liteforge/core';
 import { toasts, removeToast } from './store.js';
 import { injectDefaultStyles } from './styles.js';
-import type { ToastClasses, ToastEntry, ToastPosition, ToastStyles } from './types.js';
+import type { ToastClasses, ToastEntry, ToastIcon, ToastIcons, ToastPosition, ToastStyles } from './types.js';
 
 const ICON_SVG: Record<string, string> = {
   success: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
@@ -12,11 +12,28 @@ const ICON_SVG: Record<string, string> = {
 
 const CLOSE_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
 
+/**
+ * Resolve a ToastIcon value and mount it into the given span.
+ * - string  → treated as HTML markup (innerHTML)
+ * - Node    → appended directly
+ * - () => Node → called, result appended
+ */
+function applyIcon(span: HTMLElement, icon: ToastIcon): void {
+  if (typeof icon === 'string') {
+    span.innerHTML = icon;
+  } else if (typeof icon === 'function') {
+    span.appendChild(icon());
+  } else {
+    span.appendChild(icon);
+  }
+}
+
 function renderToast(
   entry: ToastEntry,
   container: HTMLElement,
   providerStyles?: ToastStyles,
   providerClasses?: ToastClasses,
+  providerIcons?: ToastIcons,
 ): void {
   const el = document.createElement('div');
 
@@ -39,7 +56,14 @@ function renderToast(
   const icon = document.createElement('span');
   icon.className = 'lf-toast__icon';
   if (providerClasses?.icon) icon.classList.add(providerClasses.icon);
-  icon.innerHTML = ICON_SVG[entry.type] ?? '';
+
+  // Icon resolution: per-toast → provider → built-in default
+  const resolvedIcon: ToastIcon =
+    entry.options.icon ??
+    providerIcons?.[entry.type as keyof ToastIcons] ??
+    (ICON_SVG[entry.type] ?? '');
+  applyIcon(icon, resolvedIcon);
+
   if (providerStyles?.icon) icon.style.cssText += providerStyles.icon;
   if (entry.options.styles?.icon) icon.style.cssText += entry.options.styles.icon;
   el.appendChild(icon);
@@ -112,6 +136,7 @@ export interface ToastProviderOptions {
   unstyled?: boolean;
   styles?: ToastStyles;
   classes?: ToastClasses;
+  icons?: ToastIcons;
 }
 
 export function ToastProvider(opts?: ToastProviderOptions): HTMLElement {
@@ -150,7 +175,7 @@ export function ToastProvider(opts?: ToastProviderOptions): HTMLElement {
     for (const entry of current) {
       if (!rendered.has(entry.id)) {
         rendered.add(entry.id);
-        renderToast(entry, container, opts?.styles, opts?.classes);
+        renderToast(entry, container, opts?.styles, opts?.classes, opts?.icons);
       }
     }
   });

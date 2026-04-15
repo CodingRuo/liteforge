@@ -4,8 +4,8 @@ import { CodeBlock } from '../../components/CodeBlock.js';
 import { LiveExample } from '../../components/LiveExample.js';
 import { ApiTable } from '../../components/ApiTable.js';
 import { setToc } from '../../toc.js';
-import { SETUP_CODE, BASIC_CODE, PROMISE_CODE, POSITIONS_CODE, CSS_CODE, STYLING_CODE } from './snippets.js';
-import { getPluginApi, getToastApi, getOptsApi, getProviderStylesApi, getProviderClassesApi } from './api.js';
+import { SETUP_CODE, BASIC_CODE, PROMISE_CODE, POSITIONS_CODE, CSS_CODE, ICONS_CODE, STYLING_CODE } from './snippets.js';
+import { getPluginApi, getToastApi, getOptsApi, getProviderStylesApi, getProviderClassesApi, getIconsApi } from './api.js';
 import { ToastExample } from './ToastExample.js';
 
 export const ToastPage = createComponent({
@@ -18,6 +18,7 @@ export const ToastPage = createComponent({
       { id: 'basic',          label: () => t('toast.basic'),          level: 2 },
       { id: 'promise',        label: () => t('toast.promise'),        level: 2 },
       { id: 'position',       label: () => t('toast.position'),       level: 2 },
+      { id: 'icons',          label: () => t('toast.icons'),          level: 2 },
       { id: 'styling',        label: () => t('toast.styling'),        level: 2 },
       { id: 'css',            label: () => t('toast.cssVars'),        level: 2 },
       { id: 'plugin-api',     label: () => t('toast.pluginOptions'),  level: 2 },
@@ -25,6 +26,7 @@ export const ToastPage = createComponent({
       { id: 'opts-api',       label: () => t('toast.toastOptions'),   level: 3 },
       { id: 'styles-api',     label: () => t('toast.stylesApi'),      level: 3 },
       { id: 'classes-api',    label: () => t('toast.classesApi'),     level: 3 },
+      { id: 'icons-api',      label: () => t('toast.iconsApi'),       level: 3 },
     ]);
     return (
       <div>
@@ -62,6 +64,10 @@ toast.info('New version available.');`}
           <CodeBlock code={POSITIONS_CODE} language="typescript" />
         </DocSection>
 
+        <DocSection title={() => t('toast.icons')} id="icons" description={() => t('toast.iconsDesc')}>
+          <CodeBlock code={ICONS_CODE} language="typescript" />
+        </DocSection>
+
         <DocSection title={() => t('toast.styling')} id="styling" description={() => t('toast.stylingDesc')}>
           <CodeBlock code={STYLING_CODE} language="typescript" />
         </DocSection>
@@ -88,6 +94,10 @@ toast.info('New version available.');`}
 
         <DocSection title={() => t('toast.classesApi')} id="classes-api" description={() => t('toast.classesApiDesc')}>
           <ApiTable rows={() => getProviderClassesApi(t)} />
+        </DocSection>
+
+        <DocSection title={() => t('toast.iconsApi')} id="icons-api" description={() => t('toast.iconsApiDesc')}>
+          <ApiTable rows={() => getIconsApi(t)} />
         </DocSection>
       </div>
     );

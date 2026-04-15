@@ -34,6 +34,7 @@ export function toastPlugin(options?: ToastPluginOptions): LiteForgePlugin {
       if (options?.unstyled === true) providerOpts.unstyled = true;
       if (options?.styles) providerOpts.styles = options.styles;
       if (options?.classes) providerOpts.classes = options.classes;
+      if (options?.icons) providerOpts.icons = options.icons;
       const provider = ToastProvider(providerOpts);
       container.appendChild(provider);
 

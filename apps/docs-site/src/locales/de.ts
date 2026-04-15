@@ -527,6 +527,16 @@ export default defineLocale({
     apiId: 'Stabile ID — verhindert Duplikate bei gleicher ID',
     apiOptClass: 'Zusätzliche CSS-Klasse(n) für dieses spezifische Toast-Element',
     apiOptStyles: 'Inline-Style-Overrides für diesen Toast — werden nach Provider-Styles angewendet',
+    // Icons Sektion
+    icons: 'Eigene Icons',
+    iconsDesc: 'Built-in SVG-Icons pro Toast-Typ auf Provider-Ebene oder pro Toast-Aufruf überschreiben. Akzeptiert HTML-String, DOM-Node oder Factory-Funktion () => Node.',
+    iconsApi: 'ToastIcons',
+    iconsApiDesc: "An den icons-Prop von ToastProvider übergeben. Auflösung: per-Toast icon → provider icons[type] → Built-in-Standard.",
+    apiOptIcon: 'Eigenes Icon für diesen Toast — überschreibt Provider-Icons und Built-in-Standard. Akzeptiert String (HTML), Node oder () => Node.',
+    apiIconsSuccess: 'Eigenes Icon für Erfolgs-Toasts',
+    apiIconsError: 'Eigenes Icon für Fehler-Toasts',
+    apiIconsWarning: 'Eigenes Icon für Warn-Toasts',
+    apiIconsInfo: 'Eigenes Icon für Info-Toasts',
     // Styling section
     styling: 'Styling — styles & classes',
     stylingDesc: 'Styles pro Element-Teil (Container, Toast, Icon, Schließen-Schaltfläche) auf Provider-Ebene oder pro einzelnem Toast überschreiben. Provider-Styles werden zuerst angewendet; per-Toast-Overrides schichten sich darüber.',

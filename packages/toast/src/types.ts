@@ -8,6 +8,20 @@ export type ToastPosition =
   | 'bottom-center'
   | 'bottom-right';
 
+/** A custom icon: HTML string, DOM Node, or a factory function that returns a Node */
+export type ToastIcon = string | Node | (() => Node)
+
+/**
+ * Global icon overrides per toast type.
+ * Each value replaces the built-in SVG icon for that variant.
+ */
+export interface ToastIcons {
+  success?: ToastIcon
+  error?:   ToastIcon
+  warning?: ToastIcon
+  info?:    ToastIcon
+}
+
 export interface ToastStyles {
   /** Inline style string for the container element */
   container?: string;
@@ -49,13 +63,15 @@ export interface ToastOptions {
   class?: string;
   /** Inline styles for this specific toast item (overrides provider-level styles) */
   styles?: Pick<ToastStyles, 'toast' | 'icon' | 'close'>;
+  /** Custom icon for this specific toast (overrides provider-level icons) */
+  icon?: ToastIcon;
 }
 
 export interface ToastEntry {
   readonly id: string;
   readonly type: ToastType;
   readonly message: string;
-  readonly options: Required<Pick<ToastOptions, 'duration' | 'pauseOnHover' | 'closable'>> & Pick<ToastOptions, 'class' | 'styles'>;
+  readonly options: Required<Pick<ToastOptions, 'duration' | 'pauseOnHover' | 'closable'>> & Pick<ToastOptions, 'class' | 'styles' | 'icon'>;
 }
 
 export interface ToastPromiseMessages {
@@ -72,4 +88,5 @@ export interface ToastPluginOptions {
   unstyled?: boolean;
   styles?: ToastStyles;
   classes?: ToastClasses;
+  icons?: ToastIcons;
 }

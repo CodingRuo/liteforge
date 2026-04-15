@@ -25,6 +25,7 @@ export function addToast(type: ToastType, message: string, options?: ToastOption
   };
   if (options?.class !== undefined) opts.class = options.class;
   if (options?.styles !== undefined) opts.styles = options.styles;
+  if (options?.icon !== undefined) opts.icon = options.icon;
   const entry: ToastEntry = { id, type, message, options: opts };
   toasts.update(list => [...list, entry]);
   return id;

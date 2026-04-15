@@ -99,6 +99,80 @@ describe('ToastProvider', () => {
   });
 });
 
+describe('ToastProvider icons (#61)', () => {
+  it('uses built-in SVG icon by default', () => {
+    const el = ToastProvider() as HTMLElement;
+    document.body.appendChild(el);
+    toast.success('Hi');
+    const icon = el.querySelector('.lf-toast__icon');
+    expect(icon?.innerHTML).toContain('<svg');
+  });
+
+  it('applies provider-level SVG string icon', () => {
+    const customSvg = '<svg data-custom="1"></svg>';
+    const el = ToastProvider({ icons: { success: customSvg } }) as HTMLElement;
+    document.body.appendChild(el);
+    toast.success('Hi');
+    const icon = el.querySelector('.lf-toast__icon');
+    expect(icon?.innerHTML).toContain('data-custom="1"');
+  });
+
+  it('applies provider-level Node icon', () => {
+    const node = document.createElement('span');
+    node.textContent = '★';
+    const el = ToastProvider({ icons: { error: node } }) as HTMLElement;
+    document.body.appendChild(el);
+    toast.error('Oops');
+    const icon = el.querySelector('.lf-toast__icon');
+    expect(icon?.textContent).toBe('★');
+  });
+
+  it('applies provider-level factory function icon', () => {
+    const factory = () => {
+      const s = document.createElement('span');
+      s.textContent = '✓';
+      return s;
+    };
+    const el = ToastProvider({ icons: { success: factory } }) as HTMLElement;
+    document.body.appendChild(el);
+    toast.success('Done');
+    const icon = el.querySelector('.lf-toast__icon');
+    expect(icon?.textContent).toBe('✓');
+  });
+
+  it('per-toast icon overrides provider-level icon', () => {
+    const providerSvg = '<svg data-provider="1"></svg>';
+    const perToastSvg = '<svg data-pertosst="1"></svg>';
+    const el = ToastProvider({ icons: { success: providerSvg } }) as HTMLElement;
+    document.body.appendChild(el);
+    toast.success('Hi', { icon: perToastSvg });
+    const icon = el.querySelector('.lf-toast__icon');
+    expect(icon?.innerHTML).toContain('data-pertosst="1"');
+    expect(icon?.innerHTML).not.toContain('data-provider="1"');
+  });
+
+  it('per-toast Node icon works without provider icons', () => {
+    const node = document.createElement('img');
+    node.setAttribute('src', 'star.svg');
+    const el = ToastProvider() as HTMLElement;
+    document.body.appendChild(el);
+    toast.info('FYI', { icon: node });
+    const icon = el.querySelector('.lf-toast__icon');
+    expect(icon?.querySelector('img')?.getAttribute('src')).toBe('star.svg');
+  });
+
+  it('provider icon for one type does not affect other types', () => {
+    const custom = '<svg data-custom="1"></svg>';
+    const el = ToastProvider({ icons: { success: custom } }) as HTMLElement;
+    document.body.appendChild(el);
+    toast.error('Oops');
+    const icon = el.querySelector('.lf-toast__icon');
+    // error should still use built-in SVG (no data-custom attr)
+    expect(icon?.innerHTML).not.toContain('data-custom="1"');
+    expect(icon?.innerHTML).toContain('<svg');
+  });
+});
+
 describe('ToastProvider styles', () => {
   it('injects <link data-lf-toast> into document head', () => {
     ToastProvider();

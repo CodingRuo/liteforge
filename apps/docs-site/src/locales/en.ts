@@ -527,6 +527,16 @@ const en = defineLocale({
     apiId: 'Stable ID — prevents duplicates if you pass the same id twice',
     apiOptClass: 'Extra CSS class(es) added to this specific toast element',
     apiOptStyles: 'Inline style overrides for this toast — applied after provider-level styles',
+    // Icons section
+    icons: 'Custom icons',
+    iconsDesc: "Override the built-in SVG icons per toast type at provider level, or per individual toast call. Accepts an HTML string, a DOM Node, or a factory function () => Node.",
+    iconsApi: 'ToastIcons',
+    iconsApiDesc: "Pass to ToastProvider's icons prop. Resolution order: per-toast icon → provider icons[type] → built-in default.",
+    apiOptIcon: 'Custom icon for this toast — overrides provider icons and built-in default. Accepts string (HTML), Node, or () => Node.',
+    apiIconsSuccess: 'Custom icon for success toasts',
+    apiIconsError: 'Custom icon for error toasts',
+    apiIconsWarning: 'Custom icon for warning toasts',
+    apiIconsInfo: 'Custom icon for info toasts',
     // Styling section
     styling: 'Styling — styles & classes',
     stylingDesc: 'Override styles per element part (container, toast, icon, close button) at provider level or per individual toast. Provider styles apply first; per-toast overrides layer on top.',

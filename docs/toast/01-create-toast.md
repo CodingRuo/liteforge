@@ -85,6 +85,29 @@ Mount the toast stack in the DOM.
 
 **`ToastPosition`:** `'top-left' \| 'top-center' \| 'top-right' \| 'bottom-left' \| 'bottom-center' \| 'bottom-right'`
 
+### `ToastIcons`
+
+Override the built-in SVG icons per toast type. Accepts an HTML string, a DOM `Node`, or a factory function `() => Node`:
+
+```ts
+<ToastProvider
+  icons={{
+    success: '<svg ...>...</svg>',          // HTML string
+    error:   () => Icon({ name: 'x' }),     // factory function
+    warning: document.createElement('span'), // DOM Node
+  }}
+/>
+```
+
+Per-toast override (takes priority over provider-level icons):
+
+```ts
+toast.success('Saved', { icon: '<svg ...>...</svg>' })
+toast.error('Failed', { icon: myIconNode })
+```
+
+Resolution order: **per-toast `icon`** → **provider `icons[type]`** → **built-in default**
+
 ### `ToastStyles`
 
 Inline style strings applied to the corresponding part. Applied as `element.style.cssText +=`.

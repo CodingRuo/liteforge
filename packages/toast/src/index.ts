@@ -6,6 +6,8 @@ export { toastPlugin } from './plugin.js';
 export type {
   ToastType,
   ToastPosition,
+  ToastIcon,
+  ToastIcons,
   ToastStyles,
   ToastClasses,
   ToastOptions,

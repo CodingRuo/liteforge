@@ -1,5 +1,12 @@
 # @liteforge/toast
 
+## 5.0.0
+
+### Patch Changes
+
+- Updated dependencies
+  - @liteforge/runtime@0.9.0
+
 ## 4.0.0
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @liteforge/admin
 
+## 17.0.0
+
+### Patch Changes
+
+- Updated dependencies
+  - @liteforge/runtime@0.9.0
+  - @liteforge/client@8.0.0
+  - @liteforge/router@0.12.3
+
 ## 16.0.0
 
 ### Patch Changes

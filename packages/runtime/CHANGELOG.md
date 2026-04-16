@@ -1,5 +1,42 @@
 # @liteforge/runtime
 
+## 0.9.0
+
+### Minor Changes
+
+- feat(runtime): add `useClickOutside()` composable (#63)
+
+  Eliminates the manual document-listener pattern for dropdowns and popovers.
+
+  - Registers via `setTimeout(0)` to avoid the same-tick race condition where
+    the opening click would immediately trigger the outside handler
+  - Accepts a single element, a getter `() => el`, or a getter returning an
+    array `() => [triggerEl, panelEl]` for split trigger/panel layouts
+  - Auto-registers `onCleanup()` when called inside an effect or component
+    `setup()` — returns a manual cleanup function for use outside reactive
+    contexts
+
+  ```ts
+  const open = signal(false);
+  let containerEl: HTMLElement | null = null;
+
+  useClickOutside(
+    () => containerEl,
+    () => open.set(false)
+  );
+
+  return (
+    <div
+      ref={(el) => {
+        containerEl = el;
+      }}
+    >
+      <button onclick={() => open.set(true)}>Open</button>
+      <Show when={() => open()}>{() => <ul>...</ul>}</Show>
+    </div>
+  );
+  ```
+
 ## 0.8.0
 
 ### Minor Changes

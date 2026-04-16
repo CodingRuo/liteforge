@@ -1,6 +1,6 @@
 {
   "name": "@liteforge/modal",
-  "version": "5.0.0",
+  "version": "6.0.0",
   "description": "Signal-based modal system. createModal, ModalProvider, confirm/alert/prompt presets.",
   "author": "SchildW3rk <contact@schildw3rk.dev>",
   "license": "MIT",
@@ -55,7 +55,7 @@
   },
   "peerDependencies": {
     "@liteforge/core": ">=0.1.0",
-    "@liteforge/runtime": ">=0.8.0"
+    "@liteforge/runtime": ">=0.9.0"
   },
   "peerDependenciesMeta": {
     "@liteforge/runtime": {

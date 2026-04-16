@@ -1,10 +1,18 @@
-import { signal, computed, effect } from '@liteforge/core';
-import type { Signal, ReadonlySignal } from '@liteforge/core';
+import { computed, effect } from '@liteforge/core';
+import type { ReadonlySignal } from '@liteforge/core';
+import { defineStore } from '@liteforge/store';
+import type { Store, SignalifiedState } from '@liteforge/store';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type EffectiveTheme = 'light' | 'dark';
 
 export interface ThemeStoreOptions {
+  /**
+   * Store name — used by DevTools and as the key in `createApp({ stores })`.
+   * @default 'theme'
+   */
+  name?: string;
+
   /**
    * localStorage key for persisting the theme preference.
    * @default 'lf_theme'
@@ -18,42 +26,35 @@ export interface ThemeStoreOptions {
   default?: ThemeMode;
 }
 
-export interface ThemeStore {
-  /** Current theme mode — `'light'` | `'dark'` | `'system'` */
-  theme: Signal<ThemeMode>;
+// Internal state shape used by defineStore
+type ThemeState = {
+  theme: ThemeMode;
+  systemIsDark: boolean;
+};
 
+type ThemeActions = {
+  setTheme(mode: ThemeMode): void;
+  toggle(): void;
+  initialize(): void;
+};
+
+export type ThemeStore = Store<ThemeState, Record<string, never>, ThemeActions> & {
   /** Resolves `'system'` to the actual OS preference — always `'light'` or `'dark'` */
   effectiveTheme: ReadonlySignal<EffectiveTheme>;
 
   /** `true` when the effective theme is dark */
   isDark: ReadonlySignal<boolean>;
-
-  /**
-   * Set the theme mode, persist to localStorage, and apply `data-theme`
-   * to `<html>` immediately.
-   */
-  setTheme(mode: ThemeMode): void;
-
-  /**
-   * Toggle between `'light'` and `'dark'`.
-   * When the current mode is `'system'`, switches to the opposite of the
-   * current effective theme.
-   */
-  toggle(): void;
-
-  /**
-   * Call once in `main.ts` after `createApp()`.
-   * Restores the persisted theme preference and attaches a
-   * `prefers-color-scheme` media-query listener for `'system'` mode.
-   *
-   * Returns a cleanup function that removes the media listener.
-   */
-  initialize(): () => void;
-}
+};
 
 /**
  * Create a theme store that manages `light / dark / system` preference with
  * localStorage persistence and automatic `data-theme` application on `<html>`.
+ *
+ * Built on top of `defineStore()` — fully compatible with `AnyStore`,
+ * DevTools, and time-travel debugging out of the box.
+ *
+ * Pass it directly to `createApp({ stores: [uiStore] })` — `initialize()`
+ * runs automatically on app boot.
  *
  * @example
  * ```ts
@@ -62,8 +63,9 @@ export interface ThemeStore {
  *
  * export const uiStore = createThemeStore({ storageKey: 'my_theme' })
  *
- * // main.ts
- * uiStore.initialize()
+ * // main.ts — initialize() is called automatically
+ * await createApp({ root: App, target: '#app', stores: [authStore, uiStore] })
+ *   .mount()
  *
  * // In a component
  * const { isDark, toggle } = uiStore
@@ -71,25 +73,15 @@ export interface ThemeStore {
  * ```
  */
 export function createThemeStore(options: ThemeStoreOptions = {}): ThemeStore {
+  const storeName = options.name ?? 'theme';
   const storageKey = options.storageKey ?? 'lf_theme';
   const defaultMode = options.default ?? 'system';
 
-  // ── State ────────────────────────────────────────────────────────────────
+  // Cleanup ref for the media listener + effect — lives outside defineStore
+  // so it survives $reset and can be replaced on re-initialize
+  let _mediaCleanup: (() => void) | null = null;
 
-  const theme = signal<ThemeMode>(defaultMode);
-
-  // The OS preference as a signal — updated by the media listener
-  const systemIsDark = signal<boolean>(false);
-
-  const effectiveTheme = computed<EffectiveTheme>(() => {
-    const t = theme();
-    if (t !== 'system') return t;
-    return systemIsDark() ? 'dark' : 'light';
-  });
-
-  const isDark = computed<boolean>(() => effectiveTheme() === 'dark');
-
-  // ── Helpers ──────────────────────────────────────────────────────────────
+  // ── Helpers ────────────────────────────────────────────────────────────────
 
   function readStorage(): ThemeMode | null {
     if (typeof localStorage === 'undefined') return null;
@@ -112,55 +104,88 @@ export function createThemeStore(options: ThemeStoreOptions = {}): ThemeStore {
     document.documentElement.setAttribute('data-theme', effective);
   }
 
-  // ── Public API ───────────────────────────────────────────────────────────
+  // ── defineStore core ───────────────────────────────────────────────────────
+  //
+  // `defineStore` gives us signals for `theme` + `systemIsDark`,
+  // plus `$name`, `$reset`, `$snapshot`, `$restore`, `$watch`, DevTools
+  // integration — all for free. Actions get access to the signal state.
+  // We layer `effectiveTheme` and `isDark` computed signals on top after.
 
-  function setTheme(mode: ThemeMode): void {
-    theme.set(mode);
-    writeStorage(mode);
-    applyToDocument(effectiveTheme());
-  }
+  const base = defineStore<ThemeState, Record<string, never>, ThemeActions>(storeName, {
+    state: {
+      theme: defaultMode,
+      systemIsDark: false,
+    },
+    actions: (state: SignalifiedState<ThemeState>) => ({
+      setTheme(mode: ThemeMode): void {
+        state.theme.set(mode);
+        writeStorage(mode);
+        applyToDocument(store.effectiveTheme());
+      },
+      toggle(): void {
+        const next: EffectiveTheme = store.effectiveTheme() === 'dark' ? 'light' : 'dark';
+        store.setTheme(next);
+      },
+      initialize(): void {
+        // Restore persisted preference
+        const persisted = readStorage();
+        if (persisted !== null) {
+          state.theme.set(persisted);
+        }
 
-  function toggle(): void {
-    const next: EffectiveTheme = effectiveTheme() === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-  }
+        // Read current OS preference
+        let mediaQuery: MediaQueryList | null = null;
+        if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+          mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+          state.systemIsDark.set(mediaQuery.matches);
+        }
 
-  function initialize(): () => void {
-    // Restore persisted preference
-    const persisted = readStorage();
-    if (persisted !== null) {
-      theme.set(persisted);
-    }
+        // Apply initial data-theme synchronously — no FOUC
+        applyToDocument(store.effectiveTheme());
 
-    // Read OS preference
-    let mediaQuery: MediaQueryList | null = null;
-    if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
-      mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      systemIsDark.set(mediaQuery.matches);
-    }
+        // Keep data-theme in sync with effectiveTheme signal
+        const disposeEffect = effect(() => {
+          applyToDocument(store.effectiveTheme());
+        });
 
-    // Apply initial data-theme synchronously — no FOUC
-    applyToDocument(effectiveTheme());
+        // Listen for OS preference changes
+        const onMediaChange = (e: MediaQueryListEvent): void => {
+          state.systemIsDark.set(e.matches);
+        };
 
-    // Keep data-theme in sync with effectiveTheme signal
-    const disposeEffect = effect(() => {
-      applyToDocument(effectiveTheme());
-    });
+        if (mediaQuery) {
+          mediaQuery.addEventListener('change', onMediaChange);
+        }
 
-    // Listen for OS preference changes
-    const onMediaChange = (e: MediaQueryListEvent): void => {
-      systemIsDark.set(e.matches);
-    };
+        _mediaCleanup = () => {
+          disposeEffect();
+          mediaQuery?.removeEventListener('change', onMediaChange);
+        };
+      },
+    }),
+  });
 
-    if (mediaQuery) {
-      mediaQuery.addEventListener('change', onMediaChange);
-    }
+  // Patch $reset to also tear down the media listener before resetting state
+  const originalReset = base.$reset.bind(base);
+  base.$reset = (): void => {
+    _mediaCleanup?.();
+    _mediaCleanup = null;
+    originalReset();
+  };
 
-    return () => {
-      disposeEffect();
-      mediaQuery?.removeEventListener('change', onMediaChange);
-    };
-  }
+  // ── Computed signals layered on top ────────────────────────────────────────
 
-  return { theme, effectiveTheme, isDark, setTheme, toggle, initialize };
+  const effectiveTheme = computed<EffectiveTheme>(() => {
+    const t = base.theme();
+    if (t !== 'system') return t;
+    return base.systemIsDark() ? 'dark' : 'light';
+  });
+
+  const isDark = computed<boolean>(() => effectiveTheme() === 'dark');
+
+  // ── Assemble ThemeStore ────────────────────────────────────────────────────
+
+  const store = Object.assign(base, { effectiveTheme, isDark }) as ThemeStore;
+
+  return store;
 }

@@ -2,9 +2,11 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
+    "baseUrl": "../..",
     "types": ["vitest/globals"],
     "paths": {
-      "@liteforge/core": ["../core/src/index.ts"]
+      "@liteforge/core": ["packages/core/src/index.ts"],
+      "@liteforge/store": ["packages/store/src/index.ts"]
     }
   },
   "include": ["src/**/*.ts", "tests/**/*.ts"]

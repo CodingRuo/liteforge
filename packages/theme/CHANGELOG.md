@@ -1,5 +1,19 @@
 # @liteforge/theme
 
+## 0.5.0
+
+### Minor Changes
+
+- feat(theme): rewrite createThemeStore() on top of defineStore()
+
+  - `createThemeStore()` now uses `defineStore()` internally — fully compatible
+    with `createApp({ stores: [...] })`, DevTools, and time-travel debugging
+  - `ThemeStore` exposes all `Store<S,G,A>` fields: `theme` / `systemIsDark`
+    signals, `$name`, `$reset`, `$snapshot`, `$restore`, `$watch`, `$onChange`
+  - `effectiveTheme` and `isDark` are layered on as `computed` signals
+  - `initialize()` is an action — called automatically by `createApp()`
+  - Adds `@liteforge/store` as a peer dependency
+
 ## 0.4.0
 
 ### Minor Changes

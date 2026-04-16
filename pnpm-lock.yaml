@@ -225,10 +225,13 @@ importers:
         version: link:../core
 
   packages/theme:
-    dependencies:
+    devDependencies:
       '@liteforge/core':
         specifier: workspace:*
         version: link:../core
+      '@liteforge/store':
+        specifier: workspace:*
+        version: link:../store
 
   packages/toast:
     devDependencies:

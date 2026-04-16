@@ -1,6 +1,6 @@
 {
   "name": "@liteforge/theme",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Shared design-token system for LiteForge UI packages. Primitive + semantic CSS variables, dark mode, optional reset.",
   "author": "SchildW3rk <contact@schildw3rk.dev>",
   "license": "MIT",
@@ -60,7 +60,12 @@
     "css/*.css"
   ],
   "peerDependencies": {
-    "@liteforge/core": ">=0.1.0"
+    "@liteforge/core": ">=0.1.0",
+    "@liteforge/store": ">=0.1.0"
+  },
+  "devDependencies": {
+    "@liteforge/core": "workspace:*",
+    "@liteforge/store": "workspace:*"
   },
   "engines": {
     "node": ">=18"

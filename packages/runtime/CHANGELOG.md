@@ -1,5 +1,11 @@
 # @liteforge/runtime
 
+## 0.9.1
+
+### Patch Changes
+
+- fix: set sideEffects to jsx-runtime files only — enables tree-shaking of unused exports (~3-5 kB gzip saving)
+
 ## 0.9.0
 
 ### Minor Changes

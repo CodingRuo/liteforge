@@ -1,5 +1,17 @@
 # @liteforge/admin
 
+## 17.0.1
+
+### Patch Changes
+
+- fix: wrap console.warn calls in adminPlugin() with DEV guard — no debug strings in production bundles
+- Updated dependencies
+- Updated dependencies
+- Updated dependencies
+  - @liteforge/router@0.12.4
+  - @liteforge/runtime@0.9.1
+  - @liteforge/client@8.0.0
+
 ## 17.0.0
 
 ### Patch Changes

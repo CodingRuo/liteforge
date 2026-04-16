@@ -47,7 +47,9 @@ export function adminPlugin(options?: AdminPluginOptions): LiteForgePlugin {
           if (router) {
             void router.navigate(path);
           } else {
-            console.warn('[admin] navigate() called but no router found in context');
+            if ((import.meta.env as { DEV?: boolean } | undefined)?.DEV) {
+              console.warn('[admin] navigate() called but no router found in context');
+            }
           }
         },
         registry: resourceRegistry,
@@ -56,7 +58,7 @@ export function adminPlugin(options?: AdminPluginOptions): LiteForgePlugin {
       context.provide('admin', adminApi);
 
       // Warn if no resources registered
-      if (resourceRegistry.size === 0) {
+      if ((import.meta.env as { DEV?: boolean } | undefined)?.DEV && resourceRegistry.size === 0) {
         console.warn(
           '[liteforge/admin] No resources registered. Call registerResource() or use defineResource() + registerResource() before mounting the app.',
         );

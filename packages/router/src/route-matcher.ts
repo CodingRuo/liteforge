@@ -274,7 +274,14 @@ export function compileRoute(
 ): CompiledRoute {
   const { lazyDefaults } = options;
   const normalizedPath = normalizePath(definition.path);
-  const fullPath = parent ? joinPaths(parent.fullPath, normalizedPath) : normalizedPath;
+  // If a child path already starts with the parent's fullPath (absolute notation),
+  // use it as-is to avoid double-joining (e.g. parent=/app, child=/app/customers → /app/customers
+  // instead of /app/app/customers).
+  const fullPath = parent
+    ? (normalizedPath.startsWith(parent.fullPath + '/') || normalizedPath === parent.fullPath
+        ? normalizedPath
+        : joinPaths(parent.fullPath, normalizedPath))
+    : normalizedPath;
   const { regex, paramNames, isCatchAll } = compilePath(fullPath);
 
   const compiled: CompiledRoute = {

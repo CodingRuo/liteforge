@@ -70,7 +70,9 @@ export function composeMiddleware(
           return;
         }
       } catch (error) {
-        console.error(`Middleware "${mw.name}" threw an error:`, error);
+        if ((import.meta.env as { DEV?: boolean } | undefined)?.DEV) {
+          console.error(`Middleware "${mw.name}" threw an error:`, error);
+        }
         throw error;
       }
     }
@@ -102,7 +104,9 @@ export async function runMiddleware(
 
     return { completed: true };
   } catch (error) {
-    console.error('Middleware chain error:', error);
+    if ((import.meta.env as { DEV?: boolean } | undefined)?.DEV) {
+      console.error('Middleware chain error:', error);
+    }
     return { completed: false };
   }
 }

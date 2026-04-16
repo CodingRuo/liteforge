@@ -59,7 +59,9 @@ export class GuardRegistry {
    */
   register(guard: RouteGuard): void {
     if (this.guards.has(guard.name)) {
-      console.warn(`Guard "${guard.name}" is being overwritten`);
+      if ((import.meta.env as { DEV?: boolean } | undefined)?.DEV) {
+        console.warn(`Guard "${guard.name}" is being overwritten`);
+      }
     }
     this.guards.set(guard.name, guard);
   }
@@ -143,7 +145,9 @@ async function executeGuard(
     // Emit guard run event with failure (zero cost if debug not enabled)
     emitGuardRun(guard.name, context.to.path, false, duration);
     
-    console.error(`Guard "${guard.name}" threw an error:`, error);
+    if ((import.meta.env as { DEV?: boolean } | undefined)?.DEV) {
+      console.error(`Guard "${guard.name}" threw an error:`, error);
+    }
     // Treat errors as blocking navigation
     return { allowed: false };
   }
@@ -321,7 +325,9 @@ export function createRoleGuard(options: CreateRoleGuardOptions): RouteGuard {
   const { hasRole, unauthorizedPath = '/unauthorized' } = options;
   return defineGuard('role', ({ param }) => {
     if (!param) {
-      console.warn('Role guard requires a role parameter (e.g., "role:admin")');
+      if ((import.meta.env as { DEV?: boolean } | undefined)?.DEV) {
+        console.warn('Role guard requires a role parameter (e.g., "role:admin")');
+      }
       return false;
     }
     return hasRole(param) || unauthorizedPath;

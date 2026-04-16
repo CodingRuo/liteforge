@@ -840,4 +840,42 @@ describe('edge cases', () => {
     expect(editMatch![editMatch!.length - 1]!.route.fullPath).toBe('/customers/:id/edit');
     expect(editMatch![editMatch!.length - 1]!.params).toEqual({ id: '2' });
   });
+
+  it('does not double-join when child path already starts with parent path (regression #69)', () => {
+    // Bug: joinPaths('/app', '/app/customers/:id/edit') → '/app/app/customers/:id/edit'
+    // Fix: detect absolute child paths that already include the parent prefix
+    const routes = compileRoutes([
+      {
+        path: '/app',
+        component: () => document.createElement('div'),
+        children: [
+          { path: '/app/customers',          component: () => document.createElement('div') },
+          { path: '/app/customers/:id',      component: () => document.createElement('div') },
+          { path: '/app/customers/:id/edit', component: () => document.createElement('div') },
+        ],
+      },
+    ]);
+
+    const editChild = routes[0]!.children[2]!;
+    expect(editChild.fullPath).toBe('/app/customers/:id/edit');
+  });
+
+  it('matches absolute-path child routes on direct URL access (regression #69)', async () => {
+    const routes = compileRoutes([
+      {
+        path: '/app',
+        component: () => document.createElement('div'),
+        children: [
+          { path: '/app/customers',          component: () => document.createElement('div') },
+          { path: '/app/customers/:id',      component: () => document.createElement('div') },
+          { path: '/app/customers/:id/edit', component: () => document.createElement('div') },
+        ],
+      },
+    ]);
+
+    const match = await matchRoutes('/app/customers/abc-123/edit', routes);
+    expect(match).not.toBeNull();
+    expect(match![match!.length - 1]!.route.fullPath).toBe('/app/customers/:id/edit');
+    expect(match![match!.length - 1]!.params).toEqual({ id: 'abc-123' });
+  });
 });

@@ -1,5 +1,19 @@
 # @liteforge/router
 
+## 0.12.4
+
+### Patch Changes
+
+- fix: lazy() routes with absolute child paths (/:id/something) not matched on direct URL access
+
+  When child routes defined absolute paths that already included the parent prefix
+  (e.g. parent `/app`, child `/app/customers/:id/edit`), joinPaths would double-join
+  them into `/app/app/customers/:id/edit`. Direct URL access always failed while
+  client-side navigation worked by coincidence. Fix: detect absolute child paths
+  that already start with the parent prefix and skip joinPaths.
+
+- fix: wrap debug console.warn/error calls in DEV guards — eliminates dead debug strings from production bundles (~1.5-2 kB gzip saving)
+
 ## 0.12.3
 
 ### Patch Changes

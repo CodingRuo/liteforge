@@ -2,6 +2,8 @@
 
 A signals-based frontend framework with no virtual DOM, zero external dependencies, and TypeScript-first APIs.
 
+**⚠️ STATUS: ALPHA / EXPERIMENTAL — This framework is currently in heavy active development. It is used in production for specific projects (Kontor), but the API is subject to breaking changes. Use at your own risk. Expect bugs!**
+
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ---

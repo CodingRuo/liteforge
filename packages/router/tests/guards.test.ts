@@ -9,7 +9,7 @@ import {
   createGuestGuard,
   createConfirmGuard,
 } from '../src/guards.js';
-import type { RouteGuard, GuardContext } from '../src/types.js';
+import type { RouteGuard, GuardContext, GuardRedirect } from '../src/types.js';
 
 // =============================================================================
 // defineGuard
@@ -39,6 +39,65 @@ describe('defineGuard', () => {
 
     await guard.handler(mockContext);
     expect(receivedContext).toBe(mockContext);
+  });
+
+  it('can return a GuardRedirect object with path, replace, query, and state', async () => {
+    const mockContext = {
+      to: { path: '/dashboard', href: '/dashboard', search: '', query: {}, hash: '', state: null },
+      from: null,
+      params: {},
+      route: {} as never,
+      use: () => null as never,
+    };
+
+    const guard = defineGuard('auth', ({ to }) => {
+      // The canonical auth-guard pattern from issue #62
+      const redirect: GuardRedirect = {
+        path: '/login',
+        replace: true,
+        query: { redirect: to.path },
+        state: { reason: 'unauthenticated' },
+      };
+      return redirect;
+    });
+
+    const result = await guard.handler(mockContext) as GuardRedirect;
+    expect(result.path).toBe('/login');
+    expect(result.replace).toBe(true);
+    expect(result.query).toEqual({ redirect: '/dashboard' });
+    expect(result.state).toEqual({ reason: 'unauthenticated' });
+  });
+
+  it('GuardRedirect normalizes to allowed:false with redirect target', async () => {
+    const redirect: GuardRedirect = {
+      path: '/login',
+      replace: true,
+      query: { redirect: '/secret' },
+    };
+    const normalized = normalizeGuardResult(redirect);
+    expect(normalized.allowed).toBe(false);
+    expect(normalized.redirect).toBe(redirect);
+  });
+
+  it('runGuards forwards GuardRedirect object as redirect target', async () => {
+    const mockContext = {
+      to: { path: '/admin', href: '/admin', search: '', query: {}, hash: '', state: null },
+      from: null,
+      params: {},
+      route: {} as never,
+      use: () => null as never,
+    };
+
+    const redirect: GuardRedirect = { path: '/login', replace: true, query: { redirect: '/admin' } };
+    const guards: RouteGuard[] = [
+      defineGuard('auth', () => redirect),
+    ];
+
+    const result = await runGuards(guards, mockContext);
+    expect(result.allowed).toBe(false);
+    expect(result.redirect).toBe(redirect);
+    expect((result.redirect as GuardRedirect).replace).toBe(true);
+    expect((result.redirect as GuardRedirect).query).toEqual({ redirect: '/admin' });
   });
 });
 

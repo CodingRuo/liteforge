@@ -1,5 +1,28 @@
 # @liteforge/router
 
+## 0.12.3
+
+### Patch Changes
+
+- feat(router): export `GuardRedirect` type for structured guard redirects (#62)
+
+  Guards could already return a `NavigationTarget` object with `path`, `replace`,
+  `query`, `hash`, and `state` — the router handled it correctly. This change
+  makes the feature explicit and discoverable:
+
+  - Adds `GuardRedirect` as a named, exported type alias
+  - Updates `defineGuard` JSDoc to show the object return form as the recommended
+    pattern for auth flows (uses `replace: true` to keep the history stack clean)
+
+  ```ts
+  const authGuard = defineGuard("auth", ({ to }) => {
+    if (!authStore.isAuthenticated()) {
+      return { path: "/login", replace: true, query: { redirect: to.path } };
+    }
+    return true;
+  });
+  ```
+
 ## 0.12.2
 
 ### Patch Changes

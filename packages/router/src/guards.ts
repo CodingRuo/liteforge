@@ -13,22 +13,31 @@ import type {
 // =============================================================================
 
 /**
- * Define a named route guard
+ * Define a named route guard.
+ *
+ * A guard can return:
+ * - `true` — allow navigation
+ * - `false` — block navigation (user stays on the current route)
+ * - `string` — redirect to that path
+ * - `GuardRedirect` — redirect with full control: `replace`, `query`, `hash`, `state`
+ *
+ * Use the object form for auth flows so the redirect uses `history.replaceState`
+ * and the protected route is removed from the history stack.
  *
  * @example
  * ```ts
- * const authGuard = defineGuard('auth', ({ to, from, use }) => {
- *   const auth = use('auth');
- *   if (!auth.isAuthenticated()) {
- *     return `/login?redirect=${encodeURIComponent(to.path)}`;
+ * // Object redirect — keeps the history stack clean
+ * const authGuard = defineGuard('auth', ({ to }) => {
+ *   if (!authStore.isAuthenticated()) {
+ *     return { path: '/login', replace: true, query: { redirect: to.path } }
  *   }
- *   return true;
- * });
+ *   return true
+ * })
  *
  * // Parameterized guard
  * const roleGuard = defineGuard('role', ({ use, param }) => {
- *   return use('auth').hasRole(param) || '/unauthorized';
- * });
+ *   return use('auth').hasRole(param) || '/unauthorized'
+ * })
  * ```
  */
 export function defineGuard(name: string, handler: GuardFunction): RouteGuard {

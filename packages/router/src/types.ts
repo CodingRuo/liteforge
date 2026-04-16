@@ -244,11 +244,35 @@ export interface GuardContext {
 }
 
 /**
+ * Structured redirect descriptor that a guard can return.
+ *
+ * Mirrors the object form of `NavigationTarget` so the API is consistent
+ * with `router.push()` and `router.replace()`.
+ *
+ * @example
+ * ```ts
+ * const authGuard = defineGuard('auth', ({ to }) => {
+ *   if (!authStore.isAuthenticated()) {
+ *     return { path: '/login', replace: true, query: { redirect: to.path } }
+ *   }
+ *   return true
+ * })
+ * ```
+ */
+export type GuardRedirect = {
+  path: string;
+  replace?: boolean;
+  query?: QueryParams;
+  hash?: string;
+  state?: unknown;
+};
+
+/**
  * Guard function return type
  * - true: allow navigation
  * - false: block navigation (stay on current route)
  * - string: redirect to this path
- * - NavigationTarget: redirect to this location
+ * - GuardRedirect / NavigationTarget: redirect with full control over replace, query, hash, state
  */
 export type GuardResult = boolean | string | NavigationTarget;
 

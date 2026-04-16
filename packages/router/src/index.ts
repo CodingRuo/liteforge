@@ -23,6 +23,7 @@ export type {
   // Guard types
   GuardContext,
   GuardResult,
+  GuardRedirect,
   GuardFunction,
   RouteGuard,
 

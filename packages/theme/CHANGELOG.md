@@ -1,5 +1,34 @@
 # @liteforge/theme
 
+## 0.4.0
+
+### Minor Changes
+
+- feat(theme): add createThemeStore() helper (#64)
+
+  Eliminates the 40-60 lines of boilerplate every project writes for theme management.
+
+  ```ts
+  import { createThemeStore } from "@liteforge/theme";
+
+  export const uiStore = createThemeStore({
+    storageKey: "my_theme",
+    default: "system",
+  });
+
+  // main.ts
+  uiStore.initialize();
+  ```
+
+  Provides:
+
+  - `theme` — `Signal<'light' | 'dark' | 'system'>`
+  - `effectiveTheme` — resolves `'system'` to actual OS preference
+  - `isDark` — `ReadonlySignal<boolean>`
+  - `setTheme(mode)` — sets, persists, and applies `data-theme` on `<html>`
+  - `toggle()` — toggles between light and dark (resolves system first)
+  - `initialize()` — restores persisted preference + attaches `prefers-color-scheme` listener; returns cleanup function
+
 ## 0.3.2
 
 ### Patch Changes

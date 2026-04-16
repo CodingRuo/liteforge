@@ -21,3 +21,5 @@ export { TOKEN_MAP } from './tokens.js';
 export type { ThemeTokens } from './tokens.js';
 export { colorScheme, resetColorScheme } from './scheme.js';
 export type { ColorScheme } from './scheme.js';
+export { createThemeStore } from './theme-store.js';
+export type { ThemeMode, EffectiveTheme, ThemeStoreOptions, ThemeStore } from './theme-store.js';

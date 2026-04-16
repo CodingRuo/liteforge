@@ -53,6 +53,7 @@ export interface ShowConfig<T = unknown> {
   when: (() => T) | T;
   fallback?: () => Node;
   children: ((value: NonNullable<T>) => Node) | (() => Node);
+  keepAlive?: boolean;
 }
 
 /**
@@ -83,7 +84,7 @@ export interface ShowConfig<T = unknown> {
 let showInstanceId = 0;
 
 export function Show<T>(config: ShowConfig<T>): Node {
-  const { when, fallback, children } = config;
+  const { when, fallback, children, keepAlive = false } = config;
 
   if (typeof children !== 'function') {
     console.error(
@@ -97,9 +98,6 @@ export function Show<T>(config: ShowConfig<T>): Node {
   // Create a marker comment for positioning
   const instanceId = ++showInstanceId;
   const marker = document.createComment(`Show:${instanceId}`);
-  let currentNode: Node | null = null;
-  let lastValue: T | undefined;
-  let hasRendered = false;
 
   // Resolve the condition to a function.
   // Handles two cases:
@@ -113,20 +111,77 @@ export function Show<T>(config: ShowConfig<T>): Node {
     return val;
   };
 
+  if (keepAlive) {
+    // -------------------------------------------------------------------------
+    // keepAlive path: render once, then toggle display:none
+    // -------------------------------------------------------------------------
+    // The child node is created on first mount and stays in the DOM forever.
+    // Effects inside it are never disposed. `fallback` is ignored.
+    let keepAliveNode: Node | null = null;
+    let mounted = false;
+
+    function updateKeepAlive(): void {
+      const parentElement = marker.parentNode as Element;
+      if (!parentElement) return;
+
+      const isTruthy = Boolean(getValue());
+
+      if (!mounted) {
+        // First render — create the node and insert it, hidden or visible
+        keepAliveNode = (children as () => Node)();
+        if (keepAliveNode instanceof HTMLElement) {
+          if (!isTruthy) {
+            keepAliveNode.style.display = 'none';
+          }
+        }
+        parentElement.insertBefore(keepAliveNode, marker.nextSibling);
+        mounted = true;
+        return;
+      }
+
+      // Subsequent renders — only toggle visibility
+      if (keepAliveNode instanceof HTMLElement) {
+        keepAliveNode.style.display = isTruthy ? '' : 'none';
+      }
+    }
+
+    effect(() => {
+      getValue();
+      if (marker.isConnected) {
+        updateKeepAlive();
+      } else {
+        queueMicrotask(() => {
+          if (marker.isConnected) {
+            updateKeepAlive();
+          }
+        });
+      }
+    });
+
+    return marker;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Normal path (keepAlive = false): remove/insert on toggle
+  // ---------------------------------------------------------------------------
+  let currentNode: Node | null = null;
+  let lastValue: T | undefined;
+  let hasRendered = false;
+
   // Update content based on condition
   function updateContent(): void {
     const parentElement = marker.parentNode as Element;
     if (!parentElement) return;
 
     const value = getValue();
-    
+
     // Value unchanged (by reference) → nothing to do
     // This handles: same primitive (boolean true/false/null), same object reference
     // Prevents re-rendering when isAdmin() returns same boolean but effect re-runs
     if (hasRendered && Object.is(value, lastValue)) {
       return;
     }
-    
+
     lastValue = value;
     hasRendered = true;
 

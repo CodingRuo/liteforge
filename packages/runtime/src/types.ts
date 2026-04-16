@@ -583,6 +583,25 @@ export interface ShowProps<T> {
 
   /** Rendered when the condition is falsy. Must also be a render function. */
   fallback?: () => Node;
+
+  /**
+   * When `true`, the child node is hidden via `display: none` instead of
+   * being removed from the DOM. Reactive effects inside the child stay alive
+   * across toggle cycles. The child is rendered once on first mount.
+   *
+   * Use this when the child has expensive reactive state (live subscriptions,
+   * polling effects, WebSocket bindings) that should keep running while hidden.
+   *
+   * Note: `fallback` is ignored when `keepAlive` is `true`.
+   *
+   * @example
+   * ```tsx
+   * <Show when={() => isOpen()} keepAlive>
+   *   {() => <LivePanel />}
+   * </Show>
+   * ```
+   */
+  keepAlive?: boolean;
 }
 
 /**

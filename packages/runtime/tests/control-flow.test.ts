@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { signal } from '@liteforge/core';
+import { signal, effect } from '@liteforge/core';
 import { Show, For, Switch, Match, Dynamic } from '../src/control-flow.js';
 import { createComponent } from '../src/component.js';
 import { initAppContext, clearContext } from '../src/context.js';
@@ -192,6 +192,204 @@ describe('control flow components', () => {
       container.appendChild(node);
       await tick();
       expect(container.textContent).toBe('FallbackVisible');
+    });
+
+    describe('keepAlive', () => {
+      it('renders child node on initial truthy condition', async () => {
+        const visible = signal(true);
+        const node = Show({
+          when: () => visible(),
+          keepAlive: true,
+          children: () => {
+            const el = document.createElement('div');
+            el.textContent = 'KeepAlive';
+            return el;
+          },
+        });
+
+        container.appendChild(node);
+        await tick();
+        expect(container.textContent).toBe('KeepAlive');
+      });
+
+      it('hides child via display:none when condition becomes false — does not remove from DOM', async () => {
+        const visible = signal(true);
+        const node = Show({
+          when: () => visible(),
+          keepAlive: true,
+          children: () => {
+            const el = document.createElement('div');
+            el.textContent = 'Alive';
+            return el;
+          },
+        });
+
+        container.appendChild(node);
+        await tick();
+
+        const child = container.querySelector('div')!;
+        expect(child).not.toBeNull();
+        expect(child.style.display).toBe('');
+
+        visible.set(false);
+        await tick();
+
+        // Node must still be in the DOM
+        expect(container.contains(child)).toBe(true);
+        expect(child.style.display).toBe('none');
+      });
+
+      it('removes display:none when condition becomes true again', async () => {
+        const visible = signal(false);
+        const node = Show({
+          when: () => visible(),
+          keepAlive: true,
+          children: () => {
+            const el = document.createElement('div');
+            el.textContent = 'Toggle';
+            return el;
+          },
+        });
+
+        container.appendChild(node);
+        await tick();
+
+        const child = container.querySelector('div')!;
+        expect(child.style.display).toBe('none');
+
+        visible.set(true);
+        await tick();
+        expect(child.style.display).toBe('');
+
+        visible.set(false);
+        await tick();
+        expect(child.style.display).toBe('none');
+
+        visible.set(true);
+        await tick();
+        expect(child.style.display).toBe('');
+      });
+
+      it('children factory is called exactly once across multiple toggles', async () => {
+        const visible = signal(true);
+        let renderCount = 0;
+
+        const node = Show({
+          when: () => visible(),
+          keepAlive: true,
+          children: () => {
+            renderCount++;
+            const el = document.createElement('span');
+            el.textContent = 'Once';
+            return el;
+          },
+        });
+
+        container.appendChild(node);
+        await tick();
+        expect(renderCount).toBe(1);
+
+        visible.set(false);
+        await tick();
+        visible.set(true);
+        await tick();
+        visible.set(false);
+        await tick();
+
+        expect(renderCount).toBe(1);
+      });
+
+      it('an effect bound to the child node keeps running while hidden', async () => {
+        const visible = signal(true);
+        const label = signal('initial');
+        let effectRunCount = 0;
+        const el = document.createElement('div');
+
+        // Simulate what a reactive child component does: an effect that reads a signal
+        // and updates the DOM node. With keepAlive the node is never removed, so
+        // the effect is never disposed and continues to fire while hidden.
+        const disposeInnerEffect = effect(() => {
+          effectRunCount++;
+          el.textContent = label();
+        });
+
+        const node = Show({
+          when: () => visible(),
+          keepAlive: true,
+          children: () => el,
+        });
+
+        container.appendChild(node);
+        await tick();
+        expect(el.textContent).toBe('initial');
+        expect(effectRunCount).toBe(1);
+
+        // Hide — effect must still respond to signal changes
+        visible.set(false);
+        await tick();
+
+        label.set('updated while hidden');
+        await tick();
+
+        expect(el.textContent).toBe('updated while hidden');
+        expect(effectRunCount).toBe(2);
+
+        // Show — no re-render, node is just un-hidden
+        visible.set(true);
+        await tick();
+        expect(el.textContent).toBe('updated while hidden');
+        expect(effectRunCount).toBe(2);
+
+        disposeInnerEffect();
+      });
+
+      it('normal Show (no keepAlive) removes node from DOM on false', async () => {
+        const visible = signal(true);
+        const node = Show({
+          when: () => visible(),
+          children: () => {
+            const el = document.createElement('div');
+            el.textContent = 'Normal';
+            return el;
+          },
+        });
+
+        container.appendChild(node);
+        await tick();
+
+        const child = container.querySelector('div')!;
+        expect(child).not.toBeNull();
+
+        visible.set(false);
+        await tick();
+
+        expect(container.querySelector('div')).toBeNull();
+        expect(container.contains(child)).toBe(false);
+      });
+
+      it('renders initially hidden when condition starts false', async () => {
+        const visible = signal(false);
+        const node = Show({
+          when: () => visible(),
+          keepAlive: true,
+          children: () => {
+            const el = document.createElement('div');
+            el.textContent = 'HiddenFirst';
+            return el;
+          },
+        });
+
+        container.appendChild(node);
+        await tick();
+
+        const child = container.querySelector('div')!;
+        expect(child).not.toBeNull();
+        expect(child.style.display).toBe('none');
+
+        visible.set(true);
+        await tick();
+        expect(child.style.display).toBe('');
+      });
     });
   });
 

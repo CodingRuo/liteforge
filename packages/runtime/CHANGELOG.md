@@ -1,5 +1,26 @@
 # @liteforge/runtime
 
+## 0.8.0
+
+### Minor Changes
+
+- feat(runtime): add `keepAlive` prop to `Show` component
+
+  When `keepAlive` is set, `Show` hides the child via `display: none` instead of
+  removing it from the DOM. Reactive effects inside the child stay alive across
+  toggle cycles — the child node is rendered once on first mount and never
+  destroyed.
+
+  ```tsx
+  <Show when={() => isOpen()} keepAlive>
+    {() => <LivePanel />}
+  </Show>
+  ```
+
+  Use this when the child has expensive reactive state (live signal subscriptions,
+  polling effects, open WebSocket bindings) that should keep running while hidden.
+  Note: `fallback` is ignored in `keepAlive` mode.
+
 ## 0.7.4
 
 ### Patch Changes

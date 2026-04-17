@@ -6,7 +6,7 @@
  *             Loading, error, caching — all managed by @liteforge/query automatically.
  */
 
-import { createComponent } from 'liteforge';
+import { defineComponent } from 'liteforge';
 import { createClient, ApiError, useQueryClient } from 'liteforge/client';
 import type { RequestConfig, ResponseContext } from 'liteforge/client';
 import type { QueryApi } from 'liteforge/query';
@@ -33,7 +33,7 @@ interface Todo {
 // Component
 // ============================================================================
 
-export const ClientPage = createComponent({
+export const ClientPage = defineComponent({
   name: 'ClientPage',
 
   setup({ use }) {

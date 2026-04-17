@@ -1,11 +1,11 @@
 ---
-title: "createRouter"
+title: "defineRouter"
 category: "router"
-tags: ["router", "createRouter", "navigate", "history", "guards", "middleware"]
+tags: ["router", "defineRouter", "navigate", "history", "guards", "middleware"]
 related: ["Route Definition", "Navigation", "Context"]
 ---
 
-# createRouter
+# defineRouter
 
 > Client-side router with signals, guards, middleware, nested routes, and lazy loading.
 
@@ -18,12 +18,12 @@ npm install @liteforge/router
 ## Quick Start
 
 ```ts
-import { createRouter, createBrowserHistory } from '@liteforge/router'
+import { defineRouter, createBrowserHistory } from '@liteforge/router'
 import { routerPlugin } from '@liteforge/router'
-import { createApp } from '@liteforge/runtime'
+import { defineApp } from '@liteforge/runtime'
 import { Home, About, UserDetail } from './pages'
 
-const router = createRouter({
+const router = defineRouter({
   history: createBrowserHistory(),
   routes: [
     { path: '/', component: Home },
@@ -32,13 +32,13 @@ const router = createRouter({
   ],
 })
 
-await createApp({ root: App, target: '#app' })
+await defineApp({ root: App, target: '#app' })
   .use(routerPlugin(router))
 ```
 
 ## API Reference
 
-### `createRouter<T>(options)` → `Router<T>`
+### `defineRouter<T>(options)` → `Router<T>`
 
 **Options (`RouterOptions`):**
 
@@ -87,7 +87,7 @@ await createApp({ root: App, target: '#app' })
 ### Typed navigation with `as const`
 
 ```ts
-const router = createRouter({
+const router = defineRouter({
   routes: [
     { path: '/' },
     { path: '/users/:id' },
@@ -141,11 +141,11 @@ router.beforeEach(async ({ to, from }) => {
 
 By default (`initialNavigation: true`), the router runs the full guard + middleware pipeline for the **current URL** before the app mounts. This prevents authenticated routes from rendering without an auth check on hard reload.
 
-When using `routerPlugin`, `createApp().mount()` awaits `isReady` internally — no extra code needed:
+When using `routerPlugin`, `defineApp().mount()` awaits `isReady` internally — no extra code needed:
 
 ```ts
 // Guards run before App renders — auth redirect happens before any component mounts
-await createApp({ root: App, target: '#app' })
+await defineApp({ root: App, target: '#app' })
   .use(routerPlugin(router))
   .mount()
 ```
@@ -155,7 +155,7 @@ If a guard redirects on the initial load, the URL is replaced and the redirect t
 To skip guards on the initial load (rare — only for apps that handle auth differently):
 
 ```ts
-createRouter({ routes, initialNavigation: false })
+defineRouter({ routes, initialNavigation: false })
 ```
 
 ## Notes

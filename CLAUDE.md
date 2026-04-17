@@ -15,7 +15,11 @@
 - **Signals-based Reactivity** — Automatic dependency tracking, no manual subscriptions
 - **Zero Dependencies** — Every package has zero external runtime deps (only peer deps on core)
 - **TypeScript-first** — Full strict mode, no `any` in public APIs
-- **Object-style APIs** — All `create*` functions take an options object, no positional args
+- **Object-style APIs** — All public functions take an options object, no positional args
+- **Naming convention — `define*` vs `create*`:**
+  - `define*` = **Spec/Declaration** — describes something statically, no live side-effects at call time (e.g. `defineComponent`, `defineRouter`, `defineApp`, `defineStore`)
+  - `create*` = **Live Instance** — allocates runtime state, signals, or DOM resources at call time (e.g. `createQuery`, `createForm`, `createTable`, `createCalendar`, `createFlow`, `createClient`, `createModal`, `createMutation`, `createResource`, `createErrorBoundary`, `createThemeStore`, `createDevTools`)
+  - **Rule:** If the return value holds live signals or DOM state → `create*`. If it is a reusable blueprint passed to a runtime → `define*`.
 
 **Tech Stack:** TypeScript, Vite, JSX, pnpm monorepo.
 
@@ -24,7 +28,7 @@
 ## Architecture Rules — NEVER break these
 
 1. Use ONLY `signal()`, `effect()`, `computed()` from `@liteforge/core` for reactivity
-2. No classes in public APIs — use factory functions (`createX` pattern)
+2. No classes in public APIs — use factory functions (`defineX` or `createX`, see naming convention above)
 3. No `any` types in public APIs — full TypeScript generics with strict mode
 4. No external runtime dependencies — only `@liteforge/core` as peer dependency
 5. All date operations use native `Date` + `Intl.DateTimeFormat` — NO date-fns/dayjs/moment
@@ -61,7 +65,7 @@ Build order follows this graph. `pnpm -r build` handles it automatically.
 | Package | Version | Size (gzip) | Tests | Description |
 |---------|---------|-------------|-------|-------------|
 | `@liteforge/core` | 0.1.0 | ~6kb | ~120 | signal, computed, effect, batch, onCleanup |
-| `@liteforge/runtime` | 0.1.0 | ~12kb | ~200 | createComponent, createApp, use(), Show, For, Switch |
+| `@liteforge/runtime` | 0.1.0 | ~12kb | ~200 | defineComponent, defineApp, use(), Show, For, Switch |
 | `@liteforge/store` | 0.1.0 | ~5kb | ~150 | defineStore, storeRegistry, plugins, time-travel |
 | `@liteforge/router` | 0.1.0 | ~20kb | ~250 | Router, guards, middleware, nested routes, lazy loading |
 | `@liteforge/query` | 0.1.0 | ~5kb | 67 | createQuery, createMutation, queryCache |
@@ -159,7 +163,7 @@ batch(() => {               // deferred notifications
 ### `@liteforge/runtime` — Components & DOM
 
 ```tsx
-export const MyComponent = createComponent({
+export const MyComponent = defineComponent({
   setup({ props, use }) {
     const editMode = signal(false)
     return { editMode }
@@ -210,7 +214,7 @@ const userStore = defineStore('users', {
 ### `@liteforge/router` — Routing
 
 ```ts
-const router = createRouter({
+const router = defineRouter({
   routes: [
     { path: '/', component: Home },
     { path: '/users/:id', component: UserDetail, guard: 'auth' },

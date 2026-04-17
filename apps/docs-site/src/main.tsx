@@ -1,5 +1,5 @@
-import { createApp } from 'liteforge';
-import { createBrowserHistory, createRouter } from '@liteforge/router';
+import { defineApp } from 'liteforge';
+import { createBrowserHistory, defineRouter } from '@liteforge/router';
 import { modalPlugin } from '@liteforge/modal';
 import { toastPlugin } from '@liteforge/toast';
 import { i18nPlugin } from '@liteforge/i18n';
@@ -17,13 +17,13 @@ type GlobFn = (pattern: string, opts?: { eager?: boolean }) => Record<string, ()
 const locales = ((import.meta as unknown as { glob: GlobFn }).glob)('./locales/*.ts');
 
 const history = createBrowserHistory();
-const router = createRouter({
+const router = defineRouter({
   routes,
   history,
   titleTemplate: (title) => title ?? 'LiteForge Docs',
 });
 
-await createApp({ root: App, target: '#app', router })
+await defineApp({ root: App, target: '#app', router })
   .use(i18nPlugin({
     defaultLocale: 'en',
     locales,

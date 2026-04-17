@@ -5,7 +5,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { h, Fragment } from '../src/h.js';
 import { signal } from '@liteforge/core';
-import { createComponent } from '../src/component.js';
+import { defineComponent } from '../src/component.js';
 import { initAppContext, clearContext } from '../src/context.js';
 
 // =============================================================================
@@ -324,8 +324,8 @@ describe('h() - Function Components', () => {
 // =============================================================================
 
 describe('h() - LiteForge Components', () => {
-  it('renders createComponent factory', () => {
-    const MyComponent = createComponent({
+  it('renders defineComponent factory', () => {
+    const MyComponent = defineComponent({
       props: {
         name: { type: String, default: 'Guest' },
       },

@@ -41,7 +41,7 @@ export function use<T = unknown>(key: string): T {
     }
   }
 
-  throw new Error(`Context key "${key}" not found. Make sure it's provided in createApp() or a parent component's provide().`);
+  throw new Error(`Context key "${key}" not found. Make sure it's provided in defineApp() or a parent component's provide().`);
 }
 
 /**
@@ -61,7 +61,7 @@ export function hasContext(key: string): boolean {
 }
 
 // ============================================================================
-// Internal API (used by createComponent and createApp)
+// Internal API (used by defineComponent and defineApp)
 // ============================================================================
 
 /**
@@ -84,7 +84,7 @@ export function popContext(): void {
 
 /**
  * Initialize the app-level context (bottom of stack).
- * Should only be called once by createApp().
+ * Should only be called once by defineApp().
  *
  * @param values - The app-level context values
  */

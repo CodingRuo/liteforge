@@ -25,10 +25,10 @@ npm install @liteforge/client @liteforge/query
 The recommended approach — registers the client as an app plugin, available via `use('client')` in every component:
 
 ```ts
-import { createApp } from 'liteforge'
+import { defineApp } from 'liteforge'
 import { clientPlugin, queryIntegration } from '@liteforge/client'
 
-createApp({ root: App, target: '#app' })
+defineApp({ root: App, target: '#app' })
   .use(clientPlugin({
     baseUrl: 'https://api.example.com',
     headers: { 'X-App-Version': '1.0.0' },

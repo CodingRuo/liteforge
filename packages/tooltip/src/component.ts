@@ -6,12 +6,12 @@ export interface TooltipProps extends TooltipOptions {
 }
 
 /**
- * Plain factory function (not createComponent) that wraps a child element
+ * Plain factory function (not defineComponent) that wraps a child element
  * with tooltip behaviour. The child is attached to a `display: contents` span
  * so layout is unaffected. Tooltip is attached to the first HTMLElement child.
  *
  * Cleanup: call the returned cleanup fn from onCleanup() when used inside
- * createComponent, or rely on GC when used in short-lived contexts.
+ * defineComponent, or rely on GC when used in short-lived contexts.
  */
 export function Tooltip(props: TooltipProps): Node {
   const wrapper = document.createElement('span');

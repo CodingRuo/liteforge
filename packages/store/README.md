@@ -133,7 +133,7 @@ const loggerPlugin = defineStorePlugin({
 })
 
 // Register when creating app
-createApp({
+defineApp({
   plugins: [loggerPlugin]
 })
 ```

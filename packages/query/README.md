@@ -175,11 +175,11 @@ queryCache.has('users')
 ## Usage in Components
 
 ```tsx
-import { createComponent } from '@liteforge/runtime'
+import { defineComponent } from '@liteforge/runtime'
 import { createQuery } from '@liteforge/query'
 import { Show, For } from '@liteforge/runtime'
 
-const UserList = createComponent({
+const UserList = defineComponent({
   component: () => {
     const users = createQuery({
       key: 'users',
@@ -223,7 +223,7 @@ const UserList = createComponent({
 - Edit forms (pre-fill existing record)
 
 ```ts
-createComponent({
+defineComponent({
   async load({ props }) {
     const customer = await client.get(`/customers/${props.id}`)
     return { customer }
@@ -242,7 +242,7 @@ createComponent({
 - Dashboard aggregations
 
 ```ts
-createComponent({
+defineComponent({
   setup() {
     const customers = createQuery({
       key: 'customers',

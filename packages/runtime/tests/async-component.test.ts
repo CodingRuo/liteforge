@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
-  createComponent,
+  defineComponent,
   initAppContext,
   clearContext,
 } from '../src/index.js';
@@ -26,7 +26,7 @@ describe('async component loading', () => {
         resolveLoad = resolve;
       });
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         load: async () => {
           await loadPromise;
           return { data: 'loaded' };
@@ -57,7 +57,7 @@ describe('async component loading', () => {
         resolveLoad = resolve;
       });
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         load: async () => {
           await loadPromise;
           return {};
@@ -82,7 +82,7 @@ describe('async component loading', () => {
     it('should pass props and setup to load', async () => {
       const loadSpy = vi.fn().mockResolvedValue({ result: 'data' });
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         setup: ({ props }) => ({ doubled: (props.count as number) * 2 }),
         load: loadSpy,
         component: () => document.createTextNode('Loaded'),
@@ -106,7 +106,7 @@ describe('async component loading', () => {
 
       let capturedUrl: string | undefined;
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         load: async ({ use }) => {
           capturedUrl = use('apiUrl');
           return {};
@@ -123,7 +123,7 @@ describe('async component loading', () => {
     });
 
     it('should guarantee data in component function', async () => {
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         load: async () => ({ user: { name: 'John' } }),
         component: ({ data }) => {
           // data.user is guaranteed to exist - no null checks needed
@@ -142,7 +142,7 @@ describe('async component loading', () => {
 
   describe('error handling', () => {
     it('should show error component on load failure', async () => {
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         load: async () => {
           throw new Error('Network error');
         },
@@ -164,7 +164,7 @@ describe('async component loading', () => {
     });
 
     it('should show default error text without error component', async () => {
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         load: async () => {
           throw new Error('Something went wrong');
         },
@@ -182,7 +182,7 @@ describe('async component loading', () => {
     it('should provide retry function in error', async () => {
       let loadAttempts = 0;
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         load: async () => {
           loadAttempts++;
           if (loadAttempts < 2) {
@@ -224,7 +224,7 @@ describe('async component loading', () => {
     });
 
     it('should convert non-Error throws to Error', async () => {
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         load: async () => {
           throw 'string error';
         },
@@ -250,7 +250,7 @@ describe('async component loading', () => {
 
       const componentSpy = vi.fn(() => document.createTextNode('Loaded'));
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         load: async () => {
           await loadPromise;
           return {};
@@ -276,7 +276,7 @@ describe('async component loading', () => {
     it('should not render error if unmounted during load', async () => {
       const errorSpy = vi.fn(() => document.createTextNode('Error'));
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         load: async () => {
           throw new Error('Failed');
         },
@@ -301,7 +301,7 @@ describe('async component loading', () => {
     it('should call mounted only after load completes', async () => {
       const mountedSpy = vi.fn();
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         load: async () => {
           await new Promise((r) => setTimeout(r, 10));
           return { loaded: true };
@@ -336,7 +336,7 @@ describe('async component loading', () => {
       let capturedConfig: { theme: string; locale: string } | undefined;
       let capturedVersion: string | undefined;
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         setup: ({ use }) => {
           // use() is passed via args for consistent API across all lifecycle methods
           capturedConfig = use('config');
@@ -367,7 +367,7 @@ describe('async component loading', () => {
       let capturedAppName: string | undefined;
       let capturedAnalytics: { track: ReturnType<typeof vi.fn> } | undefined;
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         load: async () => {
           await new Promise((r) => setTimeout(r, 5));
           return { data: 'loaded' };

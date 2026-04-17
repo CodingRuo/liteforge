@@ -1,4 +1,4 @@
-import { createComponent, use } from 'liteforge';
+import { defineComponent, use } from 'liteforge';
 import { Link } from '@liteforge/router';
 import { DocSection } from '../../components/DocSection.js';
 import { CodeBlock } from '../../components/CodeBlock.js';
@@ -19,7 +19,7 @@ import {
 } from './snippets.js';
 import { getOptionsApi, getEventApi, getResultApi } from './api.js';
 
-export const CalendarPage = createComponent({
+export const CalendarPage = defineComponent({
   name: 'CalendarPage',
   component() {
     const { t } = use('i18n');

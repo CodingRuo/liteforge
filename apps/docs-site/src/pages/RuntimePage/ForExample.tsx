@@ -1,7 +1,7 @@
-import { createComponent, signal, effect } from 'liteforge';
+import { defineComponent, signal, effect } from 'liteforge';
 import { inputClass } from '../../components/Input.js';
 
-export const ForExample = createComponent({
+export const ForExample = defineComponent({
   name: 'ForExample',
   component() {
     const items = signal(['Appointments', 'Patients', 'Invoices']);

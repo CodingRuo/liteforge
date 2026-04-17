@@ -1,4 +1,4 @@
-import { createComponent, Show, Switch, Match } from 'liteforge';
+import { defineComponent, Show, Switch, Match } from 'liteforge';
 import type { Signal } from 'liteforge';
 import type { BenchStatus } from './bench-utils';
 
@@ -9,7 +9,7 @@ interface BenchmarkCardProps {
   children?: Node | Node[];
 }
 
-const StatusBadge = createComponent<{ status: Signal<BenchStatus> }>({
+const StatusBadge = defineComponent<{ status: Signal<BenchStatus> }>({
   name: 'StatusBadge',
   component({ props }) {
     return (
@@ -55,7 +55,7 @@ const StatusBadge = createComponent<{ status: Signal<BenchStatus> }>({
   },
 });
 
-export const BenchmarkCard = createComponent<BenchmarkCardProps>({
+export const BenchmarkCard = defineComponent<BenchmarkCardProps>({
   name: 'BenchmarkCard',
   component({ props }) {
     return (
@@ -90,7 +90,7 @@ interface ConfigSelectProps<T extends number | string> {
 
 let selectIdCounter = 0;
 
-export const ConfigSelect = createComponent<ConfigSelectProps<number>>({
+export const ConfigSelect = defineComponent<ConfigSelectProps<number>>({
   name: 'ConfigSelect',
   component({ props }) {
     const formatFn = props.formatOption ?? ((n: number) => n.toLocaleString());
@@ -128,7 +128,7 @@ interface RunButtonProps {
   children?: Node | string;
 }
 
-export const RunButton = createComponent<RunButtonProps>({
+export const RunButton = defineComponent<RunButtonProps>({
   name: 'RunButton',
   component({ props }) {
     const isDisabled = typeof props.disabled === 'function' 
@@ -160,7 +160,7 @@ interface ResultsTableProps {
   rows: Signal<string[][]>;
 }
 
-export const ResultsTable = createComponent<ResultsTableProps>({
+export const ResultsTable = defineComponent<ResultsTableProps>({
   name: 'ResultsTable',
   component({ props }) {
     return (

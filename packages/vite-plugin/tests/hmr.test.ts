@@ -109,7 +109,7 @@ describe('hasHmrAcceptance', () => {
 
 describe('injectHmrIds', () => {
   it('injects __hmrId for named export const', () => {
-    const code = `export const MyComponent = createComponent({
+    const code = `export const MyComponent = defineComponent({
   name: 'MyComponent',
   component() { return null; }
 });`;
@@ -118,7 +118,7 @@ describe('injectHmrIds', () => {
   });
 
   it('injects __hmrId for named export let', () => {
-    const code = `export let MyComponent = createComponent({
+    const code = `export let MyComponent = defineComponent({
   name: 'MyComponent',
 });`;
     const result = injectHmrIds(code, '/src/MyComponent.tsx');
@@ -126,7 +126,7 @@ describe('injectHmrIds', () => {
   });
 
   it('injects __hmrId for local const (non-exported)', () => {
-    const code = `const LocalComponent = createComponent({
+    const code = `const LocalComponent = defineComponent({
   name: 'Local',
 });`;
     const result = injectHmrIds(code, '/src/Local.tsx');
@@ -134,7 +134,7 @@ describe('injectHmrIds', () => {
   });
 
   it('injects __hmrId for export default', () => {
-    const code = `export default createComponent({
+    const code = `export default defineComponent({
   name: 'Default',
 });`;
     const result = injectHmrIds(code, '/src/Default.tsx');
@@ -143,11 +143,11 @@ describe('injectHmrIds', () => {
 
   it('handles multiple components in one file', () => {
     const code = `
-export const First = createComponent({
+export const First = defineComponent({
   name: 'First',
 });
 
-export const Second = createComponent({
+export const Second = defineComponent({
   name: 'Second',
 });
 `;
@@ -167,14 +167,14 @@ export const config = { key: 'value' };
   });
 
   it('normalizes Windows paths', () => {
-    const code = `export const MyComp = createComponent({ name: 'MyComp' });`;
+    const code = `export const MyComp = defineComponent({ name: 'MyComp' });`;
     const result = injectHmrIds(code, 'C:\\Users\\dev\\src\\MyComp.tsx');
     expect(result).toContain('C:/Users/dev/src/MyComp.tsx::MyComp');
     expect(result).not.toContain('\\');
   });
 
   it('preserves existing component structure', () => {
-    const code = `export const App = createComponent({
+    const code = `export const App = defineComponent({
   name: 'App',
   setup() { return { count: signal(0) }; },
   component({ setup }) { return <div>{setup.count()}</div>; },

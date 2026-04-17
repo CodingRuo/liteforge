@@ -2,7 +2,7 @@
 title: "Vite Plugin"
 category: "vite-plugin"
 tags: ["vite-plugin", "jsx", "transform", "hmr", "getter-wrap", "event-handler"]
-related: ["JSX", "Installation", "createComponent"]
+related: ["JSX", "Installation", "defineComponent"]
 ---
 
 # Vite Plugin
@@ -44,7 +44,7 @@ The default export. Creates a Vite plugin instance.
 
 1. **JSX transform** — Compiles JSX to `h()` calls. Reactive expressions are wrapped in getter functions `() => ...`. Event handlers and component calls are never wrapped.
 2. **Signal-safe getters** — Any JSX attribute value that reads a signal is automatically wrapped in `() => expr` so the DOM tracks reactivity correctly.
-3. **HMR injection** — In dev mode, injects `__hmrId` into every `createComponent()` call and appends `import.meta.hot.accept()` code. On module update, the component registry is refreshed and `fullRerender()` rebuilds the app.
+3. **HMR injection** — In dev mode, injects `__hmrId` into every `defineComponent()` call and appends `import.meta.hot.accept()` code. On module update, the component registry is refreshed and `fullRerender()` rebuilds the app.
 
 ### Event handler detection
 
@@ -72,7 +72,7 @@ Component calls like `table.Root()` or `calendar.Toolbar()` in JSX children are 
 | `isComponent(name)` | Check if a tag name is a component (uppercase) |
 | `transform(code, options, isDev)` | Transform a code string |
 | `transformCode(code, id, options)` | Transform with file ID |
-| `injectHmrIds(code, id)` | Inject `__hmrId` into `createComponent()` calls |
+| `injectHmrIds(code, id)` | Inject `__hmrId` into `defineComponent()` calls |
 | `analyzeElement(node)` | Analyze a JSX element for template extraction |
 | `compileTemplate(element)` | Compile a static template |
 

@@ -1,7 +1,7 @@
-import { createComponent, signal, effect } from 'liteforge';
+import { defineComponent, signal, effect } from 'liteforge';
 import { btnClass } from '../../components/Button.js';
 
-export const ToggleExample = createComponent({
+export const ToggleExample = defineComponent({
   name: 'ToggleExample',
   component() {
     const open = signal(false);

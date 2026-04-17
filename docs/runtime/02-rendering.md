@@ -2,7 +2,7 @@
 title: "Rendering"
 category: "runtime"
 tags: ["rendering", "dom", "template", "insert", "setProp", "h"]
-related: ["JSX", "createComponent", "Context"]
+related: ["JSX", "defineComponent", "Context"]
 ---
 
 # Rendering

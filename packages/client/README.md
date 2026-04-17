@@ -25,11 +25,11 @@ npm install @liteforge/client @liteforge/query
 The recommended approach registers the client as an app plugin, making it available via `use('client')` in every component:
 
 ```ts
-import { createApp } from 'liteforge'
+import { defineApp } from 'liteforge'
 import { clientPlugin } from '@liteforge/client'
 import { App } from './App'
 
-createApp({ root: App, target: '#app' })
+defineApp({ root: App, target: '#app' })
   .use(clientPlugin({
     baseUrl: 'https://api.example.com',
     headers: { 'X-App-Version': '1.0.0' },
@@ -46,7 +46,7 @@ Pass `query: queryIntegration()` to unlock reactive `use*` methods on every reso
 ```ts
 import { clientPlugin, queryIntegration } from '@liteforge/client'
 
-createApp({ root: App, target: '#app' })
+defineApp({ root: App, target: '#app' })
   .use(clientPlugin({
     baseUrl: '/api',
     query: queryIntegration(),
@@ -142,10 +142,10 @@ const adminUsers = api.resource<User>('users', {
 When `clientPlugin` is configured with `query: queryIntegration()`, `resource()` returns a `QueryResource` with reactive signal-based methods:
 
 ```ts
-import { createComponent, use } from 'liteforge'
+import { defineComponent, use } from 'liteforge'
 import { useQueryClient } from '@liteforge/client'
 
-export const UserList = createComponent({
+export const UserList = defineComponent({
   setup() {
     const client = useQueryClient()
     const users = client.resource<User, NewUser>('users')

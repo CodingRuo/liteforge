@@ -1,4 +1,4 @@
-import { createComponent } from 'liteforge';
+import { defineComponent } from 'liteforge';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'neutral' | 'ghost' | 'danger';
 export type ButtonSize = 'sm' | 'md';
@@ -36,7 +36,7 @@ export function btnClass(variant: ButtonVariant = 'secondary', size: ButtonSize 
   return [BTN_BASE, VARIANT_CLASSES[variant], SIZE_CLASSES[size], extra].filter(Boolean).join(' ');
 }
 
-export const Button = createComponent<ButtonProps>({
+export const Button = defineComponent<ButtonProps>({
   name: 'Button',
   component({ props }) {
     const variant  = props.variant  ?? 'secondary';

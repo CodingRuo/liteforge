@@ -1,7 +1,7 @@
 // No imports — pure string constants
 
 // Use variable to prevent vite-plugin HMR transform from injecting __hmrId into demo strings
-const _cc = 'createComponent';
+const _cc = 'defineComponent';
 
 export const COMPONENT_CODE = `import { ${_cc} } from 'liteforge';
 import { signal } from 'liteforge';
@@ -97,7 +97,7 @@ const MyPage = ${_cc}({
 });
 
 // Register plugins once in main.ts:
-await createApp({ root: App, target: '#app' })
+await defineApp({ root: App, target: '#app' })
   .use(routerPlugin({ routes }))
   .use(modalPlugin())
   .mount();`;

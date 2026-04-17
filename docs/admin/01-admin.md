@@ -2,7 +2,7 @@
 title: "Admin"
 category: "admin"
 tags: ["admin", "defineResource", "defineDashboard", "AdminLayout", "DataTable", "ResourceForm"]
-related: ["createTable", "createForm", "createRouter"]
+related: ["createTable", "createForm", "defineRouter"]
 ---
 
 # Admin
@@ -19,8 +19,8 @@ npm install @liteforge/admin
 
 ```ts
 import { defineResource, buildAdminRoutes, adminPlugin } from '@liteforge/admin'
-import { createApp } from '@liteforge/runtime'
-import { createRouter, createBrowserHistory } from '@liteforge/router'
+import { defineApp } from '@liteforge/runtime'
+import { defineRouter, createBrowserHistory } from '@liteforge/router'
 import { z } from 'zod'
 
 const userResource = defineResource({
@@ -49,9 +49,9 @@ const userResource = defineResource({
 })
 
 const adminRoutes = buildAdminRoutes([userResource])
-const router = createRouter({ history: createBrowserHistory(), routes: adminRoutes })
+const router = defineRouter({ history: createBrowserHistory(), routes: adminRoutes })
 
-await createApp({ root: App, target: '#app' })
+await defineApp({ root: App, target: '#app' })
   .use(routerPlugin(router))
   .use(adminPlugin())
 ```

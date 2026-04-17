@@ -2,7 +2,7 @@
 title: "JSX"
 category: "core"
 tags: ["jsx", "tsx", "h", "Fragment", "Show", "For", "Switch", "Match", "Dynamic"]
-related: ["Signals", "createComponent", "Vite Plugin"]
+related: ["Signals", "defineComponent", "Vite Plugin"]
 ---
 
 # JSX

@@ -15,7 +15,7 @@ export function hasTitleOverride(): boolean {
 }
 
 /**
- * Called by createRouter when titleTemplate is provided.
+ * Called by defineRouter when titleTemplate is provided.
  * Returns a dispose function for cleanup.
  */
 export function setupTitleEffect(

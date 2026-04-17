@@ -16,15 +16,15 @@ Peer dependency: `@liteforge/core >= 0.1.0`
 
 ## API
 
-### createApp
+### defineApp
 
 Creates and mounts a LiteForge application.
 
 ```tsx
-import { createApp } from '@liteforge/runtime'
+import { defineApp } from '@liteforge/runtime'
 import { App } from './App'
 
-const app = createApp({
+const app = defineApp({
   root: '#app',          // CSS selector or HTMLElement
   router: myRouter,      // Optional: router instance
   stores: [userStore],   // Optional: stores to register
@@ -34,15 +34,15 @@ const app = createApp({
 app.mount(App)
 ```
 
-### createComponent
+### defineComponent
 
 Creates a component with lifecycle hooks and async data loading.
 
 ```tsx
-import { createComponent } from '@liteforge/runtime'
+import { defineComponent } from '@liteforge/runtime'
 import { signal } from '@liteforge/core'
 
-const UserProfile = createComponent({
+const UserProfile = defineComponent({
   // Define props with validation
   props: {
     userId: { type: String, required: true },
@@ -103,7 +103,7 @@ Access registered services, stores, and the router.
 import { use } from '@liteforge/runtime'
 
 // Inside a component
-const MyComponent = createComponent({
+const MyComponent = defineComponent({
   component: () => {
     const router = use('router')
     const userStore = use('users')

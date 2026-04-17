@@ -1,5 +1,5 @@
 // Use variable to prevent vite-plugin HMR transform from injecting __hmrId into demo strings
-const _cc = 'createComponent';
+const _cc = 'defineComponent';
 
 export const QUICKSTART = `import { signal, computed } from 'liteforge';
 import { ${_cc} } from 'liteforge';

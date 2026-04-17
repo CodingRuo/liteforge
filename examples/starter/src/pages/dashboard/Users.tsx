@@ -11,7 +11,7 @@
  */
 
 import { signal, computed } from 'liteforge';
-import { createComponent, For, Show } from 'liteforge';
+import { defineComponent, For, Show } from 'liteforge';
 
 // =============================================================================
 // Types
@@ -50,7 +50,7 @@ async function fetchUsers(): Promise<User[]> {
 // Component
 // =============================================================================
 
-export const UsersPage = createComponent({
+export const UsersPage = defineComponent({
   name: 'UsersPage',
   setup() {
     const searchQuery = signal('');
@@ -157,3 +157,4 @@ export const UsersPage = createComponent({
     );
   },
 });
+

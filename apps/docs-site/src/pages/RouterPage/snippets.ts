@@ -1,13 +1,13 @@
 // No imports — pure string constants
 
 // Prevent vite-plugin HMR transform from injecting __hmrId into demo strings
-const _cc = 'createComponent';
+const _cc = 'defineComponent';
 
-export const SETUP_CODE = `import { createRouter, createBrowserHistory } from '@liteforge/router';
-import { createApp } from 'liteforge';
+export const SETUP_CODE = `import { defineRouter, createBrowserHistory } from '@liteforge/router';
+import { defineApp } from 'liteforge';
 import { App } from './App';
 
-const router = createRouter({
+const router = defineRouter({
   history: createBrowserHistory(),
   routes: [
     { path: '/',          component: HomePage },
@@ -17,7 +17,7 @@ const router = createRouter({
   ],
 });
 
-await createApp({ root: App, target: '#app', router });`;
+await defineApp({ root: App, target: '#app', router });`;
 
 export const NESTED_CODE = `{
   path: '/dashboard',
@@ -136,7 +136,7 @@ const titleMiddleware = defineMiddleware('title', async (ctx, next) => {
   document.title = title;
 });
 
-const router = createRouter({
+const router = defineRouter({
   routes,
   history: createBrowserHistory(),
   middleware: [titleMiddleware],
@@ -149,7 +149,7 @@ const routes = [
   { path: '/patients/:id', component: PatientDetail },
 ] as const
 
-const router = createRouter({ routes, history })
+const router = defineRouter({ routes, history })
 
 // ✓ Valid paths
 router.navigate('/')
@@ -174,7 +174,7 @@ router.navigate('/search/:query', { query: 'hello world' })
 import type { FillParams, ExtractRoutePaths, TypedNavigationTarget, ExtractParamPaths } from '@liteforge/router';`;
 
 export const VIEW_TRANSITIONS_CODE = `// Option 1 — Native View Transitions API (CSS-driven, browser-native)
-const router = createRouter({
+const router = defineRouter({
   routes,
   history,
   useViewTransitions: true,   // wraps DOM commit in document.startViewTransition()
@@ -185,7 +185,7 @@ const router = createRouter({
 // ::view-transition-new(root) { animation: fade-in  150ms ease; }
 
 // Option 2 — Custom hooks (JS-driven, full control)
-const router = createRouter({
+const router = defineRouter({
   routes,
   history,
   transitions: {
@@ -201,7 +201,7 @@ const router = createRouter({
 // ctx carries: { to: Location, from: Location | null, direction: 'forward' | 'replace' }
 
 // Option 3 — Both together (hooks fire around the view transition)
-const router = createRouter({
+const router = defineRouter({
   routes,
   history,
   useViewTransitions: true,

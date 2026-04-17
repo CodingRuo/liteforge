@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { createRouter, createMemoryHistory } from '../src/index.js';
+import { defineRouter, createMemoryHistory } from '../src/index.js';
 import type { Router, TransitionHooks } from '../src/types.js';
 
 // =============================================================================
@@ -12,7 +12,7 @@ function createTestRouter(
     useViewTransitions?: boolean;
   } = {}
 ): Router {
-  return createRouter({
+  return defineRouter({
     routes: [
       { path: '/', name: 'home', component: () => document.createElement('div') },
       { path: '/about', name: 'about', component: () => document.createElement('div') },
@@ -132,7 +132,7 @@ describe('transition hooks', () => {
   it('does not call transition hooks on blocked navigation', async () => {
     const hookCalled = vi.fn();
 
-    router = createRouter({
+    router = defineRouter({
       routes: [
         { path: '/', component: () => document.createElement('div') },
         { path: '/blocked', component: () => document.createElement('div') },

@@ -1,12 +1,12 @@
 // No imports — pure string constants
 
-export const MINIMAL_CODE = `import { createApp } from 'liteforge';
+export const MINIMAL_CODE = `import { defineApp } from 'liteforge';
 import { App } from './App.js';
 
 // Minimal bootstrap — no plugins
-await createApp({ root: App, target: '#app' });`;
+await defineApp({ root: App, target: '#app' });`;
 
-export const FULL_CODE = `import { createApp } from 'liteforge';
+export const FULL_CODE = `import { defineApp } from 'liteforge';
 import { routerPlugin } from '@liteforge/router';
 import { queryPlugin } from '@liteforge/query';
 import { clientPlugin, queryIntegration } from '@liteforge/client';
@@ -18,7 +18,7 @@ import { App } from './App.js';
 import { router } from './router.js';
 import { authStore, uiStore } from './stores/index.js';
 
-const app = await createApp({
+const app = await defineApp({
   root: App,
   target: '#app',
 
@@ -69,9 +69,9 @@ declare module 'liteforge' {
   }
 }`;
 
-export const USE_CODE = `import { createComponent } from 'liteforge';
+export const USE_CODE = `import { defineComponent } from 'liteforge';
 
-export const MyComponent = createComponent({
+export const MyComponent = defineComponent({
   name: 'MyComponent',
   setup({ use }) {
     // Access any registered plugin value by key
@@ -87,7 +87,7 @@ export const MyComponent = createComponent({
 });`;
 
 export const CONTEXT_CODE = `// Provide values at app level — available in all components
-const app = await createApp({
+const app = await defineApp({
   root: App,
   target: '#app',
   context: {
@@ -102,13 +102,13 @@ setup({ use }) {
   return { flags };
 }`;
 
-export const STORES_CODE = `// Stores passed to createApp() are initialized before any component mounts.
+export const STORES_CODE = `// Stores passed to defineApp() are initialized before any component mounts.
 // Components that call use() or defineStore() get the same singleton instance.
 
 import { authStore } from './stores/auth.js';
 import { uiStore }   from './stores/ui.js';
 
-await createApp({
+await defineApp({
   root: App,
   target: '#app',
   stores: [authStore, uiStore],  // initialized in order
@@ -121,7 +121,7 @@ setup({ use }) {
 }`;
 
 export const DEBUG_CODE = `// debug: true → exposes window.$lf in the browser console
-await createApp({ root: App, target: '#app', debug: true });
+await defineApp({ root: App, target: '#app', debug: true });
 
 // In DevTools console:
 $lf.stores        // all registered stores by name
@@ -138,22 +138,22 @@ $lf.unmount()     // unmount the app programmatically
 })))`;
 
 export const THENABLE_CODE = `// AppBuilder is Thenable — top-level await works directly:
-const app = await createApp({ root: App, target: '#app' }).use(routerPlugin(r)).mount();
+const app = await defineApp({ root: App, target: '#app' }).use(routerPlugin(r)).mount();
 
 // Or with .then() / .catch():
-createApp({ root: App, target: '#app' })
+defineApp({ root: App, target: '#app' })
   .use(routerPlugin(r))
   .mount()
   .then(app => console.log('mounted', app))
   .catch(err => console.error('boot failed', err));
 
 // Chaining .use() after .mount() throws — all plugins must be registered first
-const builder = createApp({ ... });
+const builder = defineApp({ ... });
 builder.mount();      // starts mount
 builder.use(plugin);  // ← throws: cannot add plugin after mount()`;
 
 export const DESTROY_CODE = `// app.unmount() unmounts the component tree and calls all plugin cleanups
-const app = await createApp({ root: App, target: '#app' })
+const app = await defineApp({ root: App, target: '#app' })
   .use(routerPlugin(r))
   .mount();
 

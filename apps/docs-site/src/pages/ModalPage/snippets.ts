@@ -5,7 +5,7 @@ import { ModalProvider } from '@liteforge/modal';
 
 document.body.appendChild(ModalProvider());
 
-await createApp({ root: App, target: '#app', router });`;
+await defineApp({ root: App, target: '#app', router });`;
 
 export const BASIC_CODE = `import { createModal } from '@liteforge/modal';
 

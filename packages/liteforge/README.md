@@ -38,17 +38,17 @@ export default defineConfig({
 
 **`src/main.tsx`**
 ```tsx
-import { createApp } from 'liteforge'
+import { defineApp } from 'liteforge'
 import { App } from './App'
 
-createApp({ root: App, target: '#app' }).mount()
+defineApp({ root: App, target: '#app' }).mount()
 ```
 
 **`src/App.tsx`**
 ```tsx
-import { createComponent, signal, Show } from 'liteforge'
+import { defineComponent, signal, Show } from 'liteforge'
 
-export const App = createComponent({
+export const App = defineComponent({
   component() {
     const count = signal(0)
     return (
@@ -93,9 +93,9 @@ onCleanup(() => {         // runs when the enclosing effect/component is destroy
 ## Components
 
 ```tsx
-import { createComponent, Show, For } from 'liteforge'
+import { defineComponent, Show, For } from 'liteforge'
 
-export const UserList = createComponent({
+export const UserList = defineComponent({
   async load() {
     const users = await fetch('/api/users').then(r => r.json())
     return { users }
@@ -140,10 +140,10 @@ import { Show, For, Switch, Match } from 'liteforge'
 
 ## Plugin System
 
-Additional capabilities are added via plugins in `createApp`:
+Additional capabilities are added via plugins in `defineApp`:
 
 ```ts
-import { createApp } from 'liteforge'
+import { defineApp } from 'liteforge'
 import { routerPlugin } from '@liteforge/router'
 import { modalPlugin } from '@liteforge/modal'
 import { toastPlugin } from '@liteforge/toast'
@@ -151,7 +151,7 @@ import { clientPlugin, queryIntegration } from '@liteforge/client'
 import { devtoolsPlugin } from '@liteforge/devtools'
 import { App } from './App'
 
-createApp({ root: App, target: '#app' })
+defineApp({ root: App, target: '#app' })
   .use(routerPlugin({ routes: [...] }))
   .use(modalPlugin())
   .use(toastPlugin({ position: 'bottom-right' }))
@@ -192,7 +192,7 @@ All packages are zero-dependency and published independently:
 |---------|-------------|
 | `liteforge` | Umbrella: core + runtime |
 | `@liteforge/core` | `signal`, `computed`, `effect`, `batch`, `onCleanup` |
-| `@liteforge/runtime` | `createComponent`, `createApp`, `Show`, `For`, `Switch`, plugin system |
+| `@liteforge/runtime` | `defineComponent`, `defineApp`, `Show`, `For`, `Switch`, plugin system |
 | `@liteforge/vite-plugin` | JSX transform, signal-safe getter wrapping, HMR |
 | `@liteforge/router` | Client-side routing with guards, middleware, lazy loading |
 | `@liteforge/store` | Signal-based state management with devtools integration |

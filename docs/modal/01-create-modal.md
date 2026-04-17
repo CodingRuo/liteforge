@@ -21,7 +21,7 @@ npm install @liteforge/modal
 import { createModal, ModalProvider } from '@liteforge/modal'
 
 // 1. Add ModalProvider to your app root
-const App = createComponent({
+const App = defineComponent({
   component() {
     return (
       <div>

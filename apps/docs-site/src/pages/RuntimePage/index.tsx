@@ -1,4 +1,4 @@
-import { createComponent, use } from 'liteforge';
+import { defineComponent, use } from 'liteforge';
 import { DocSection } from '../../components/DocSection.js';
 import { CodeBlock } from '../../components/CodeBlock.js';
 import { LiveExample } from '../../components/LiveExample.js';
@@ -19,13 +19,13 @@ import { getComponentApi } from './api.js';
 import { ToggleExample } from './ToggleExample.js';
 import { ForExample } from './ForExample.js';
 
-export const RuntimePage = createComponent({
+export const RuntimePage = defineComponent({
   name: 'RuntimePage',
   component() {
     const { t } = use('i18n');
 
     setToc([
-      { id: 'create-component',   label: () => t('runtime.createComponent'),   level: 2 },
+      { id: 'create-component',   label: () => t('runtime.defineComponent'),   level: 2 },
       { id: 'jsx',                label: () => t('runtime.jsx'),                level: 2 },
       { id: 'show',               label: () => t('runtime.show'),               level: 2 },
       { id: 'for',                label: () => t('runtime.for'),                level: 2 },
@@ -40,20 +40,20 @@ export const RuntimePage = createComponent({
           <h1 class="text-3xl font-bold text-[var(--content-primary)] mb-2">{() => t('runtime.title')}</h1>
           <p class="text-[var(--content-secondary)] leading-relaxed max-w-xl">
             {() => t('runtime.subtitlePre')}{' '}
-            <code class="font-mono text-sm text-indigo-300">createComponent()</code>,
+            <code class="font-mono text-sm text-indigo-300">defineComponent()</code>,
             {' '}{() => t('runtime.subtitleMid')}{' '}
             <code class="font-mono text-sm text-indigo-300">Show</code>,{' '}
             <code class="font-mono text-sm text-indigo-300">For</code>, {() => t('runtime.subtitleAnd')}{' '}
             <code class="font-mono text-sm text-indigo-300">Switch</code>.
           </p>
           <CodeBlock code={`pnpm add @liteforge/runtime @liteforge/core`} language="bash" />
-          <CodeBlock code={`import { createComponent, Show, For } from 'liteforge';`} language="typescript" />
+          <CodeBlock code={`import { defineComponent, Show, For } from 'liteforge';`} language="typescript" />
         </div>
 
         <DocSection
-          title={() => t('runtime.createComponent')}
+          title={() => t('runtime.defineComponent')}
           id="create-component"
-          description={() => t('runtime.createComponentDesc')}
+          description={() => t('runtime.defineComponentDesc')}
         >
           <div>
             <CodeBlock code={COMPONENT_CODE} language="tsx" />

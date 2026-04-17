@@ -1,4 +1,4 @@
-import { createComponent } from 'liteforge';
+import { defineComponent } from 'liteforge';
 import { DocSection } from '../../components/DocSection.js';
 import { CodeBlock } from '../../components/CodeBlock.js';
 import { LiveExample } from '../../components/LiveExample.js';
@@ -9,7 +9,7 @@ import { getHooksApi, getUtilsApi } from './api.js';
 import { LifecycleExample } from './LifecycleExample.js';
 import { LifecycleDiagram } from './LifecycleDiagram.js';
 
-export const LifecyclePage = createComponent({
+export const LifecyclePage = defineComponent({
   name: 'LifecyclePage',
   component({ use }) {
     const { t } = use('i18n');

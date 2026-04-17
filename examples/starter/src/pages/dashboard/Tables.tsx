@@ -14,7 +14,7 @@
  * - Nested property access (company.name)
  */
 
-import { createComponent, Show } from 'liteforge';
+import { defineComponent, Show } from 'liteforge';
 import { createQuery } from 'liteforge/query';
 import { createTable } from 'liteforge/table';
 import type { ColumnDef } from 'liteforge/table';
@@ -48,7 +48,7 @@ interface User {
 // Tables Page Component
 // =============================================================================
 
-export const TablesPage = createComponent({
+export const TablesPage = defineComponent({
   name: 'TablesPage',
 
   setup() {

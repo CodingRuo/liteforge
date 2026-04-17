@@ -8,7 +8,7 @@
  * - Dark mode via CSS variables
  */
 
-import { createComponent } from 'liteforge';
+import { defineComponent } from 'liteforge';
 import { signal } from 'liteforge';
 import { createModal, confirm, alert, prompt } from 'liteforge/modal';
 import { useTitle } from 'liteforge/router'
@@ -17,7 +17,7 @@ import { useTitle } from 'liteforge/router'
 // Modals Page Component
 // =============================================================================
 
-export const ModalsPage = createComponent({
+export const ModalsPage = defineComponent({
   name: 'ModalsPage',
 
   setup() {

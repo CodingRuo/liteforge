@@ -1,4 +1,4 @@
-import { createComponent, Show } from 'liteforge';
+import { defineComponent, Show } from 'liteforge';
 import { computed } from 'liteforge';
 
 export type InputSize = 'sm' | 'md';
@@ -34,7 +34,7 @@ export function inputClass(opts: { size?: InputSize; error?: boolean; extra?: st
   return [INPUT_BASE, SIZE_CLASSES[size], border, opts.extra ?? ''].filter(Boolean).join(' ');
 }
 
-export const Input = createComponent<InputProps>({
+export const Input = defineComponent<InputProps>({
   name: 'Input',
   component({ props }) {
     const size  = props.size ?? 'md';

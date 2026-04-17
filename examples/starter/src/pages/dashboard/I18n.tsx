@@ -10,11 +10,11 @@
  * - localStorage persistence (survives page reload)
  */
 
-import { createComponent, signal } from 'liteforge';
+import { defineComponent, signal } from 'liteforge';
 import { useTitle } from 'liteforge/router';
 import type { I18nApi } from 'liteforge/i18n';
 
-export const I18nPage = createComponent({
+export const I18nPage = defineComponent({
   name: 'I18nPage',
 
   setup({ use }) {

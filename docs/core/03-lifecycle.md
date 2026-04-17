@@ -2,7 +2,7 @@
 title: "Lifecycle"
 category: "core"
 tags: ["lifecycle", "setup", "load", "mounted", "destroyed", "placeholder", "error"]
-related: ["createComponent", "Context", "Rendering"]
+related: ["defineComponent", "Context", "Rendering"]
 ---
 
 # Lifecycle
@@ -18,11 +18,11 @@ npm install @liteforge/runtime
 ## Quick Start
 
 ```tsx
-import { createComponent } from '@liteforge/runtime'
+import { defineComponent } from '@liteforge/runtime'
 import { onSetupCleanup } from '@liteforge/runtime'
 import { signal, effect } from '@liteforge/core'
 
-const MyComponent = createComponent({
+const MyComponent = defineComponent({
   setup({ props, use }) {
     const count = signal(0)
 

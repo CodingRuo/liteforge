@@ -3,7 +3,7 @@
 export const SETUP_CODE = `// main.tsx
 import { toastPlugin } from '@liteforge/toast';
 
-await createApp({ root: App, target: '#app' })
+await defineApp({ root: App, target: '#app' })
   .use(toastPlugin({ position: 'bottom-right' }))
   .mount();`;
 

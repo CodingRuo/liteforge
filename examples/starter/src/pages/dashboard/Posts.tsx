@@ -10,7 +10,7 @@
  * - Clickable posts linking to detail page
  */
 
-import { createComponent, Show, For } from 'liteforge';
+import { defineComponent, Show, For } from 'liteforge';
 import { signal } from 'liteforge';
 import { Link } from 'liteforge/router';
 import { createQuery, createMutation } from 'liteforge/query';
@@ -49,7 +49,7 @@ const createPost = (post: NewPost): Promise<Post> =>
 // Posts Page Component
 // =============================================================================
 
-export const PostsPage = createComponent({
+export const PostsPage = defineComponent({
   name: 'PostsPage',
 
   setup() {

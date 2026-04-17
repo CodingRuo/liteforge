@@ -1,4 +1,4 @@
-import { createComponent, For, Show, Switch, Match } from 'liteforge';
+import { defineComponent, For, Show, Switch, Match } from 'liteforge';
 import { signal, batch } from 'liteforge';
 import { BenchmarkCard, RunButton } from './BenchmarkCard';
 import { nextFrame, type BenchStatus, type BenchSummary } from './bench-utils';
@@ -17,7 +17,7 @@ interface DomPrecisionBenchProps {
   onComplete?: (summary: BenchSummary) => void;
 }
 
-export const DomPrecisionBench = createComponent<DomPrecisionBenchProps>({
+export const DomPrecisionBench = defineComponent<DomPrecisionBenchProps>({
   name: 'DomPrecisionBench',
   component({ props }) {
     const status = signal<BenchStatus>('idle');

@@ -1,4 +1,4 @@
-import { createComponent, For, Show } from 'liteforge';
+import { defineComponent, For, Show } from 'liteforge';
 import { signal } from 'liteforge';
 import { SignalBench } from './SignalBench';
 import { ListBench } from './ListBench';
@@ -23,7 +23,7 @@ const INITIAL_ROWS: SummaryRow[] = [
   { name: 'Memory Leak Detection',   result: 'Run benchmark below ↓', status: 'pending' },
 ];
 
-export const BenchmarkPage = createComponent({
+export const BenchmarkPage = defineComponent({
   name: 'BenchmarkPage',
   component() {
     const summaryRows = signal<SummaryRow[]>(INITIAL_ROWS.map(r => ({ ...r })));

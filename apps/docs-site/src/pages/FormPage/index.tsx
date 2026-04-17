@@ -1,4 +1,4 @@
-import { createComponent, use } from 'liteforge';
+import { defineComponent, use } from 'liteforge';
 import { DocSection } from '../../components/DocSection.js';
 import { CodeBlock } from '../../components/CodeBlock.js';
 import { LiveExample } from '../../components/LiveExample.js';
@@ -17,7 +17,7 @@ import { getFormApi, getArrayApi } from './api.js';
 import { LoginFormExample } from './LoginFormExample.js';
 import { ArrayFieldExample } from './ArrayFieldExample.js';
 
-export const FormPage = createComponent({
+export const FormPage = defineComponent({
   name: 'FormPage',
   component() {
     const { t } = use('i18n');

@@ -1,6 +1,6 @@
-import { createComponent, signal, effect } from 'liteforge';
+import { defineComponent, signal, effect } from 'liteforge';
 
-export const LifecycleExample = createComponent({
+export const LifecycleExample = defineComponent({
   name: 'LifecycleExample',
   component() {
     const log = signal<string[]>([]);

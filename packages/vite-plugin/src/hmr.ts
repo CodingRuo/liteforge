@@ -10,7 +10,7 @@
  * 4. Signals and stores survive the update (they're in separate modules)
  * 
  * Level 2 HMR adds:
- * - __hmrId injection into createComponent() calls
+ * - __hmrId injection into defineComponent() calls
  * - Component instance tracking by module URL
  * - Re-render with preserved setup signals
  */
@@ -20,15 +20,15 @@
 // =============================================================================
 
 /**
- * Inject __hmrId into all createComponent() calls in a module.
+ * Inject __hmrId into all defineComponent() calls in a module.
  * 
  * This enables component-level HMR by giving each component a unique identifier
  * based on file path + export name.
  * 
  * Patterns handled:
- * - `export const Sidebar = createComponent({` → adds __hmrId: "/path::Sidebar"
- * - `export default createComponent({` → adds __hmrId: "/path::default"
- * - `const Sidebar = createComponent({` → adds __hmrId: "/path::Sidebar"
+ * - `export const Sidebar = defineComponent({` → adds __hmrId: "/path::Sidebar"
+ * - `export default defineComponent({` → adds __hmrId: "/path::default"
+ * - `const Sidebar = defineComponent({` → adds __hmrId: "/path::Sidebar"
  * 
  * @param code - The source code to transform
  * @param fileId - The absolute file path (used as module identifier)
@@ -41,30 +41,30 @@ export function injectHmrIds(code: string, fileId: string): string {
   let result = code;
   
   // Pattern 1: Named variable assignment (with or without export)
-  // Matches: `export const Sidebar = createComponent({`
-  // Matches: `const Sidebar = createComponent({`
-  // Matches: `let Sidebar = createComponent({`
-  // Matches: `var Sidebar = createComponent({`
+  // Matches: `export const Sidebar = defineComponent({`
+  // Matches: `const Sidebar = defineComponent({`
+  // Matches: `let Sidebar = defineComponent({`
+  // Matches: `var Sidebar = defineComponent({`
   result = result.replace(
-    /(?:export\s+)?(?:const|let|var)\s+(\w+)\s*=\s*createComponent\s*\(\s*\{/g,
+    /(?:export\s+)?(?:const|let|var)\s+(\w+)\s*=\s*defineComponent\s*\(\s*\{/g,
     (match, name: string) => {
       const hmrId = `${normalizedId}::${name}`;
       return match.replace(
-        'createComponent({',
-        `createComponent({ __hmrId: ${JSON.stringify(hmrId)},`
+        'defineComponent({',
+        `defineComponent({ __hmrId: ${JSON.stringify(hmrId)},`
       );
     }
   );
   
-  // Pattern 2: Export default createComponent
-  // Matches: `export default createComponent({`
+  // Pattern 2: Export default defineComponent
+  // Matches: `export default defineComponent({`
   result = result.replace(
-    /export\s+default\s+createComponent\s*\(\s*\{/g,
+    /export\s+default\s+defineComponent\s*\(\s*\{/g,
     (match) => {
       const hmrId = `${normalizedId}::default`;
       return match.replace(
-        'createComponent({',
-        `createComponent({ __hmrId: ${JSON.stringify(hmrId)},`
+        'defineComponent({',
+        `defineComponent({ __hmrId: ${JSON.stringify(hmrId)},`
       );
     }
   );

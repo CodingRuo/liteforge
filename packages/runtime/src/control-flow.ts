@@ -763,7 +763,7 @@ export function Match(config: MatchConfig): MatchCase {
  * Configuration for the Dynamic component.
  * The component prop is a getter that returns either:
  * - RenderFunction: A simple () => Node function
- * - ComponentFactory: A LiteForge component from createComponent()
+ * - ComponentFactory: A LiteForge component from defineComponent()
  * - null: No component to render
  */
 export interface DynamicConfig<P extends Record<string, unknown>> {

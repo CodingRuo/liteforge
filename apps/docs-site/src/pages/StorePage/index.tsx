@@ -1,4 +1,4 @@
-import { createComponent, use } from 'liteforge';
+import { defineComponent, use } from 'liteforge';
 import { DocSection } from '../../components/DocSection.js';
 import { CodeBlock } from '../../components/CodeBlock.js';
 import { LiveExample } from '../../components/LiveExample.js';
@@ -8,7 +8,7 @@ import { SETUP_CODE, LIVE_CODE, PLUGINS_CODE, TIME_TRAVEL_CODE } from './snippet
 import { getDefineStoreApi, getStoreInstanceApi } from './api.js';
 import { StoreExample } from './StoreExample.js';
 
-export const StorePage = createComponent({
+export const StorePage = defineComponent({
   name: 'StorePage',
   component() {
     const { t } = use('i18n');

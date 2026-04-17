@@ -8,14 +8,14 @@
  * - Protected admin navigation
  */
 
-import { createComponent } from 'liteforge';
+import { defineComponent } from 'liteforge';
 import { Link, RouterOutlet } from 'liteforge/router';
 
 // =============================================================================
 // Component
 // =============================================================================
 
-export const AdminLayout = createComponent({
+export const AdminLayout = defineComponent({
   name: 'AdminLayout',
   component() {
     return (

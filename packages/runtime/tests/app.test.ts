@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { signal } from '@liteforge/core';
-import { createApp, createComponent, clearContext } from '../src/index.js';
+import { defineApp, defineComponent, clearContext } from '../src/index.js';
 import type { AnyStore } from '../src/index.js';
 
-describe('createApp', () => {
+describe('defineApp', () => {
   let container: HTMLElement;
 
   beforeEach(() => {
@@ -25,11 +25,11 @@ describe('createApp', () => {
 
   describe('basic mounting', () => {
     it('should mount root component to target element', async () => {
-      const App = createComponent({
+      const App = defineComponent({
         component: () => document.createTextNode('Hello App'),
       });
 
-      const app = await createApp({
+      const app = await defineApp({
         root: App,
         target: '#app',
       });
@@ -39,11 +39,11 @@ describe('createApp', () => {
     });
 
     it('should mount to element reference', async () => {
-      const App = createComponent({
+      const App = defineComponent({
         component: () => document.createTextNode('Direct Mount'),
       });
 
-      const app = await createApp({
+      const app = await defineApp({
         root: App,
         target: container,
       });
@@ -53,7 +53,7 @@ describe('createApp', () => {
     });
 
     it('should accept simple render function as root', async () => {
-      const app = await createApp({
+      const app = await defineApp({
         root: () => {
           const el = document.createElement('h1');
           el.textContent = 'Simple Function';
@@ -67,11 +67,11 @@ describe('createApp', () => {
     });
 
     it('should throw if target not found', async () => {
-      const App = createComponent({
+      const App = defineComponent({
         component: () => document.createTextNode('Test'),
       });
 
-      await expect(createApp({
+      await expect(defineApp({
         root: App,
         target: '#nonexistent',
       })).rejects.toThrow('Target element "#nonexistent" not found');
@@ -80,11 +80,11 @@ describe('createApp', () => {
 
   describe('unmount', () => {
     it('should remove content from DOM', async () => {
-      const App = createComponent({
+      const App = defineComponent({
         component: () => document.createTextNode('Content'),
       });
 
-      const app = await createApp({
+      const app = await defineApp({
         root: App,
         target: '#app',
       });
@@ -98,12 +98,12 @@ describe('createApp', () => {
     it('should call destroyed on root component', async () => {
       const destroyedSpy = vi.fn();
 
-      const App = createComponent({
+      const App = defineComponent({
         component: () => document.createTextNode('Test'),
         destroyed: destroyedSpy,
       });
 
-      const app = await createApp({
+      const app = await defineApp({
         root: App,
         target: '#app',
       });
@@ -116,12 +116,12 @@ describe('createApp', () => {
     it('should be safe to call unmount multiple times', async () => {
       const destroyedSpy = vi.fn();
 
-      const App = createComponent({
+      const App = defineComponent({
         component: () => document.createTextNode('Test'),
         destroyed: destroyedSpy,
       });
 
-      const app = await createApp({
+      const app = await defineApp({
         root: App,
         target: '#app',
       });
@@ -134,7 +134,7 @@ describe('createApp', () => {
     });
 
     it('should clean up simple render function nodes', async () => {
-      const app = await createApp({
+      const app = await defineApp({
         root: () => {
           const el = document.createElement('div');
           el.textContent = 'Render Function';
@@ -153,14 +153,14 @@ describe('createApp', () => {
     it('should provide app-level context', async () => {
       let capturedValue: string | undefined;
 
-      const App = createComponent({
+      const App = defineComponent({
         component: ({ use }) => {
           capturedValue = use('apiUrl');
           return document.createTextNode('Test');
         },
       });
 
-      const app = await createApp({
+      const app = await defineApp({
         root: App,
         target: '#app',
         context: {
@@ -173,11 +173,11 @@ describe('createApp', () => {
     });
 
     it('should provide use() method on app instance', async () => {
-      const App = createComponent({
+      const App = defineComponent({
         component: () => document.createTextNode('Test'),
       });
 
-      const app = await createApp({
+      const app = await defineApp({
         root: App,
         target: '#app',
         context: {
@@ -192,14 +192,14 @@ describe('createApp', () => {
     it('should support signal values in context', async () => {
       const theme = signal('light');
 
-      const App = createComponent({
+      const App = defineComponent({
         component: ({ use }) => {
           const themeSignal = use<typeof theme>('theme');
           return document.createTextNode(themeSignal());
         },
       });
 
-      const app = await createApp({
+      const app = await defineApp({
         root: App,
         target: '#app',
         context: { theme },
@@ -215,7 +215,7 @@ describe('createApp', () => {
         path: () => '/',
       };
 
-      const app = await createApp({
+      const app = await defineApp({
         root: () => document.createElement('div'),
         target: container,
         router: mockRouter,
@@ -238,14 +238,14 @@ describe('createApp', () => {
 
       let capturedStore: unknown;
 
-      const App = createComponent({
+      const App = defineComponent({
         component: ({ use }) => {
           capturedStore = use('store:test');
           return document.createTextNode('Test');
         },
       });
 
-      const app = await createApp({
+      const app = await defineApp({
         root: App,
         target: '#app',
         stores: [testStore],
@@ -266,14 +266,14 @@ describe('createApp', () => {
 
       let capturedStore: unknown;
 
-      const App = createComponent({
+      const App = defineComponent({
         component: ({ use }) => {
           capturedStore = use('myStore');
           return document.createTextNode('Test');
         },
       });
 
-      const app = await createApp({
+      const app = await defineApp({
         root: App,
         target: '#app',
         stores: [testStore],
@@ -296,7 +296,7 @@ describe('createApp', () => {
         },
       };
 
-      const app = await createApp({
+      const app = await defineApp({
         root: () => document.createElement('div'),
         target: container,
         stores: [testStore],
@@ -330,7 +330,7 @@ describe('createApp', () => {
         },
       };
 
-      const app = await createApp({
+      const app = await defineApp({
         root: () => document.createElement('div'),
         target: container,
         stores: [storeA, storeB],
@@ -360,7 +360,7 @@ describe('createApp', () => {
         initialize: () => { order.push('b'); },
       };
 
-      const app = await createApp({
+      const app = await defineApp({
         root: () => document.createElement('div'),
         target: container,
         stores: [storeA, storeB],
@@ -373,7 +373,7 @@ describe('createApp', () => {
 
   describe('debug mode', () => {
     it('should set $lf on window when debug is true', async () => {
-      const app = await createApp({
+      const app = await defineApp({
         root: () => document.createElement('div'),
         target: container,
         debug: true,
@@ -387,7 +387,7 @@ describe('createApp', () => {
       // Clean up from previous tests
       delete (window as unknown as Record<string, unknown>).$lf;
 
-      const app = await createApp({
+      const app = await defineApp({
         root: () => document.createElement('div'),
         target: container,
         debug: false,
@@ -398,7 +398,7 @@ describe('createApp', () => {
     });
 
     it('should remove $lf from window on unmount', async () => {
-      const app = await createApp({
+      const app = await defineApp({
         root: () => document.createElement('div'),
         target: container,
         debug: true,
@@ -417,7 +417,7 @@ describe('createApp', () => {
         $restore: () => {},
       };
 
-      const app = await createApp({
+      const app = await defineApp({
         root: () => document.createElement('div'),
         target: container,
         stores: [testStore],
@@ -435,7 +435,7 @@ describe('createApp', () => {
       let ready = false;
       let receivedApp: unknown;
 
-      const app = await createApp({
+      const app = await defineApp({
         root: () => document.createElement('div'),
         target: container,
         onReady: (a) => {
@@ -452,7 +452,7 @@ describe('createApp', () => {
     it('should call onError on bootstrap failure', async () => {
       let caughtError: Error | null = null;
 
-      await createApp({
+      await defineApp({
         root: () => { throw new Error('Component failed'); },
         target: '#nonexistent-target',
         onError: (err) => { caughtError = err; },
@@ -472,7 +472,7 @@ describe('createApp', () => {
         start: () => { started = true; },
       };
 
-      const app = await createApp({
+      const app = await defineApp({
         root: () => document.createElement('div'),
         target: container,
         router: mockRouter,
@@ -491,7 +491,7 @@ describe('createApp', () => {
         stop: () => { stopped = true; },
       };
 
-      const app = await createApp({
+      const app = await defineApp({
         root: () => document.createElement('div'),
         target: container,
         router: mockRouter,

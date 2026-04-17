@@ -1,4 +1,4 @@
-import { createComponent } from 'liteforge';
+import { defineComponent } from 'liteforge';
 
 export type BadgeVariant = 'default' | 'indigo' | 'green' | 'amber' | 'red' | 'neutral';
 
@@ -19,7 +19,7 @@ const VARIANT_CLASSES: Record<BadgeVariant, string> = {
 
 const BASE = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium';
 
-export const Badge = createComponent<BadgeProps>({
+export const Badge = defineComponent<BadgeProps>({
   name: 'Badge',
   component({ props }) {
     const variant = props.variant ?? 'default';

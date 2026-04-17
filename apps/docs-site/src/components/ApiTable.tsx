@@ -1,4 +1,4 @@
-import { createComponent } from 'liteforge';
+import { defineComponent } from 'liteforge';
 import { createTable } from '@liteforge/table';
 
 export interface ApiRow {
@@ -12,7 +12,7 @@ interface ApiTableProps {
   rows: ApiRow[] | (() => ApiRow[]);
 }
 
-export const ApiTable = createComponent<ApiTableProps>({
+export const ApiTable = defineComponent<ApiTableProps>({
   name: 'ApiTable',
   component({ props }) {
     const table = createTable<ApiRow>({

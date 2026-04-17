@@ -21,7 +21,7 @@ npm install @liteforge/toast
 import { toast, ToastProvider } from '@liteforge/toast'
 
 // 1. Add ToastProvider to your app root (once)
-const App = createComponent({
+const App = defineComponent({
   component() {
     return (
       <div>
@@ -169,7 +169,7 @@ clearToasts()    // Remove all
 ```ts
 import { toastPlugin } from '@liteforge/toast'
 
-await createApp({ root: App, target: '#app' })
+await defineApp({ root: App, target: '#app' })
   .use(toastPlugin({ position: 'bottom-right' }))
 ```
 

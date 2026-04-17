@@ -12,7 +12,7 @@
  * - Auto locale-based translations (locale: 'de-AT' → German)
  */
 
-import { createComponent } from 'liteforge';
+import { defineComponent } from 'liteforge';
 import { signal } from 'liteforge';
 import { createCalendar, startOfWeek } from 'liteforge/calendar';
 import { tooltip } from 'liteforge/tooltip';
@@ -355,7 +355,7 @@ class MockCalendarSocket {
 // Calendar Page Component
 // =============================================================================
 
-export const CalendarPage = createComponent({
+export const CalendarPage = defineComponent({
   name: 'CalendarPage',
 
   setup() {

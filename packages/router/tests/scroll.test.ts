@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { createRouter, createMemoryHistory } from '../src/index.js';
+import { defineRouter, createMemoryHistory } from '../src/index.js';
 import type { Router } from '../src/types.js';
 
 // =============================================================================
@@ -10,8 +10,8 @@ import type { Router } from '../src/types.js';
  * Build a test router with the given scroll behavior and routes.
  * All routers use MemoryHistory so tests don't touch the real browser URL bar.
  */
-function makeRouter(scrollBehavior?: Parameters<typeof createRouter>[0]['scrollBehavior']): Router {
-  const opts: Parameters<typeof createRouter>[0] = {
+function makeRouter(scrollBehavior?: Parameters<typeof defineRouter>[0]['scrollBehavior']): Router {
+  const opts: Parameters<typeof defineRouter>[0] = {
     routes: [
       { path: '/', component: () => document.createElement('div') },
       { path: '/core', component: () => document.createElement('div') },
@@ -22,7 +22,7 @@ function makeRouter(scrollBehavior?: Parameters<typeof createRouter>[0]['scrollB
   if (scrollBehavior !== undefined) {
     opts.scrollBehavior = scrollBehavior;
   }
-  return createRouter(opts);
+  return defineRouter(opts);
 }
 
 // =============================================================================

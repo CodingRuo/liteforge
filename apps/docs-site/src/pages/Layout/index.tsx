@@ -1,4 +1,4 @@
-import { createComponent, signal, effect, use } from 'liteforge';
+import { defineComponent, signal, effect, use } from 'liteforge';
 import { RouterOutlet, Link } from '@liteforge/router';
 import { tooltip } from '@liteforge/tooltip';
 import { themeStore } from '../../stores/theme.js';
@@ -8,7 +8,7 @@ import { icon, IC } from './icons.js';
 import { NAV_GROUPS, loadCollapsed, saveCollapsed, loadDesktopCollapsed, saveDesktopCollapsed } from './nav.js';
 import { TC_DEFAULTS, TC_SWATCHES, loadTC, saveTC, lighten } from './theme-customizer.js';
 
-export const Layout = createComponent({
+export const Layout = defineComponent({
   name: 'DocsLayout',
   component() {
     const { t, locale, setLocale } = use('i18n');

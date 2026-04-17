@@ -1,4 +1,4 @@
-import { createComponent, use } from 'liteforge';
+import { defineComponent, use } from 'liteforge';
 import { DocSection } from '../../components/DocSection.js';
 import { CodeBlock } from '../../components/CodeBlock.js';
 import { LiveExample } from '../../components/LiveExample.js';
@@ -8,7 +8,7 @@ import { SETUP_CODE, BASIC_CODE, PROMISE_CODE, POSITIONS_CODE, CSS_CODE, ICONS_C
 import { getPluginApi, getToastApi, getOptsApi, getProviderStylesApi, getProviderClassesApi, getIconsApi } from './api.js';
 import { ToastExample } from './ToastExample.js';
 
-export const ToastPage = createComponent({
+export const ToastPage = defineComponent({
   name: 'ToastPage',
   component() {
     const { t } = use('i18n');

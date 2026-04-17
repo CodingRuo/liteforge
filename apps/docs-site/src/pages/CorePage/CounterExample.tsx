@@ -1,8 +1,8 @@
-import { createComponent } from 'liteforge';
+import { defineComponent } from 'liteforge';
 import { signal, computed } from 'liteforge';
 import { btnClass } from '../../components/Button.js';
 
-export const CounterExample = createComponent({
+export const CounterExample = defineComponent({
   name: 'CounterExample',
   component() {
     const count = signal(0);

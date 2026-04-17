@@ -1,7 +1,7 @@
-import { createComponent, Show } from 'liteforge';
+import { defineComponent, Show } from 'liteforge';
 import { signal } from 'liteforge';
 
-export const ShowLiveExample = createComponent({
+export const ShowLiveExample = defineComponent({
   name: 'ShowLiveExample',
   component() {
     const isLoggedIn = signal(false);

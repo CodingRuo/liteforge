@@ -17,10 +17,10 @@ Peer dependencies: `@liteforge/core >= 0.1.0`, `@liteforge/runtime >= 0.1.0`
 ## Basic Usage
 
 ```tsx
-import { createRouter, RouterOutlet, Link } from '@liteforge/router'
-import { createApp } from '@liteforge/runtime'
+import { defineRouter, RouterOutlet, Link } from '@liteforge/router'
+import { defineApp } from '@liteforge/runtime'
 
-const router = createRouter({
+const router = defineRouter({
   routes: [
     { path: '/', component: Home },
     { path: '/about', component: About },
@@ -38,19 +38,19 @@ const App = () => (
   </div>
 )
 
-createApp({ router }).mount(App)
+defineApp({ router }).mount(App)
 ```
 
 ## API
 
-### createRouter
+### defineRouter
 
 Creates a router instance.
 
 ```ts
-import { createRouter } from '@liteforge/router'
+import { defineRouter } from '@liteforge/router'
 
-const router = createRouter({
+const router = defineRouter({
   routes: [...],
   
   // Optional settings
@@ -275,7 +275,7 @@ const adminGuard = createRoleGuard({
   redirectTo: '/unauthorized'
 })
 
-const router = createRouter({
+const router = defineRouter({
   routes: [...],
   guards: {
     auth: authGuard,
@@ -305,7 +305,7 @@ const title = createTitleMiddleware({
   template: (title) => `${title} | My App`
 })
 
-const router = createRouter({
+const router = defineRouter({
   routes: [...],
   middleware: [logger, title, analyticsMiddleware]
 })

@@ -1,4 +1,4 @@
-import { createComponent, use } from 'liteforge';
+import { defineComponent, use } from 'liteforge';
 import { DocSection } from '../../components/DocSection.js';
 import { CodeBlock } from '../../components/CodeBlock.js';
 import { LiveExample } from '../../components/LiveExample.js';
@@ -17,7 +17,7 @@ import {
 import { getTableApi, getStyleTokensApi } from './api.js';
 import { TableExampleDocs, TableExampleTailwind } from './TableExamples.js';
 
-export const TablePage = createComponent({
+export const TablePage = defineComponent({
   name: 'TablePage',
   component() {
     const { t } = use('i18n');

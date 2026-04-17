@@ -1,9 +1,9 @@
 // No imports — pure string constants
 
 export const INTEGRATION_CODE = `// main.tsx
-import { createApp } from 'liteforge';
+import { defineApp } from 'liteforge';
 
-await createApp({ root: App, target: '#app' })
+await defineApp({ root: App, target: '#app' })
   // useDev() is tree-shaken from production builds automatically
   .useDev(() => import('@liteforge/devtools').then(m => m.devtoolsPlugin({
     shortcut:   'ctrl+shift+d',   // toggle panel
@@ -31,7 +31,7 @@ export const TIME_TRAVEL_CODE = `// Stores tab → click any history entry to re
 // which writes all signals back to their snapshotted values.
 // Live effects and computed values re-run automatically.`
 
-export const STANDALONE_CODE = `// Attach DevTools without createApp — useful for plain scripts
+export const STANDALONE_CODE = `// Attach DevTools without defineApp — useful for plain scripts
 import { createDevTools } from '@liteforge/devtools';
 
 const dt = createDevTools({

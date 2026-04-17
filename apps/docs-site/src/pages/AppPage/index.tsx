@@ -1,4 +1,4 @@
-import { createComponent, use } from 'liteforge';
+import { defineComponent, use } from 'liteforge';
 import { DocSection } from '../../components/DocSection.js';
 import { CodeBlock } from '../../components/CodeBlock.js';
 import { ApiTable } from '../../components/ApiTable.js';
@@ -22,7 +22,7 @@ import {
   getAppApi,
 } from './api.js';
 
-export const AppPage = createComponent({
+export const AppPage = defineComponent({
   name: 'AppPage',
   component() {
     const { t } = use('i18n');
@@ -49,7 +49,7 @@ export const AppPage = createComponent({
           <p class="text-xs font-mono text-[var(--content-muted)] mb-1">@liteforge/runtime</p>
           <h1 class="text-3xl font-bold text-[var(--content-primary)] mb-2">{() => t('app.title')}</h1>
           <p class="text-[var(--content-secondary)] leading-relaxed max-w-xl">
-            <code class="text-indigo-400 text-sm">createApp()</code> {() => t('app.subtitlePre')}{' '}
+            <code class="text-indigo-400 text-sm">defineApp()</code> {() => t('app.subtitlePre')}{' '}
             <code class="text-indigo-400 text-sm">Thenable</code> — {() => t('app.subtitleTopLevel')}{' '}
             <code class="text-indigo-400 text-sm">await</code> {() => t('app.subtitleMid')}{' '}
             <code class="text-indigo-400 text-sm">.mount()</code> {() => t('app.subtitleSuffix')}

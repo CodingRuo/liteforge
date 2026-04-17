@@ -516,7 +516,7 @@ export interface NavigateOptions {
 /**
  * Router instance - the main router API
  *
- * @typeParam T - The literal routes array type (inferred by createRouter<T>).
+ * @typeParam T - The literal routes array type (inferred by defineRouter<T>).
  *   Defaults to `readonly RouteDefinition[]` so existing code that references
  *   `Router` without a type parameter continues to compile unchanged.
  */
@@ -559,8 +559,8 @@ export interface Router<T extends readonly RouteDefinition[] = readonly RouteDef
    * Navigate to a typed path. TypeScript will error if the path string doesn't
    * match any known route pattern. Param segments (:id) accept any string value.
    *
-   * To get typed navigation, pass `routes` with `as const` to createRouter:
-   *   createRouter({ routes: [...] as const })
+   * To get typed navigation, pass `routes` with `as const` to defineRouter:
+   *   defineRouter({ routes: [...] as const })
    */
   navigate(path: TypedNavigationTarget<T>, options?: NavigateOptions): Promise<boolean>;
 
@@ -627,14 +627,14 @@ export interface Router<T extends readonly RouteDefinition[] = readonly RouteDef
    * Resolves to `false` only when navigation was fully blocked with no redirect target.
    * Always resolves — never rejects.
    *
-   * When using `routerPlugin`, `createApp().mount()` already awaits `isReady` internally,
+   * When using `routerPlugin`, `defineApp().mount()` already awaits `isReady` internally,
    * so the app never mounts before the initial guard run completes.
    *
    * @example
    * ```ts
    * // Manual await (without routerPlugin):
    * await router.isReady
-   * createApp({ root: App, target: '#app' }).mount()
+   * defineApp({ root: App, target: '#app' }).mount()
    * ```
    */
   readonly isReady: Promise<boolean>;

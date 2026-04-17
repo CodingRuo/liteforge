@@ -1,5 +1,40 @@
 # @liteforge/runtime
 
+## 1.0.0
+
+### Major Changes
+
+- feat!: rename createComponent → defineComponent, createApp → defineApp, createRouter → defineRouter
+
+  ## Breaking Changes
+
+  The three "spec" factory functions have been renamed to follow the new `define*` vs `create*` naming convention:
+
+  | Old               | New               | Package              |
+  | ----------------- | ----------------- | -------------------- |
+  | `createComponent` | `defineComponent` | `@liteforge/runtime` |
+  | `createApp`       | `defineApp`       | `@liteforge/runtime` |
+  | `createRouter`    | `defineRouter`    | `@liteforge/router`  |
+
+  ### Migration
+
+  Simple find & replace in your project:
+
+  ```
+  createComponent  →  defineComponent
+  createApp        →  defineApp
+  createRouter     →  defineRouter
+  ```
+
+  ### Naming Convention
+
+  LiteForge now consistently follows the rule:
+
+  - **`define*`** — Spec/Declaration. Describes something statically, no live side-effects at call time. The return value is a blueprint passed to the runtime.
+  - **`create*`** — Live Instance. Allocates runtime state, signals, or DOM resources immediately at call time.
+
+  Functions that remain `create*` because they return live runtime instances: `createQuery`, `createMutation`, `createForm`, `createTable`, `createCalendar`, `createFlow`, `createClient`, `createModal`, `createResource`, `createErrorBoundary`, `createThemeStore`, `createDevTools`.
+
 ## 0.9.1
 
 ### Patch Changes

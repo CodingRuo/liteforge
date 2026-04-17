@@ -109,7 +109,7 @@ export function defineStore<
     if (!contextUseFn) {
       throw new Error(
         `Store "${name}" is not connected to an app context. ` +
-        `Make sure to register it in createApp({ stores: [...] }) ` +
+        `Make sure to register it in defineApp({ stores: [...] }) ` +
         `before calling actions that use context.`
       );
     }

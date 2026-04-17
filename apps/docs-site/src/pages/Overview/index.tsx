@@ -1,4 +1,4 @@
-import { createComponent, use } from 'liteforge';
+import { defineComponent, use } from 'liteforge';
 import { Link } from '@liteforge/router';
 import { clearToc } from '../../toc.js';
 import { CodeBlock } from '../../components/CodeBlock.js';
@@ -47,7 +47,7 @@ const PKG_DESC_KEY: Record<string, ExtractKeys<DocsTranslations>> = {
   i18n: 'pkg.i18n', admin: 'pkg.admin',
 };
 
-export const Overview = createComponent({
+export const Overview = defineComponent({
   name: 'Overview',
   component() {
     const { t } = use('i18n');

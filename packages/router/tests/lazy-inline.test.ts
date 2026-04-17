@@ -9,7 +9,7 @@ import {
   isLazyComponent,
 } from '../src/lazy.js';
 import { compileRoute, compileRoutes } from '../src/route-matcher.js';
-import { createRouter } from '../src/router.js';
+import { defineRouter } from '../src/router.js';
 import type { 
   RouteComponent, 
   LazyImportFn, 
@@ -522,17 +522,17 @@ describe('compileRoutes with lazyDefaults', () => {
 });
 
 // =============================================================================
-// createRouter with lazyDefaults
+// defineRouter with lazyDefaults
 // =============================================================================
 
-describe('createRouter with lazyDefaults', () => {
+describe('defineRouter with lazyDefaults', () => {
   it('passes lazyDefaults to route compilation', () => {
     const importFn: LazyImportFn = () => Promise.resolve({ default: createMockComponent('Test') });
     Object.defineProperty(importFn, 'toString', {
       value: () => '() => import("./Test.js")',
     });
 
-    const router = createRouter({
+    const router = defineRouter({
       routes: [
         { path: '/test', component: importFn },
       ],
@@ -559,7 +559,7 @@ describe('createRouter with lazyDefaults', () => {
       value: () => '() => import("./Dashboard.js")',
     });
 
-    const router = createRouter({
+    const router = defineRouter({
       routes: [
         { path: '/', component: HomePage },
         { path: '/dashboard', component: importFn },

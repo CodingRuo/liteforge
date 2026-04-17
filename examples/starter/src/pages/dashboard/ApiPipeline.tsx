@@ -29,7 +29,7 @@
  *  drive reactive class changes in the already-mounted JSX.
  */
 
-import { createComponent, signal } from 'liteforge';
+import { defineComponent, signal } from 'liteforge';
 import {
   createFlow,
   FlowCanvas,
@@ -267,7 +267,7 @@ const INITIAL_EDGES: FlowEdge[] = [
 // Page Component
 // =============================================================================
 
-export const ApiPipelinePage = createComponent({
+export const ApiPipelinePage = defineComponent({
   name: 'ApiPipelinePage',
 
   setup() {

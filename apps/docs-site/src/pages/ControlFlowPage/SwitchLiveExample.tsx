@@ -1,10 +1,10 @@
-import { createComponent, Switch, Match } from 'liteforge';
+import { defineComponent, Switch, Match } from 'liteforge';
 import { signal } from 'liteforge';
 import { Button } from '../../components/Button.js';
 
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
-export const SwitchLiveExample = createComponent({
+export const SwitchLiveExample = defineComponent({
   name: 'SwitchLiveExample',
   component() {
     const status = signal<Status>('idle');

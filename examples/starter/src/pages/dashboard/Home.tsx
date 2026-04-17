@@ -9,7 +9,7 @@
  * - Retry functionality on error
  */
 
-import { createComponent } from 'liteforge';
+import { defineComponent } from 'liteforge';
 import { authStore } from '../../stores/auth.js';
 
 // =============================================================================
@@ -51,7 +51,7 @@ async function fetchDashboardStats(): Promise<DashboardStats> {
 // Component
 // =============================================================================
 
-export const DashboardHome = createComponent({
+export const DashboardHome = defineComponent({
   name: 'DashboardHome',
   // Async data loading - runs BEFORE component renders
   async load() {

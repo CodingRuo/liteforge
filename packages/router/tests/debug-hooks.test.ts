@@ -17,7 +17,7 @@ import type {
   GuardRunPayload,
 } from '@liteforge/core';
 import {
-  createRouter,
+  defineRouter,
   createMemoryHistory,
   defineGuard,
 } from '../src/index.js';
@@ -28,7 +28,7 @@ import type { Router } from '../src/types.js';
 // =============================================================================
 
 function createTestRouter(guards: ReturnType<typeof defineGuard>[] = []): Router {
-  return createRouter({
+  return defineRouter({
     routes: [
       { path: '/', name: 'home', component: () => document.createElement('div') },
       { path: '/public', name: 'public', component: () => document.createElement('div') },

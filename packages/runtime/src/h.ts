@@ -119,7 +119,7 @@ export function h(
 
   // Component function
   if (typeof tag === 'function') {
-    return createComponentNode(tag, props, children);
+    return defineComponentNode(tag, props, children);
   }
 
   // HTML element
@@ -151,7 +151,7 @@ type SimpleFunctionComponent = (props: Record<string, unknown>) => Node;
 /**
  * Create a node from a component (Factory, RenderFunction, or simple function)
  */
-function createComponentNode(
+function defineComponentNode(
   component: ComponentFactory<Record<string, unknown>> | RenderFunction | SimpleFunctionComponent,
   props: Props,
   children: HChild[]
@@ -165,7 +165,7 @@ function createComponentNode(
     resolvedProps.children = children.length === 1 ? children[0] : children;
   }
 
-  // If it's a ComponentFactory (created with createComponent)
+  // If it's a ComponentFactory (created with defineComponent)
   if (isComponentFactory(component)) {
     // Cast to internal type to access ComponentInstance lifecycle methods.
     // The public ComponentFactory type returns Node for JSX compat; the runtime

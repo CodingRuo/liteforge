@@ -2,7 +2,7 @@
 title: "Navigation"
 category: "router"
 tags: ["navigate", "Link", "NavLink", "RouterOutlet", "useParam", "back", "forward"]
-related: ["createRouter", "Route Definition"]
+related: ["defineRouter", "Route Definition"]
 ---
 
 # Navigation
@@ -21,7 +21,7 @@ npm install @liteforge/router
 import { Link, NavLink, RouterOutlet } from '@liteforge/router'
 
 // In your layout
-const Layout = createComponent({
+const Layout = defineComponent({
   setup({ use }) {
     const router = use('router')
     return { router }

@@ -1,11 +1,11 @@
 /**
- * LiteForge createApp
+ * LiteForge defineApp
  *
  * Central app bootstrap: mounts root component, initializes stores,
  * sets up context, router, plugins, and debug utilities.
  *
  * Returns an AppBuilder that supports chained .use(plugin).mount().
- * The AppBuilder is also a Thenable, so `await createApp(...)` works
+ * The AppBuilder is also a Thenable, so `await defineApp(...)` works
  * without an explicit .mount() call (backward compat).
  */
 
@@ -38,7 +38,7 @@ interface DebugUtilities {
 }
 
 // ============================================================================
-// createApp — returns AppBuilder
+// defineApp — returns AppBuilder
 // ============================================================================
 
 /**
@@ -47,21 +47,21 @@ interface DebugUtilities {
  * Returns an AppBuilder with:
  * - `.use(plugin)` — register a new-style LiteForgePlugin (chainable)
  * - `.mount()` — async, performs full bootstrap
- * - `.then()` — Thenable for `await createApp(...)` backward compat
+ * - `.then()` — Thenable for `await defineApp(...)` backward compat
  *
  * @example
  * ```ts
  * // New pattern:
- * const app = await createApp({ root: App, target: '#app' })
+ * const app = await defineApp({ root: App, target: '#app' })
  *   .use(routerPlugin(options))
  *   .use(modalPlugin())
  *   .mount();
  *
  * // Old pattern (still works):
- * const app = await createApp({ root: App, target: '#app', plugins: [devtoolsPlugin()] });
+ * const app = await defineApp({ root: App, target: '#app', plugins: [devtoolsPlugin()] });
  * ```
  */
-export function createApp(config: AppConfig): AppBuilder {
+export function defineApp(config: AppConfig): AppBuilder {
   const newStylePlugins: LiteForgePlugin[] = [];
   const pendingDevPlugins: Array<Promise<LiteForgePlugin>> = [];
   let mountCalled = false;
@@ -275,7 +275,7 @@ async function installAndMount(
     const app: AppInstance = Object.assign(
       {
         unmount,
-        use: createAppUse(appContext),
+        use: defineAppUse(appContext),
         stores: storesMap,
       },
       config.router ? { router: config.router } : {},
@@ -427,7 +427,7 @@ async function installAndMount(
 // Helpers
 // ============================================================================
 
-function createAppUse(appContext: Record<string, unknown>) {
+function defineAppUse(appContext: Record<string, unknown>) {
   return function appUse<T = unknown>(key: string): T {
     if (key in appContext) {
       return appContext[key] as T;

@@ -1,4 +1,4 @@
-import { createComponent, use } from 'liteforge';
+import { defineComponent, use } from 'liteforge';
 import { DocSection } from '../../components/DocSection.js';
 import { CodeBlock } from '../../components/CodeBlock.js';
 import { ApiTable } from '../../components/ApiTable.js';
@@ -23,7 +23,7 @@ import {
 import { getRouteApi } from './api.js';
 import { RouterDemo } from './RouterDemo.js';
 
-export const RouterPage = createComponent({
+export const RouterPage = defineComponent({
   name: 'RouterPage',
   component() {
     const { t } = use('i18n');
@@ -48,7 +48,7 @@ export const RouterPage = createComponent({
             {() => t('router.subtitle')}
           </p>
           <CodeBlock code={`pnpm add @liteforge/router`} language="bash" />
-          <CodeBlock code={`import { createRouter, createBrowserHistory, Link, RouterOutlet } from '@liteforge/router';`} language="typescript" />
+          <CodeBlock code={`import { defineRouter, createBrowserHistory, Link, RouterOutlet } from '@liteforge/router';`} language="typescript" />
         </div>
 
         <DocSection

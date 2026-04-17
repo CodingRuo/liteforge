@@ -8,7 +8,7 @@ export type EffectiveTheme = 'light' | 'dark';
 
 export interface ThemeStoreOptions {
   /**
-   * Store name — used by DevTools and as the key in `createApp({ stores })`.
+   * Store name — used by DevTools and as the key in `defineApp({ stores })`.
    * @default 'theme'
    */
   name?: string;
@@ -53,7 +53,7 @@ export type ThemeStore = Store<ThemeState, Record<string, never>, ThemeActions> 
  * Built on top of `defineStore()` — fully compatible with `AnyStore`,
  * DevTools, and time-travel debugging out of the box.
  *
- * Pass it directly to `createApp({ stores: [uiStore] })` — `initialize()`
+ * Pass it directly to `defineApp({ stores: [uiStore] })` — `initialize()`
  * runs automatically on app boot.
  *
  * @example
@@ -64,7 +64,7 @@ export type ThemeStore = Store<ThemeState, Record<string, never>, ThemeActions> 
  * export const uiStore = createThemeStore({ storageKey: 'my_theme' })
  *
  * // main.ts — initialize() is called automatically
- * await createApp({ root: App, target: '#app', stores: [authStore, uiStore] })
+ * await defineApp({ root: App, target: '#app', stores: [authStore, uiStore] })
  *   .mount()
  *
  * // In a component

@@ -27,7 +27,7 @@ export interface TabResult {
 /**
  * Create the Component Tree tab content.
  */
-export function createComponentTree(
+export function defineComponentTree(
   buffer: EventBuffer,
   state: Signal<PanelState>
 ): TabResult {

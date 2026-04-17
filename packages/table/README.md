@@ -238,11 +238,11 @@ const table = createTable({
 ## Usage in Components
 
 ```tsx
-import { createComponent } from '@liteforge/runtime'
+import { defineComponent } from '@liteforge/runtime'
 import { createQuery } from '@liteforge/query'
 import { createTable } from '@liteforge/table'
 
-const UserTable = createComponent({
+const UserTable = defineComponent({
   component: () => {
     const users = createQuery({
       key: 'users',

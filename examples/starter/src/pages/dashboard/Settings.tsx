@@ -9,7 +9,7 @@
  * - Reactive UI updates
  */
 
-import { createComponent, For } from 'liteforge';
+import { defineComponent, For } from 'liteforge';
 import { uiStore, type Theme } from '../../stores/ui.js';
 import { authStore } from '../../stores/auth.js';
 
@@ -17,7 +17,7 @@ import { authStore } from '../../stores/auth.js';
 // Component
 // =============================================================================
 
-export const SettingsPage = createComponent({
+export const SettingsPage = defineComponent({
   name: 'SettingsPage',
   component() {
     const themes: Theme[] = ['light', 'dark', 'system'];

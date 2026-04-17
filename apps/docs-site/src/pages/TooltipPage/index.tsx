@@ -1,4 +1,4 @@
-import { createComponent, use } from 'liteforge';
+import { defineComponent, use } from 'liteforge';
 import { DocSection } from '../../components/DocSection.js';
 import { CodeBlock } from '../../components/CodeBlock.js';
 import { LiveExample } from '../../components/LiveExample.js';
@@ -25,7 +25,7 @@ import {
   DismissExample,
 } from './TooltipExamples.js';
 
-export const TooltipPage = createComponent({
+export const TooltipPage = defineComponent({
   name: 'TooltipPage',
   component() {
     const { t } = use('i18n');

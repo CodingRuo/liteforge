@@ -11,7 +11,7 @@
  */
 
 import { signal } from 'liteforge';
-import { createComponent, Show, use } from 'liteforge';
+import { defineComponent, Show, use } from 'liteforge';
 import { authStore } from '../stores/auth.js';
 import type { Router } from 'liteforge/router';
 
@@ -19,7 +19,7 @@ import type { Router } from 'liteforge/router';
 // Component
 // =============================================================================
 
-export const LoginPage = createComponent({
+export const LoginPage = defineComponent({
   name: 'LoginPage',
   setup() {
     const email = signal('');

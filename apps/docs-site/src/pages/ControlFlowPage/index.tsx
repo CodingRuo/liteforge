@@ -1,4 +1,4 @@
-import { createComponent, use } from 'liteforge';
+import { defineComponent, use } from 'liteforge';
 import { createTable } from '@liteforge/table';
 import { DocSection } from '../../components/DocSection.js';
 import { CodeBlock } from '../../components/CodeBlock.js';
@@ -50,7 +50,7 @@ const DECISION_ROWS: DecisionRow[] = [
 // Page
 // =============================================================================
 
-export const ControlFlowPage = createComponent({
+export const ControlFlowPage = defineComponent({
   name: 'ControlFlowPage',
   component() {
     const { t } = use('i18n');

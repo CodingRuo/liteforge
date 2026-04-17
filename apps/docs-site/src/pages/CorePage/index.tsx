@@ -1,4 +1,4 @@
-import { createComponent, use } from 'liteforge';
+import { defineComponent, use } from 'liteforge';
 import { setToc } from '../../toc.js';
 import { DocSection } from '../../components/DocSection.js';
 import { CodeBlock } from '../../components/CodeBlock.js';
@@ -16,7 +16,7 @@ import { getSignalApi, getComputedApi, getEffectApi } from './api.js';
 import { CounterExample } from './CounterExample.js';
 import { FullNameExample } from './FullNameExample.js';
 
-export const CorePage = createComponent({
+export const CorePage = defineComponent({
   name: 'CorePage',
   component() {
     const { t } = use('i18n');

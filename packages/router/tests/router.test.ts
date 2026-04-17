@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { effect } from '@liteforge/core';
 import {
-  createRouter,
+  defineRouter,
   createMemoryHistory,
   defineGuard,
   defineMiddleware,
@@ -13,7 +13,7 @@ import type { Router, RouterOptions } from '../src/types.js';
 // =============================================================================
 
 function createTestRouter(options: Partial<RouterOptions> = {}): Router {
-  return createRouter({
+  return defineRouter({
     routes: [
       { path: '/', name: 'home', component: () => document.createElement('div') },
       { path: '/users', name: 'users', component: () => document.createElement('div') },
@@ -30,7 +30,7 @@ function createTestRouter(options: Partial<RouterOptions> = {}): Router {
 // Router Creation
 // =============================================================================
 
-describe('createRouter', () => {
+describe('defineRouter', () => {
   let router: Router;
 
   afterEach(() => {
@@ -119,7 +119,7 @@ describe('navigation', () => {
 
   it('replace navigation does not add history entry', async () => {
     const history = createMemoryHistory({ initialEntries: ['/'] });
-    router = createRouter({
+    router = defineRouter({
       routes: [
         { path: '/', component: () => document.createElement('div') },
         { path: '/users', component: () => document.createElement('div') },
@@ -266,7 +266,7 @@ describe('guards', () => {
   it('allows navigation when guard returns true', async () => {
     const authGuard = defineGuard('auth', () => true);
 
-    router = createRouter({
+    router = defineRouter({
       routes: [
         { path: '/', component: () => document.createElement('div') },
         { path: '/admin', guard: 'auth', component: () => document.createElement('div') },
@@ -283,7 +283,7 @@ describe('guards', () => {
   it('blocks navigation when guard returns false', async () => {
     const authGuard = defineGuard('auth', () => false);
 
-    router = createRouter({
+    router = defineRouter({
       routes: [
         { path: '/', component: () => document.createElement('div') },
         { path: '/admin', guard: 'auth', component: () => document.createElement('div') },
@@ -300,7 +300,7 @@ describe('guards', () => {
   it('redirects when guard returns a path', async () => {
     const authGuard = defineGuard('auth', () => '/login');
 
-    router = createRouter({
+    router = defineRouter({
       routes: [
         { path: '/', component: () => document.createElement('div') },
         { path: '/login', component: () => document.createElement('div') },
@@ -321,7 +321,7 @@ describe('guards', () => {
       return true;
     });
 
-    router = createRouter({
+    router = defineRouter({
       routes: [
         { path: '/', component: () => document.createElement('div') },
         { path: '/users/:id', guard: 'test', component: () => document.createElement('div') },
@@ -344,7 +344,7 @@ describe('guards', () => {
       return true;
     });
 
-    router = createRouter({
+    router = defineRouter({
       routes: [
         { path: '/', component: () => document.createElement('div') },
         { path: '/admin', guard: 'async', component: () => document.createElement('div') },
@@ -362,7 +362,7 @@ describe('guards', () => {
       return param === 'admin';
     });
 
-    router = createRouter({
+    router = defineRouter({
       routes: [
         { path: '/', component: () => document.createElement('div') },
         { path: '/admin', guard: 'role:admin', component: () => document.createElement('div') },
@@ -380,7 +380,7 @@ describe('guards', () => {
   });
 
   it('registerGuard adds guard dynamically', async () => {
-    router = createRouter({
+    router = defineRouter({
       routes: [
         { path: '/', component: () => document.createElement('div') },
         { path: '/admin', guard: 'dynamic', component: () => document.createElement('div') },
@@ -421,7 +421,7 @@ describe('middleware', () => {
       log.push(`after: ${ctx.to.path}`);
     });
 
-    router = createRouter({
+    router = defineRouter({
       routes: [
         { path: '/', component: () => document.createElement('div') },
         { path: '/users', component: () => document.createElement('div') },
@@ -446,7 +446,7 @@ describe('middleware', () => {
       }
     });
 
-    router = createRouter({
+    router = defineRouter({
       routes: [
         { path: '/', component: () => document.createElement('div') },
         { path: '/old', component: () => document.createElement('div') },
@@ -475,7 +475,7 @@ describe('middleware', () => {
       order.push(3);
     });
 
-    router = createRouter({
+    router = defineRouter({
       routes: [
         { path: '/', component: () => document.createElement('div') },
         { path: '/users', component: () => document.createElement('div') },
@@ -593,7 +593,7 @@ describe('preload', () => {
   it('runs preload function before navigation completes', async () => {
     const preloadData = { user: { id: 42, name: 'Test' } };
 
-    router = createRouter({
+    router = defineRouter({
       routes: [
         { path: '/', component: () => document.createElement('div') },
         {
@@ -615,7 +615,7 @@ describe('preload', () => {
   it('preload receives params', async () => {
     let capturedParams: Record<string, string> = {};
 
-    router = createRouter({
+    router = defineRouter({
       routes: [
         { path: '/', component: () => document.createElement('div') },
         {
@@ -638,7 +638,7 @@ describe('preload', () => {
   it('navigation fails if preload throws', async () => {
     const errorHandler = vi.fn();
 
-    router = createRouter({
+    router = defineRouter({
       routes: [
         { path: '/', component: () => document.createElement('div') },
         {
@@ -709,7 +709,7 @@ describe('redirect routes', () => {
   });
 
   it('handles redirect routes', async () => {
-    router = createRouter({
+    router = defineRouter({
       routes: [
         { path: '/', component: () => document.createElement('div') },
         { path: '/old', redirect: '/new' },
@@ -723,7 +723,7 @@ describe('redirect routes', () => {
   });
 
   it('handles redirect with query params', async () => {
-    router = createRouter({
+    router = defineRouter({
       routes: [
         { path: '/', component: () => document.createElement('div') },
         { path: '/old', redirect: '/new?from=old' },
@@ -752,7 +752,7 @@ describe('error handling', () => {
   it('calls onError for navigation errors', async () => {
     const errors: Error[] = [];
 
-    router = createRouter({
+    router = defineRouter({
       routes: [
         { path: '/', component: () => document.createElement('div') },
         {
@@ -807,7 +807,7 @@ describe('initialNavigation + isReady', () => {
   });
 
   it('isReady resolves to true when no guards block', async () => {
-    const router = createRouter({
+    const router = defineRouter({
       routes: [{ path: '/', component: () => document.createElement('div') }],
       history: createMemoryHistory(),
     });
@@ -818,7 +818,7 @@ describe('initialNavigation + isReady', () => {
 
   it('guard runs on initial load and redirects', async () => {
     const history = createMemoryHistory({ initialEntries: ['/admin'] });
-    const router = createRouter({
+    const router = defineRouter({
       routes: [
         { path: '/', component: () => document.createElement('div') },
         { path: '/admin', component: () => document.createElement('div'), guard: 'auth' },
@@ -840,7 +840,7 @@ describe('initialNavigation + isReady', () => {
 
   it('guard allows initial load when authenticated', async () => {
     const history = createMemoryHistory({ initialEntries: ['/admin'] });
-    const router = createRouter({
+    const router = defineRouter({
       routes: [
         { path: '/admin', component: () => document.createElement('div'), guard: 'auth' },
         { path: '/login', component: () => document.createElement('div') },
@@ -860,7 +860,7 @@ describe('initialNavigation + isReady', () => {
   it('initialNavigation: false skips guards on load', async () => {
     const guardFn = vi.fn(() => true);
     const history = createMemoryHistory({ initialEntries: ['/admin'] });
-    const router = createRouter({
+    const router = defineRouter({
       routes: [
         { path: '/admin', component: () => document.createElement('div'), guard: 'auth' },
       ],
@@ -879,7 +879,7 @@ describe('initialNavigation + isReady', () => {
     const onError = vi.fn();
     const history = createMemoryHistory({ initialEntries: ['/a'] });
     // /a → /b → /a → /b ... infinite loop
-    const router = createRouter({
+    const router = defineRouter({
       routes: [
         { path: '/a', component: () => document.createElement('div'), guard: 'toB' },
         { path: '/b', component: () => document.createElement('div'), guard: 'toA' },
@@ -911,7 +911,7 @@ describe('initialNavigation + isReady', () => {
 
 describe('getRedirectParam', () => {
   it('returns decoded path when redirect param is a valid relative path', async () => {
-    const router = createRouter({
+    const router = defineRouter({
       routes: [{ path: '/login', component: () => document.createElement('div') }],
       history: createMemoryHistory({ initialEntries: ['/login?redirect=%2Fdashboard'] }),
     });
@@ -921,7 +921,7 @@ describe('getRedirectParam', () => {
   });
 
   it('returns null when redirect param is absent', async () => {
-    const router = createRouter({
+    const router = defineRouter({
       routes: [{ path: '/login', component: () => document.createElement('div') }],
       history: createMemoryHistory({ initialEntries: ['/login'] }),
     });
@@ -931,7 +931,7 @@ describe('getRedirectParam', () => {
   });
 
   it('rejects absolute URLs with protocol', async () => {
-    const router = createRouter({
+    const router = defineRouter({
       routes: [{ path: '/login', component: () => document.createElement('div') }],
       history: createMemoryHistory({ initialEntries: ['/login?redirect=https%3A%2F%2Fevil.com'] }),
     });
@@ -941,7 +941,7 @@ describe('getRedirectParam', () => {
   });
 
   it('rejects protocol-relative URLs', async () => {
-    const router = createRouter({
+    const router = defineRouter({
       routes: [{ path: '/login', component: () => document.createElement('div') }],
       history: createMemoryHistory({ initialEntries: ['/login?redirect=%2F%2Fevil.com'] }),
     });
@@ -951,7 +951,7 @@ describe('getRedirectParam', () => {
   });
 
   it('returns path with query string preserved', async () => {
-    const router = createRouter({
+    const router = defineRouter({
       routes: [{ path: '/login', component: () => document.createElement('div') }],
       history: createMemoryHistory({ initialEntries: ['/login?redirect=%2Fadmin%3Ftab%3Dusers'] }),
     });

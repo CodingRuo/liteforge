@@ -75,7 +75,7 @@ const store = storeRegistry.get('example');`;
 export const TIME_TRAVEL_CODE = `import { devtoolsPlugin } from '@liteforge/devtools';
 
 // Time-travel is built into devtools:
-// 1. Integrate devtoolsPlugin() in createApp()
+// 1. Integrate devtoolsPlugin() in defineApp()
 // 2. Open DevTools panel (default shortcut: Alt+D)
 // 3. Switch to the Stores tab
 // 4. Click any history entry to rewind state

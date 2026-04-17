@@ -4,7 +4,7 @@
  * Sidebar with icon+label navigation, collapses to icon-only with tooltips.
  */
 
-import { createComponent } from 'liteforge';
+import { defineComponent } from 'liteforge';
 import { RouterOutlet } from 'liteforge/router';
 import { tooltip } from 'liteforge/tooltip';
 import { authStore } from '../../stores/auth.js';
@@ -35,7 +35,7 @@ const NAV_ITEMS = [
 // Component
 // =============================================================================
 
-export const DashboardLayout = createComponent({
+export const DashboardLayout = defineComponent({
   name: 'DashboardLayout',
   component({ use }) {
     const router = use<Router>('router');

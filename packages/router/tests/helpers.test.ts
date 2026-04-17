@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { pushContext, popContext } from '../../runtime/src/context.js';
 import {
-  createRouter,
+  defineRouter,
   createMemoryHistory,
   useEditParam,
   useParam,
@@ -17,7 +17,7 @@ import type { Router } from '../src/types.js';
 // =============================================================================
 
 function createTestRouter(initialPath = '/'): Router {
-  return createRouter({
+  return defineRouter({
     routes: [
       { path: '/', name: 'home', component: () => document.createElement('div') },
       { path: '/users/:id', name: 'user-detail', component: () => document.createElement('div') },
@@ -204,7 +204,7 @@ describe('useQuery', () => {
   });
 
   it('returns current query params', async () => {
-    router = createRouter({
+    router = defineRouter({
       routes: [{ path: '/search', name: 'search', component: () => document.createElement('div') }],
       history: createMemoryHistory({ initialPath: '/search?q=hello' }),
     });

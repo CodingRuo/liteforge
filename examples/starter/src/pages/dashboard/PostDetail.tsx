@@ -8,7 +8,7 @@
  * - Navigation back to posts list
  */
 
-import { createComponent, Show, For } from 'liteforge';
+import { defineComponent, Show, For } from 'liteforge';
 import { Link, useParam } from 'liteforge/router';
 import type { QueryApi } from 'liteforge/query';
 import { createClient } from 'liteforge/client';
@@ -48,7 +48,7 @@ const fetchComments = (postId: string): Promise<Comment[]> =>
 // Post Detail Page Component
 // =============================================================================
 
-export const PostDetailPage = createComponent({
+export const PostDetailPage = defineComponent({
   name: 'PostDetailPage',
 
   setup({ use }) {

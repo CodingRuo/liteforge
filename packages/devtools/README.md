@@ -13,10 +13,10 @@ Peer dependency: `@liteforge/core >= 0.1.0`
 ## Setup
 
 ```ts
-import { createApp } from '@liteforge/runtime'
+import { defineApp } from '@liteforge/runtime'
 import { devtoolsPlugin } from '@liteforge/devtools'
 
-createApp({
+defineApp({
   plugins: [
     devtoolsPlugin({
       shortcut: 'ctrl+shift+d',  // Toggle shortcut
@@ -71,7 +71,7 @@ The devtools panel has five tabs:
 
 ### devtoolsPlugin
 
-Creates the devtools plugin for `createApp`.
+Creates the devtools plugin for `defineApp`.
 
 ```ts
 import { devtoolsPlugin } from '@liteforge/devtools'
@@ -100,7 +100,7 @@ devtoolsPlugin({
 
 ### createDevTools
 
-For standalone usage without `createApp`:
+For standalone usage without `defineApp`:
 
 ```ts
 import { createDevTools } from '@liteforge/devtools'
@@ -151,7 +151,7 @@ userStore.actions.updateProfile(profile)
 Only load devtools in development:
 
 ```ts
-import { createApp } from '@liteforge/runtime'
+import { defineApp } from '@liteforge/runtime'
 
 const plugins = []
 
@@ -160,7 +160,7 @@ if (import.meta.env.DEV) {
   plugins.push(devtoolsPlugin())
 }
 
-createApp({ plugins }).mount(App)
+defineApp({ plugins }).mount(App)
 ```
 
 ## Custom Panels

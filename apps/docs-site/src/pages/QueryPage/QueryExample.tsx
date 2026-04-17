@@ -1,7 +1,7 @@
-import { createComponent, signal, effect } from 'liteforge';
+import { defineComponent, signal, effect } from 'liteforge';
 import { createQuery } from '@liteforge/query';
 
-export const QueryExample = createComponent({
+export const QueryExample = defineComponent({
   name: 'QueryExample',
   component() {
     const postId = signal(1);

@@ -1,8 +1,8 @@
-import { createComponent, use } from 'liteforge';
+import { defineComponent, use } from 'liteforge';
 import { signal, computed } from 'liteforge';
 import { inputClass } from '../../components/Input.js';
 
-export const FullNameExample = createComponent({
+export const FullNameExample = defineComponent({
   name: 'FullNameExample',
   component() {
     const { t } = use('i18n');

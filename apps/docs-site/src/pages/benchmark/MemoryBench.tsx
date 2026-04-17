@@ -1,4 +1,4 @@
-import { createComponent, For, Show } from 'liteforge';
+import { defineComponent, For, Show } from 'liteforge';
 import { signal, computed, effect } from 'liteforge';
 import { BenchmarkCard, ConfigSelect, RunButton } from './BenchmarkCard';
 import { formatBytes, nextFrame, type BenchStatus, type BenchSummary } from './bench-utils';
@@ -35,7 +35,7 @@ interface RunRecord {
  * - 3 effects
  * - Nested children with For list
  */
-const HeavyTestComponent = createComponent({
+const HeavyTestComponent = defineComponent({
   name: 'HeavyTestComponent',
   component() {
     // 10 signals
@@ -100,7 +100,7 @@ interface MemoryBenchProps {
   onComplete?: (summary: BenchSummary) => void;
 }
 
-export const MemoryBench = createComponent<MemoryBenchProps>({
+export const MemoryBench = defineComponent<MemoryBenchProps>({
   name: 'MemoryBench',
   component({ props }) {
     const status = signal<BenchStatus>('idle');

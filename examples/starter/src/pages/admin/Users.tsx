@@ -10,7 +10,7 @@
  */
 
 import { signal } from 'liteforge';
-import { createComponent, For } from 'liteforge';
+import { defineComponent, For } from 'liteforge';
 import { toast } from 'liteforge/toast';
 
 // =============================================================================
@@ -40,7 +40,7 @@ const initialUsers: AdminUser[] = [
 // Component
 // =============================================================================
 
-export const AdminUsers = createComponent({
+export const AdminUsers = defineComponent({
   name: 'AdminUsers',
   setup() {
     const users = signal<AdminUser[]>([...initialUsers]);

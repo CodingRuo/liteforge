@@ -1,13 +1,13 @@
-import { createComponent } from 'liteforge';
+import { defineComponent } from 'liteforge';
 
-export const LifecycleDiagram = createComponent({
+export const LifecycleDiagram = defineComponent({
   name: 'LifecycleDiagram',
   component() {
     const wrap = document.createElement('div');
     wrap.className = 'overflow-x-auto';
     wrap.innerHTML = `
 <pre class="text-xs font-mono text-[var(--content-secondary)] leading-relaxed p-4 rounded bg-[var(--surface-overlay)] border border-[var(--line-default)] select-all">
-createComponent()
+defineComponent()
       │
       ▼
   setup()           ← runs once, returns reactive state

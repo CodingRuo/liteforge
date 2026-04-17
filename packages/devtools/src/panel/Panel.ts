@@ -25,8 +25,8 @@ import type {
 import type { DevToolsStoreMap } from '../types.js';
 import { createSignalInspector } from '../tabs/SignalInspector.js';
 import { createStoreExplorer } from '../tabs/StoreExplorer.js';
-import { createRouterInspector } from '../tabs/RouterInspector.js';
-import { createComponentTree } from '../tabs/ComponentTree.js';
+import { defineRouterInspector } from '../tabs/RouterInspector.js';
+import { defineComponentTree } from '../tabs/ComponentTree.js';
 import { createPerformanceTab } from '../tabs/Performance.js';
 
 // ============================================================================
@@ -254,11 +254,11 @@ function createTabContent(
       container.appendChild(tabResult.element);
       break;
     case 'router':
-      tabResult = createRouterInspector(buffer, state);
+      tabResult = defineRouterInspector(buffer, state);
       container.appendChild(tabResult.element);
       break;
     case 'components':
-      tabResult = createComponentTree(buffer, state);
+      tabResult = defineComponentTree(buffer, state);
       container.appendChild(tabResult.element);
       break;
     case 'performance':

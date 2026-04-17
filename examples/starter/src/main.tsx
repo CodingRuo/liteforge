@@ -7,7 +7,7 @@
  * - .useDev(devtoolsPlugin) → DevTools only in dev, tree-shaken from prod
  */
 
-import { createApp } from 'liteforge';
+import { defineApp } from 'liteforge';
 import { routerPlugin } from 'liteforge/router';
 import { clientPlugin, queryIntegration } from 'liteforge/client';
 import { queryPlugin } from 'liteforge/query';
@@ -19,7 +19,7 @@ import { toastPlugin } from 'liteforge/toast';
 
 // Import app components
 import { App } from './App.js';
-import { createAppRouter } from './router.js';
+import { defineAppRouter } from './router.js';
 import { authStore } from './stores/auth.js';
 import { uiStore } from './stores/ui.js';
 
@@ -44,13 +44,13 @@ async function loadLocale(locale: string): Promise<TranslationTree> {
 // Application Bootstrap
 // =============================================================================
 
-const app = await createApp({
+const app = await defineApp({
   root: App,
   target: '#app',
   stores: [authStore, uiStore],
   debug: true,
 })
-  .use(routerPlugin(createAppRouter()))
+  .use(routerPlugin(defineAppRouter()))
   .use(queryPlugin())
   .use(clientPlugin({ baseUrl: '/api', query: queryIntegration() }))
   .use(modalPlugin())

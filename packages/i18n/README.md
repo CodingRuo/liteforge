@@ -12,7 +12,7 @@ pnpm add @liteforge/i18n
 
 ```ts
 // main.ts
-import { createApp } from 'liteforge'
+import { defineApp } from 'liteforge'
 import { i18nPlugin } from '@liteforge/i18n'
 import en from './locales/en.js'
 
@@ -20,7 +20,7 @@ import en from './locales/en.js'
 // Adding a new language = create one file, no other changes needed.
 const localeModules = import.meta.glob('./locales/*.js')
 
-await createApp({ root: App, target: '#app' })
+await defineApp({ root: App, target: '#app' })
   .use(i18nPlugin({
     default: en,
     fallback: 'en',
@@ -79,9 +79,9 @@ No changes to `main.ts`, no imports to update. `import.meta.glob('./locales/*.js
 
 ```ts
 import type { I18nApi } from '@liteforge/i18n'
-import { createComponent } from 'liteforge'
+import { defineComponent } from 'liteforge'
 
-export const MyComponent = createComponent({
+export const MyComponent = defineComponent({
   name: 'MyComponent',
   setup({ use }) {
     const { t, locale, setLocale } = use<I18nApi>('i18n')

@@ -1,11 +1,11 @@
 ---
-title: "createComponent"
+title: "defineComponent"
 category: "core"
-tags: ["component", "createComponent", "factory", "props", "setup", "load"]
+tags: ["component", "defineComponent", "factory", "props", "setup", "load"]
 related: ["Lifecycle", "JSX", "Context"]
 ---
 
-# createComponent
+# defineComponent
 
 > The central factory for creating reactive components with full lifecycle support.
 
@@ -18,10 +18,10 @@ npm install @liteforge/runtime
 ## Quick Start
 
 ```tsx
-import { createComponent } from '@liteforge/runtime'
+import { defineComponent } from '@liteforge/runtime'
 import { signal } from '@liteforge/core'
 
-const Counter = createComponent({
+const Counter = defineComponent({
   setup() {
     const count = signal(0)
     return { count }
@@ -42,13 +42,13 @@ const Counter = createComponent({
 
 ## API Reference
 
-### `createComponent<TProps>(definition)` → `ComponentFactory<TProps>`
+### `defineComponent<TProps>(definition)` → `ComponentFactory<TProps>`
 
 **Overloads:**
 
-1. `createComponent<TProps>({ ... })` — explicit prop type, no schema object.
-2. `createComponent({ props: schema, ... })` — schema-driven props with defaults/required.
-3. `createComponent({ ... })` — no props.
+1. `defineComponent<TProps>({ ... })` — explicit prop type, no schema object.
+2. `defineComponent({ props: schema, ... })` — schema-driven props with defaults/required.
+3. `defineComponent({ ... })` — no props.
 
 **Definition object:**
 
@@ -82,7 +82,7 @@ A callable function that accepts props and returns a `Node` (for JSX compat). In
 ### Async loading with placeholder
 
 ```tsx
-const UserProfile = createComponent({
+const UserProfile = defineComponent({
   setup({ props }) {
     return { expanded: signal(false) }
   },
@@ -125,7 +125,7 @@ interface CardProps {
   subtitle?: string
 }
 
-const Card = createComponent<CardProps>({
+const Card = defineComponent<CardProps>({
   component({ props }) {
     return (
       <div class="card">
@@ -140,7 +140,7 @@ const Card = createComponent<CardProps>({
 ### With props schema
 
 ```tsx
-const Badge = createComponent({
+const Badge = defineComponent({
   props: {
     label: { type: String, required: true },
     color: { type: String, default: 'blue' },

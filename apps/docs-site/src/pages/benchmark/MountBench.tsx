@@ -1,4 +1,4 @@
-import { createComponent, Show } from 'liteforge';
+import { defineComponent, Show } from 'liteforge';
 import { signal, computed, effect } from 'liteforge';
 import { BenchmarkCard, ConfigSelect, RunButton, ResultsTable } from './BenchmarkCard';
 import { measure, formatMs, nextFrame, type BenchStatus, type BenchSummary } from './bench-utils';
@@ -13,7 +13,7 @@ const DEFAULT_CYCLE_COUNT = 1_000;
  * - 2 effects
  * - JSX with conditional rendering
  */
-const TestComponent = createComponent({
+const TestComponent = defineComponent({
   name: 'TestComponent',
   component() {
     // 5 signals
@@ -57,7 +57,7 @@ const TestComponent = createComponent({
 /**
  * More complex test component with children
  */
-const ComplexTestComponent = createComponent({
+const ComplexTestComponent = defineComponent({
   name: 'ComplexTestComponent',
   component() {
     const parentSignal = signal(0);
@@ -80,7 +80,7 @@ interface MountBenchProps {
   onComplete?: (summary: BenchSummary) => void;
 }
 
-export const MountBench = createComponent<MountBenchProps>({
+export const MountBench = defineComponent<MountBenchProps>({
   name: 'MountBench',
   component({ props }) {
     const status = signal<BenchStatus>('idle');

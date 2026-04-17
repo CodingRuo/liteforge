@@ -43,7 +43,7 @@ export function RouterOutlet(config: RouterOutletConfig = {}): Node {
   try {
     router = use<Router>('router');
   } catch {
-    throw new Error('RouterOutlet requires a router in context. Make sure to use createApp with a router.');
+    throw new Error('RouterOutlet requires a router in context. Make sure to use defineApp with a router.');
   }
 
   // Get current outlet depth (default 0 for top-level)
@@ -255,7 +255,7 @@ export function RouterOutlet(config: RouterOutletConfig = {}): Node {
       return;
     }
 
-    // Check if it's a ComponentFactory (from createComponent)
+    // Check if it's a ComponentFactory (from defineComponent)
     if (isComponentFactory(component)) {
       renderSyncComponent(component, props);
       return;
@@ -552,7 +552,7 @@ export function Link(config: LinkConfig): HTMLAnchorElement {
   try {
     router = use<Router>('router');
   } catch {
-    throw new Error('Link requires a router in context. Make sure to use createApp with a router.');
+    throw new Error('Link requires a router in context. Make sure to use defineApp with a router.');
   }
 
   // Create anchor element

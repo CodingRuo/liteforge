@@ -29,7 +29,7 @@ Call `tooltip(el, options)` with an `HTMLElement` and a string or options object
 import { tooltip } from '@liteforge/tooltip'
 import { onCleanup } from '@liteforge/core'
 
-// Inside createComponent setup or mounted():
+// Inside defineComponent setup or mounted():
 const el = document.querySelector('#my-button') as HTMLElement
 const cleanup = tooltip(el, 'Click to save your changes')
 onCleanup(cleanup)
@@ -58,10 +58,10 @@ tooltip(el, {
 ### In JSX via ref
 
 ```tsx
-import { createComponent, onCleanup } from 'liteforge'
+import { defineComponent, onCleanup } from 'liteforge'
 import { tooltip } from '@liteforge/tooltip'
 
-export const SaveButton = createComponent({
+export const SaveButton = defineComponent({
   component() {
     return (
       <button
@@ -126,10 +126,10 @@ With `position: 'auto'`, the tooltip measures available viewport space and falls
 `showWhen` is a guard function evaluated on every `pointerenter`. Use it to suppress tooltips conditionally — for example, when a sidebar is expanded and items already have visible labels:
 
 ```tsx
-import { createComponent } from 'liteforge'
+import { defineComponent } from 'liteforge'
 import { tooltip } from '@liteforge/tooltip'
 
-export const Nav = createComponent({
+export const Nav = defineComponent({
   setup({ use }) {
     const ui = use('ui')
     return { ui }

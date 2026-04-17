@@ -1,4 +1,4 @@
-import { createComponent, signal } from 'liteforge';
+import { defineComponent, signal } from 'liteforge';
 import { createI18n, defineLocale } from '@liteforge/i18n';
 import { btnClass } from '../../components/Button.js';
 
@@ -18,7 +18,7 @@ const DE = defineLocale({
   // 'fallback' key intentionally missing — falls back to EN
 });
 
-export const I18nExample = createComponent({
+export const I18nExample = defineComponent({
   name: 'I18nExample',
   setup() {
     const i18n = createI18n({

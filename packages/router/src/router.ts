@@ -47,7 +47,7 @@ import { setupTitleEffect } from './title.js';
  * @typeParam T - Inferred from the `routes` array literal. Pass `as const` on
  *   the routes array to get typed navigation:
  *   ```ts
- *   const router = createRouter({ routes: [{ path: '/home' }, { path: '/users/:id' }] as const })
+ *   const router = defineRouter({ routes: [{ path: '/home' }, { path: '/users/:id' }] as const })
  *   router.navigate('/home')         // OK
  *   router.navigate('/users/42')     // OK  (`:id` filled)
  *   router.navigate('/typo')         // TS error
@@ -55,7 +55,7 @@ import { setupTitleEffect } from './title.js';
  *   Without `as const`, TypeScript widens path strings to `string` and typed
  *   navigation degrades silently — all existing code continues to work.
  */
-export function createRouter<T extends readonly RouteDefinition[]>(
+export function defineRouter<T extends readonly RouteDefinition[]>(
   options: RouterOptions & { routes: T },
 ): Router<T> {
   const {
@@ -763,7 +763,7 @@ export function createRouter<T extends readonly RouteDefinition[]>(
     disposeTitleEffect = setupTitleEffect(titleTemplate, router);
   }
 
-  // Attach method to set context accessor (called by createApp)
+  // Attach method to set context accessor (called by defineApp)
   (router as RouterInternal)._setContextAccessor = (accessor: <T>(key: string) => T) => {
     contextAccessor = accessor;
   };
@@ -801,7 +801,7 @@ export interface RouterInternal extends Router {
 let activeRouter: Router | null = null;
 
 /**
- * Set the active router (called by createApp)
+ * Set the active router (called by defineApp)
  */
 export function setActiveRouter(router: Router | null): void {
   activeRouter = router;

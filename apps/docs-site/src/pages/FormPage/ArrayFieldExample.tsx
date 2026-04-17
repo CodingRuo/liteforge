@@ -1,10 +1,10 @@
-import { createComponent, computed } from 'liteforge';
+import { defineComponent, computed } from 'liteforge';
 import { createForm } from '@liteforge/form';
 import { z } from 'zod';
 import { Button } from '../../components/Button.js';
 import { inputClass } from '../../components/Input.js';
 
-export const ArrayFieldExample = createComponent({
+export const ArrayFieldExample = defineComponent({
   name: 'ArrayFieldExample',
   component() {
     const form = createForm({

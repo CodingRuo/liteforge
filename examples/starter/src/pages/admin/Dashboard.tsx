@@ -8,7 +8,7 @@
  * - Store registry inspection
  */
 
-import { createComponent, For } from 'liteforge';
+import { defineComponent, For } from 'liteforge';
 import { storeRegistry } from 'liteforge/store';
 
 // =============================================================================
@@ -49,7 +49,7 @@ async function fetchSystemStats(): Promise<SystemStats> {
 // Component
 // =============================================================================
 
-export const AdminDashboard = createComponent({
+export const AdminDashboard = defineComponent({
   name: 'AdminDashboard',
   async load() {
     const stats = await fetchSystemStats();

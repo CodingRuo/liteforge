@@ -9,7 +9,7 @@
  * - Form submission handling
  */
 
-import { createComponent, Show, For } from 'liteforge';
+import { defineComponent, Show, For } from 'liteforge';
 import { signal, computed } from 'liteforge';
 import { createForm } from 'liteforge/form';
 import { z } from 'zod';
@@ -41,7 +41,7 @@ const invoiceSchema = z.object({
 // Forms Page Component
 // =============================================================================
 
-export const FormsPage = createComponent({
+export const FormsPage = defineComponent({
   name: 'FormsPage',
 
   setup() {

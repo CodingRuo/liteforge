@@ -313,11 +313,11 @@ import {
 ## Usage in Components
 
 ```tsx
-import { createComponent } from '@liteforge/runtime'
+import { defineComponent } from '@liteforge/runtime'
 import { createQuery, createMutation } from '@liteforge/query'
 import { createCalendar } from '@liteforge/calendar'
 
-const AppointmentCalendar = createComponent({
+const AppointmentCalendar = defineComponent({
   component: () => {
     const appointments = createQuery({
       key: 'appointments',

@@ -2,7 +2,7 @@
 title: "Route Definition"
 category: "router"
 tags: ["routes", "nested", "lazy", "guards", "redirect", "meta", "preload"]
-related: ["createRouter", "Navigation", "Lazy Loading"]
+related: ["defineRouter", "Navigation", "Lazy Loading"]
 ---
 
 # Route Definition
@@ -18,11 +18,11 @@ npm install @liteforge/router
 ## Quick Start
 
 ```ts
-import { createRouter, lazy } from '@liteforge/router'
+import { defineRouter, lazy } from '@liteforge/router'
 import { createAuthGuard } from '@liteforge/router'
 import { Home, NotFound } from './pages'
 
-const router = createRouter({
+const router = defineRouter({
   routes: [
     { path: '/', component: Home },
     {
@@ -95,7 +95,7 @@ import {
   createConfirmGuard,
 } from '@liteforge/router'
 
-const router = createRouter({
+const router = defineRouter({
   routes,
   guards: [
     createAuthGuard({
@@ -153,7 +153,7 @@ const authGuard = defineGuard('auth', async ({ to, from, use }) => {
 Child paths are always **relative to the parent** — the leading `/` is stripped automatically before joining. Both `'/stats'` and `'stats'` produce the same URL when nested.
 
 ```ts
-createRouter({
+defineRouter({
   routes: [
     {
       path: '/customers',        // layout route

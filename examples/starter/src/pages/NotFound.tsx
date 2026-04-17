@@ -8,7 +8,7 @@
  * - Router navigation programmatically
  */
 
-import { createComponent, use } from 'liteforge';
+import { defineComponent, use } from 'liteforge';
 import { Link } from 'liteforge/router';
 import type { Router } from 'liteforge/router';
 
@@ -16,7 +16,7 @@ import type { Router } from 'liteforge/router';
 // Component
 // =============================================================================
 
-export const NotFoundPage = createComponent({
+export const NotFoundPage = defineComponent({
   name: 'NotFoundPage',
   component() {
     const router = use<Router>('router');

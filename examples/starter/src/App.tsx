@@ -4,7 +4,7 @@
  * Main application shell with header and RouterOutlet.
  */
 
-import { createComponent, Show } from 'liteforge';
+import { defineComponent, Show } from 'liteforge';
 import { Link, RouterOutlet } from 'liteforge/router';
 import { authStore } from './stores/auth.js';
 import { uiStore } from './stores/ui.js';
@@ -14,7 +14,7 @@ import { effect } from 'liteforge';
 // Component
 // =============================================================================
 
-export const App = createComponent({
+export const App = defineComponent({
   name: 'App',
   component() {
     // Keep data-theme in sync with uiStore so all --lf-* tokens react

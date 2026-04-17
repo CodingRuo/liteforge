@@ -1,4 +1,4 @@
-import { createComponent, Show } from 'liteforge';
+import { defineComponent, Show } from 'liteforge';
 import { signal, computed, effect } from 'liteforge';
 import { BenchmarkCard, ConfigSelect, RunButton, ResultsTable } from './BenchmarkCard';
 import { formatMs, formatOps, type BenchStatus, type BenchSummary } from './bench-utils';
@@ -10,7 +10,7 @@ interface ComputedChainBenchProps {
   onComplete?: (summary: BenchSummary) => void;
 }
 
-export const ComputedChainBench = createComponent<ComputedChainBenchProps>({
+export const ComputedChainBench = defineComponent<ComputedChainBenchProps>({
   name: 'ComputedChainBench',
   component({ props }) {
     const status = signal<BenchStatus>('idle');

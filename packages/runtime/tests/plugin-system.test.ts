@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { createApp, createComponent, clearContext } from '../src/index.js';
+import { defineApp, defineComponent, clearContext } from '../src/index.js';
 import type { LiteForgePlugin } from '../src/index.js';
 
 describe('Plugin System', () => {
@@ -22,7 +22,7 @@ describe('Plugin System', () => {
   });
 
   const makeRoot = () =>
-    createComponent({ component: () => document.createTextNode('App') });
+    defineComponent({ component: () => document.createTextNode('App') });
 
   // ──────────────────────────────────────────────────────────────────────────
   // AppBuilder shape
@@ -30,7 +30,7 @@ describe('Plugin System', () => {
 
   describe('AppBuilder', () => {
     it('returns an object with .use() and .mount()', () => {
-      const builder = createApp({ root: makeRoot(), target: container });
+      const builder = defineApp({ root: makeRoot(), target: container });
       expect(typeof builder.use).toBe('function');
       expect(typeof builder.mount).toBe('function');
       // Also implements Thenable
@@ -42,22 +42,22 @@ describe('Plugin System', () => {
         name: 'a',
         install: vi.fn(),
       };
-      const builder = createApp({ root: makeRoot(), target: container });
+      const builder = defineApp({ root: makeRoot(), target: container });
       const returned = builder.use(plugin);
       expect(returned).toBe(builder);
       // Need to mount so no pending promise leaks
       return returned.mount().then((app) => app.unmount());
     });
 
-    it('await createApp(...) without .mount() works via .then() — backward compat', async () => {
-      const app = await createApp({ root: makeRoot(), target: container });
+    it('await defineApp(...) without .mount() works via .then() — backward compat', async () => {
+      const app = await defineApp({ root: makeRoot(), target: container });
       expect(app).toBeDefined();
       expect(typeof app.unmount).toBe('function');
       app.unmount();
     });
 
     it('.use() after .mount() throws', async () => {
-      const builder = createApp({ root: makeRoot(), target: container });
+      const builder = defineApp({ root: makeRoot(), target: container });
       const app = await builder.mount();
       const latePlugin: LiteForgePlugin = { name: 'late', install: vi.fn() };
       expect(() => builder.use(latePlugin)).toThrow('.use() after .mount()');
@@ -65,7 +65,7 @@ describe('Plugin System', () => {
     });
 
     it('.mount() a second time throws', async () => {
-      const builder = createApp({ root: makeRoot(), target: container });
+      const builder = defineApp({ root: makeRoot(), target: container });
       const app = await builder.mount();
       expect(() => builder.mount()).toThrow('.mount() has already been called');
       app.unmount();
@@ -84,7 +84,7 @@ describe('Plugin System', () => {
       const b: LiteForgePlugin = { name: 'b', install: () => { order.push('b'); } };
       const c: LiteForgePlugin = { name: 'c', install: () => { order.push('c'); } };
 
-      const app = await createApp({ root: makeRoot(), target: container })
+      const app = await defineApp({ root: makeRoot(), target: container })
         .use(a)
         .use(b)
         .use(c)
@@ -102,7 +102,7 @@ describe('Plugin System', () => {
       const b: LiteForgePlugin = { name: 'dup', install: installB };
 
       await expect(
-        createApp({ root: makeRoot(), target: container })
+        defineApp({ root: makeRoot(), target: container })
           .use(a)
           .use(b)
           .mount(),
@@ -127,7 +127,7 @@ describe('Plugin System', () => {
         install(ctx) { ctx.provide('test', api); },
       };
 
-      const app = await createApp({ root: makeRoot(), target: container })
+      const app = await defineApp({ root: makeRoot(), target: container })
         .use(plugin)
         .mount();
 
@@ -143,14 +143,14 @@ describe('Plugin System', () => {
         install(ctx) { ctx.provide('svc', { value: 42 }); },
       };
 
-      const App = createComponent({
+      const App = defineComponent({
         component: ({ use }) => {
           capturedValue = use<{ value: number }>('svc').value;
           return document.createTextNode('ok');
         },
       });
 
-      const app = await createApp({ root: App, target: container })
+      const app = await defineApp({ root: App, target: container })
         .use(plugin)
         .mount();
 
@@ -170,7 +170,7 @@ describe('Plugin System', () => {
         install(ctx) { resolvedValue = ctx.resolve('shared'); },
       };
 
-      const app = await createApp({ root: makeRoot(), target: container })
+      const app = await defineApp({ root: makeRoot(), target: container })
         .use(first)
         .use(second)
         .mount();
@@ -187,7 +187,7 @@ describe('Plugin System', () => {
         install(ctx) { resolvedValue = ctx.resolve('nonexistent'); },
       };
 
-      const app = await createApp({ root: makeRoot(), target: container })
+      const app = await defineApp({ root: makeRoot(), target: container })
         .use(plugin)
         .mount();
 
@@ -206,7 +206,7 @@ describe('Plugin System', () => {
         },
       };
 
-      const app = await createApp({ root: makeRoot(), target: container })
+      const app = await defineApp({ root: makeRoot(), target: container })
         .use(queryLike)
         .mount();
 
@@ -229,7 +229,7 @@ describe('Plugin System', () => {
         },
       };
 
-      const app = await createApp({ root: makeRoot(), target: container })
+      const app = await defineApp({ root: makeRoot(), target: container })
         .use(toastPlugin)
         .use(queryLike)
         .mount();
@@ -261,7 +261,7 @@ describe('Plugin System', () => {
         install: () => () => { order.push('cleanup-c'); },
       };
 
-      const app = await createApp({ root: makeRoot(), target: container })
+      const app = await defineApp({ root: makeRoot(), target: container })
         .use(a)
         .use(b)
         .use(c)
@@ -284,7 +284,7 @@ describe('Plugin System', () => {
       };
 
       await expect(
-        createApp({ root: makeRoot(), target: container })
+        defineApp({ root: makeRoot(), target: container })
           .use(a)
           .use(b)
           .mount(),
@@ -308,7 +308,7 @@ describe('Plugin System', () => {
         install(ctx) { capturedTarget = ctx.target; },
       };
 
-      const app = await createApp({ root: makeRoot(), target: container })
+      const app = await defineApp({ root: makeRoot(), target: container })
         .use(plugin)
         .mount();
 

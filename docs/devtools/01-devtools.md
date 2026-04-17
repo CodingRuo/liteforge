@@ -2,7 +2,7 @@
 title: "DevTools"
 category: "devtools"
 tags: ["devtools", "devtoolsPlugin", "createDevTools", "time-travel", "signals", "debug"]
-related: ["defineStore", "Signals", "createApp"]
+related: ["defineStore", "Signals", "defineApp"]
 ---
 
 # DevTools
@@ -19,9 +19,9 @@ npm install @liteforge/devtools
 
 ```ts
 import { devtoolsPlugin } from '@liteforge/devtools'
-import { createApp } from '@liteforge/runtime'
+import { defineApp } from '@liteforge/runtime'
 
-await createApp({ root: App, target: '#app' })
+await defineApp({ root: App, target: '#app' })
   .use(devtoolsPlugin())
 ```
 
@@ -87,7 +87,7 @@ The panel includes 5 tabs:
 import { devtoolsPlugin } from '@liteforge/devtools'
 import { counterStore, userStore } from './stores'
 
-await createApp({ root: App, target: '#app', stores: [counterStore, userStore] })
+await defineApp({ root: App, target: '#app', stores: [counterStore, userStore] })
   .use(devtoolsPlugin({
     position: 'bottom-right',
     stores: {

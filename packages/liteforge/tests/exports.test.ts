@@ -14,10 +14,10 @@ describe('liteforge — core + runtime exports', () => {
     expect(typeof mod.onCleanup).toBe('function');
   });
 
-  it('exports createApp, createComponent from runtime', async () => {
+  it('exports defineApp, defineComponent from runtime', async () => {
     const mod = await import('../src/index.ts');
-    expect(typeof mod.createApp).toBe('function');
-    expect(typeof mod.createComponent).toBe('function');
+    expect(typeof mod.defineApp).toBe('function');
+    expect(typeof mod.defineComponent).toBe('function');
   });
 
   it('exports Show, For, Switch from runtime', async () => {

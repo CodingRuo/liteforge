@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { signal } from '@liteforge/core';
 import {
-  createComponent,
+  defineComponent,
   isComponentFactory,
   initAppContext,
   clearContext,
 } from '../src/index.js';
 
-describe('createComponent', () => {
+describe('defineComponent', () => {
   let container: HTMLElement;
 
   beforeEach(() => {
@@ -23,7 +23,7 @@ describe('createComponent', () => {
 
   describe('basic component', () => {
     it('should create a component factory', () => {
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         component: () => document.createTextNode('Hello'),
       });
 
@@ -32,7 +32,7 @@ describe('createComponent', () => {
     });
 
     it('should render simple component', () => {
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         component: () => document.createTextNode('Hello World'),
       });
 
@@ -43,7 +43,7 @@ describe('createComponent', () => {
     });
 
     it('should render element component', () => {
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         component: () => {
           const div = document.createElement('div');
           div.className = 'test';
@@ -61,7 +61,7 @@ describe('createComponent', () => {
 
   describe('props', () => {
     it('should pass props to component', () => {
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         component: ({ props }) => {
           return document.createTextNode(`Hello ${props.name}`);
         },
@@ -74,7 +74,7 @@ describe('createComponent', () => {
     });
 
     it('should apply default props', () => {
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         props: {
           name: { type: String, default: 'Default' },
           count: { type: Number, default: 0 },
@@ -91,7 +91,7 @@ describe('createComponent', () => {
     });
 
     it('should override defaults with provided props', () => {
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         props: {
           name: { type: String, default: 'Default' },
         },
@@ -107,7 +107,7 @@ describe('createComponent', () => {
     });
 
     it('should support function defaults', () => {
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         props: {
           items: { type: Array, default: () => [] },
         },
@@ -128,7 +128,7 @@ describe('createComponent', () => {
     it('should run setup and pass result to component', () => {
       const setupSpy = vi.fn(() => ({ count: signal(0) }));
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         setup: setupSpy,
         component: ({ setup }) => {
           return document.createTextNode(`Count: ${setup.count()}`);
@@ -143,7 +143,7 @@ describe('createComponent', () => {
     });
 
     it('should receive props in setup', () => {
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         setup: ({ props }) => ({
           greeting: `Hello ${props.name}`,
         }),
@@ -163,7 +163,7 @@ describe('createComponent', () => {
     it('should call mounted after component is in DOM', () => {
       const mountedSpy = vi.fn();
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         component: () => {
           const div = document.createElement('div');
           div.id = 'test-el';
@@ -184,7 +184,7 @@ describe('createComponent', () => {
     it('should receive all args in mounted', () => {
       const mountedSpy = vi.fn();
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         setup: () => ({ value: 42 }),
         component: () => document.createElement('div'),
         mounted: ({ el, props, setup }) => {
@@ -205,7 +205,7 @@ describe('createComponent', () => {
     it('should run mounted cleanup on unmount', () => {
       const cleanupSpy = vi.fn();
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         component: () => document.createElement('div'),
         mounted: () => cleanupSpy,
       });
@@ -223,7 +223,7 @@ describe('createComponent', () => {
     it('should call destroyed on unmount', () => {
       const destroyedSpy = vi.fn();
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         component: () => document.createTextNode('test'),
         destroyed: destroyedSpy,
       });
@@ -239,7 +239,7 @@ describe('createComponent', () => {
     it('should receive props and setup in destroyed', () => {
       const destroyedSpy = vi.fn();
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         setup: () => ({ value: 'setup-value' }),
         component: () => document.createTextNode('test'),
         destroyed: ({ props, setup }) => {
@@ -260,7 +260,7 @@ describe('createComponent', () => {
 
   describe('unmount', () => {
     it('should remove node from DOM', () => {
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         component: () => document.createTextNode('test'),
       });
 
@@ -275,7 +275,7 @@ describe('createComponent', () => {
     it('should be safe to call multiple times', () => {
       const destroyedSpy = vi.fn();
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         component: () => document.createTextNode('test'),
         destroyed: destroyedSpy,
       });
@@ -293,7 +293,7 @@ describe('createComponent', () => {
 
   describe('getNode', () => {
     it('should return current DOM node', () => {
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         component: () => {
           const div = document.createElement('div');
           div.id = 'my-node';
@@ -310,7 +310,7 @@ describe('createComponent', () => {
     });
 
     it('should return null after unmount', () => {
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         component: () => document.createElement('div'),
       });
 
@@ -329,7 +329,7 @@ describe('createComponent', () => {
       existing.textContent = 'existing';
       container.appendChild(existing);
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         component: () => document.createTextNode('inserted'),
       });
 
@@ -343,7 +343,7 @@ describe('createComponent', () => {
 
 describe('isComponentFactory', () => {
   it('should return true for component factories', () => {
-    const MyComponent = createComponent({
+    const MyComponent = defineComponent({
       component: () => document.createTextNode('test'),
     });
 
@@ -363,7 +363,7 @@ describe('isComponentFactory', () => {
   });
 });
 
-describe('createComponent<TProps> — generic props type parameter', () => {
+describe('defineComponent<TProps> — generic props type parameter', () => {
   let container: HTMLElement;
 
   beforeEach(() => {
@@ -382,7 +382,7 @@ describe('createComponent<TProps> — generic props type parameter', () => {
       title: string;
     }
 
-    const Card = createComponent<CardProps>({
+    const Card = defineComponent<CardProps>({
       name: 'Card',
       component({ props }) {
         const h2 = document.createElement('h2');
@@ -402,7 +402,7 @@ describe('createComponent<TProps> — generic props type parameter', () => {
       icon?: string;
     }
 
-    const Info = createComponent<InfoProps>({
+    const Info = defineComponent<InfoProps>({
       name: 'Info',
       component({ props }) {
         const span = document.createElement('span');
@@ -419,7 +419,7 @@ describe('createComponent<TProps> — generic props type parameter', () => {
 
   it('returns a valid ComponentFactory', () => {
     interface BtnProps { label: string }
-    const Btn = createComponent<BtnProps>({
+    const Btn = defineComponent<BtnProps>({
       name: 'Btn',
       component({ props }) {
         return document.createTextNode(props.label);
@@ -429,7 +429,7 @@ describe('createComponent<TProps> — generic props type parameter', () => {
   });
 
   it('existing no-props components still work after adding new overload', () => {
-    const Divider = createComponent({
+    const Divider = defineComponent({
       name: 'Divider',
       component() {
         return document.createElement('hr');
@@ -445,7 +445,7 @@ describe('createComponent<TProps> — generic props type parameter', () => {
     interface CounterProps { initial: number }
     const captured: { initial?: number } = {};
 
-    const Counter = createComponent<CounterProps>({
+    const Counter = defineComponent<CounterProps>({
       name: 'Counter',
       setup({ props }) {
         captured.initial = props.initial;

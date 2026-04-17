@@ -8,7 +8,7 @@
  * - toast.dismissAll
  */
 
-import { createComponent } from 'liteforge';
+import { defineComponent } from 'liteforge';
 import { toast } from 'liteforge/toast';
 
 // Simulated async operation
@@ -21,7 +21,7 @@ function fakeApiCall(succeed: boolean): Promise<string> {
   });
 }
 
-export const ToastsPage = createComponent({
+export const ToastsPage = defineComponent({
   name: 'ToastsPage',
   component() {
     return (

@@ -2,13 +2,13 @@
  * LiteForge HMR Runtime - Component Registry Architecture
  *
  * Architecture:
- * 1. Every createComponent() call registers the definition in componentRegistry
- * 2. On Vite HMR, the module is re-evaluated → createComponent() runs again →
+ * 1. Every defineComponent() call registers the definition in componentRegistry
+ * 2. On Vite HMR, the module is re-evaluated → defineComponent() runs again →
  *    registry is updated with the latest definition
  * 3. fullRerender() tears down and remounts the app; every factory reads the
  *    latest definition from the registry at call-time
  * 4. Stores survive (defineStore singleton registry)
- * 5. Router survives (singleton object captured in createApp closure)
+ * 5. Router survives (singleton object captured in defineApp closure)
  */
 
 import type { ComponentDefinition } from './types.js';
@@ -21,7 +21,7 @@ import type { ComponentDefinition } from './types.js';
 export interface HMRHandler {
   /** Handle a module update from Vite */
   handleUpdate: (moduleUrl: string, newModule: Record<string, unknown> | null) => void;
-  /** Full app re-render function (set by createApp) */
+  /** Full app re-render function (set by defineApp) */
   fullRerender: (() => void) | null;
 }
 
@@ -71,7 +71,7 @@ export function getLatestDefinition(
 
 /**
  * Handle a module update from Vite.
- * At this point Vite has already re-evaluated the module, so createComponent()
+ * At this point Vite has already re-evaluated the module, so defineComponent()
  * has run and the registry already contains the latest definition.
  * We always trigger a full app re-render: stores + router are singletons and
  * survive, while all factories read fresh definitions from the registry.

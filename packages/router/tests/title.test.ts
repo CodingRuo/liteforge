@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { signal } from '@liteforge/core';
 import {
-  createRouter,
+  defineRouter,
   createMemoryHistory,
   setActiveRouter,
   useTitle,
@@ -13,7 +13,7 @@ import type { Router } from '../src/types.js';
 // =============================================================================
 
 function createTitleRouter(titleTemplate?: (title: string | undefined) => string): Router {
-  return createRouter({
+  return defineRouter({
     routes: [
       { path: '/', name: 'home', component: () => document.createElement('div'), meta: { title: 'Home' } },
       { path: '/about', name: 'about', component: () => document.createElement('div'), meta: { title: 'About' } },

@@ -2,7 +2,7 @@
 title: "Context"
 category: "runtime"
 tags: ["context", "use", "provide", "dependency-injection", "plugin"]
-related: ["createComponent", "Rendering", "Quick Start"]
+related: ["defineComponent", "Rendering", "Quick Start"]
 ---
 
 # Context
@@ -18,10 +18,10 @@ npm install @liteforge/runtime
 ## Quick Start
 
 ```tsx
-import { createComponent, use } from '@liteforge/runtime'
+import { defineComponent, use } from '@liteforge/runtime'
 
 // Provider component — injects values into child context
-const AppShell = createComponent({
+const AppShell = defineComponent({
   provide() {
     return { theme: 'dark', version: '1.0' }
   },
@@ -31,7 +31,7 @@ const AppShell = createComponent({
 })
 
 // Consumer — reads from context
-const Child = createComponent({
+const Child = defineComponent({
   setup({ use }) {
     const theme = use<string>('theme')
     return { theme }
@@ -60,12 +60,12 @@ Read a value from the current component context. Available inside `setup`, `load
 
 Check if a key exists in the current context without throwing.
 
-### `provide` hook in `createComponent`
+### `provide` hook in `defineComponent`
 
 The `provide` hook on a component definition injects values into the context for all child components:
 
 ```ts
-createComponent({
+defineComponent({
   provide({ use }) {
     return { apiClient: createApiClient() }
   },
@@ -92,7 +92,7 @@ setup({ use }) {
 ```ts
 const myStore = defineStore('settings', { state: { locale: 'en' } })
 
-await createApp({ root: App, target: '#app', stores: [myStore] })
+await defineApp({ root: App, target: '#app', stores: [myStore] })
 
 // Inside any component:
 setup({ use }) {
@@ -104,7 +104,7 @@ setup({ use }) {
 ### Providing a service
 
 ```tsx
-const ApiProvider = createComponent({
+const ApiProvider = defineComponent({
   provide() {
     const client = { get: (url: string) => fetch(url).then(r => r.json()) }
     return { api: client }

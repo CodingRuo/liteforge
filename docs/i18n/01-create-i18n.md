@@ -2,7 +2,7 @@
 title: "createI18n"
 category: "i18n"
 tags: ["i18n", "createI18n", "locale", "translations", "interpolation", "plural", "defineLocale"]
-related: ["createApp", "Context"]
+related: ["defineApp", "Context"]
 ---
 
 # createI18n
@@ -91,7 +91,7 @@ Register i18n in the app context so `use('i18n')` returns the typed `I18nApi`.
 import { i18nPlugin } from '@liteforge/i18n'
 import en from './locales/en'
 
-await createApp({ root: App, target: '#app' })
+await defineApp({ root: App, target: '#app' })
   .use(i18nPlugin({ default: en, load }))
 ```
 
@@ -128,7 +128,7 @@ i18n.t('items', { count: 5 })   // → '5 items'
 ### Locale switching
 
 ```ts
-const LangSwitcher = createComponent({
+const LangSwitcher = defineComponent({
   setup({ use }) {
     const i18n = use<I18nApi>('i18n')
     return { i18n }

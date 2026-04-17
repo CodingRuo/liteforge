@@ -1,4 +1,4 @@
-import { createComponent, use } from 'liteforge';
+import { defineComponent, use } from 'liteforge';
 import { DocSection } from '../../components/DocSection.js';
 import { CodeBlock } from '../../components/CodeBlock.js';
 import { LiveExample } from '../../components/LiveExample.js';
@@ -8,7 +8,7 @@ import { SETUP_CODE, BASIC_CODE, PRESETS_CODE, LIVE_CODE } from './snippets.js';
 import { getConfigApi, getInstanceApi, getPresetApi } from './api.js';
 import { ModalExample } from './ModalExample.js';
 
-export const ModalPage = createComponent({
+export const ModalPage = defineComponent({
   name: 'ModalPage',
   component() {
     const { t } = use('i18n');

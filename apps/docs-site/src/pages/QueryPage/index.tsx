@@ -1,4 +1,4 @@
-import { createComponent, use } from 'liteforge';
+import { defineComponent, use } from 'liteforge';
 import { DocSection } from '../../components/DocSection.js';
 import { CodeBlock } from '../../components/CodeBlock.js';
 import { LiveExample } from '../../components/LiveExample.js';
@@ -15,7 +15,7 @@ import {
 import { getQueryApi, getMutationApi } from './api.js';
 import { QueryExample } from './QueryExample.js';
 
-export const QueryPage = createComponent({
+export const QueryPage = defineComponent({
   name: 'QueryPage',
   component() {
     const { t } = use('i18n');

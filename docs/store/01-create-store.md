@@ -179,4 +179,4 @@ The naming convention `'store:name'` is not enforced — use whatever key you re
 - `defineStore` is singleton: calling it twice with the same name returns the existing store.
 - State signals use `.set()` for updates — direct assignment does not work.
 - Actions receive `use` as their second argument to access app context (e.g. router, API clients). `use` throws if the store is not connected to an app.
-- Register stores in `createApp({ stores: [myStore] })` to connect them to context before mounting.
+- Register stores in `defineApp({ stores: [myStore] })` to connect them to context before mounting.

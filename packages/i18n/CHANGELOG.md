@@ -1,5 +1,12 @@
 # @liteforge/i18n
 
+## 6.0.0
+
+### Patch Changes
+
+- Updated dependencies
+  - @liteforge/runtime@1.0.0
+
 ## 5.0.0
 
 ### Patch Changes

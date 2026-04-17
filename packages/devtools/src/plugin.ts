@@ -60,8 +60,8 @@ const DEFAULT_CONFIG: ResolvedDevToolsConfig = {
  * ```ts
  * import { devtoolsPlugin } from '@liteforge/devtools';
  *
- * const app = await createApp({ root: App, target: '#app' })
- *   .use(routerPlugin(createAppRouter()))
+ * const app = await defineApp({ root: App, target: '#app' })
+ *   .use(routerPlugin(defineAppRouter()))
  *   .use(modalPlugin())
  *   .use(devtoolsPlugin({ shortcut: 'ctrl+shift+d', position: 'right' }))
  *   .mount();

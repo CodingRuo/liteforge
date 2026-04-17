@@ -1,8 +1,8 @@
-import { createComponent, signal } from 'liteforge';
+import { defineComponent, signal } from 'liteforge';
 import { createModal, confirm, alert, prompt } from '@liteforge/modal';
 import { Button } from '../../components/Button.js';
 
-export const ModalExample = createComponent({
+export const ModalExample = defineComponent({
   name: 'ModalExample',
   component() {
     const lastResult = signal<string>('');

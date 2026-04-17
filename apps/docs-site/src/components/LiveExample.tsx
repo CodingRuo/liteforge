@@ -1,4 +1,4 @@
-import { createComponent, signal } from 'liteforge';
+import { defineComponent, signal } from 'liteforge';
 import type { ComponentFactory } from 'liteforge';
 import { renderHighlighted } from './CodeBlock';
 
@@ -14,7 +14,7 @@ function resolveStr(v: string | (() => string)): string {
   return typeof v === 'function' ? v() : v;
 }
 
-export const LiveExample = createComponent<LiveExampleProps>({
+export const LiveExample = defineComponent<LiveExampleProps>({
   name: 'LiveExample',
   component({ props }) {
     const Component = props.component;

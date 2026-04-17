@@ -8,7 +8,7 @@
 
 import type { LiteForgePlugin, PluginContext } from '@liteforge/runtime';
 import type { Router, RouterOptions } from './types.js';
-import { createRouter } from './router.js';
+import { defineRouter } from './router.js';
 
 function isRouter(input: RouterOptions | Router): input is Router {
   return 'navigate' in input && typeof (input as unknown as Record<string, unknown>).navigate === 'function';
@@ -18,12 +18,12 @@ function isRouter(input: RouterOptions | Router): input is Router {
  * Create a router plugin from either:
  * - `RouterOptions` — the plugin creates a router internally
  * - An existing `Router` instance — for cases where the router is built externally
- *   (e.g. `createAppRouter()` factory that registers guards/middleware)
+ *   (e.g. `defineAppRouter()` factory that registers guards/middleware)
  */
 export function routerPlugin(optionsOrRouter: RouterOptions | Router): LiteForgePlugin {
   const router = isRouter(optionsOrRouter)
     ? optionsOrRouter
-    : createRouter(optionsOrRouter);
+    : defineRouter(optionsOrRouter);
 
   return {
     name: 'router',

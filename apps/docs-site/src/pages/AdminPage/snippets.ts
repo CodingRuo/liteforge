@@ -39,14 +39,14 @@ const posts = defineResource({
 
 registerResource(posts);`
 
-export const ROUTER_CODE = `import { createRouter } from '@liteforge/router';
+export const ROUTER_CODE = `import { defineRouter } from '@liteforge/router';
 import { buildAdminRoutes } from '@liteforge/admin';
 import { createClient } from '@liteforge/client';
 
 const client = createClient({ baseUrl: 'https://api.example.com' });
 const resources = [...resourceRegistry.values()];
 
-const router = createRouter({
+const router = defineRouter({
   routes: [
     // Your app routes...
     { path: '/', component: Home },
@@ -55,7 +55,7 @@ const router = createRouter({
   ],
 });`
 
-export const PLUGIN_CODE = `const app = await createApp({ root: App, target: '#app' })
+export const PLUGIN_CODE = `const app = await defineApp({ root: App, target: '#app' })
   .use(routerPlugin({ router }))
   .use(clientPlugin({ baseUrl: 'https://api.example.com' }))
   .use(adminPlugin({

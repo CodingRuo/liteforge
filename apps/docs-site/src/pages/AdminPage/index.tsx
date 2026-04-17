@@ -1,4 +1,4 @@
-import { createComponent, use } from 'liteforge';
+import { defineComponent, use } from 'liteforge';
 import { DocSection } from '../../components/DocSection.js';
 import { CodeBlock } from '../../components/CodeBlock.js';
 import { ApiTable } from '../../components/ApiTable.js';
@@ -15,7 +15,7 @@ import {
 } from './snippets.js';
 import { getDefineResourceApi, getFieldTypesApi, getPluginApi, getHooksApi } from './api.js';
 
-export const AdminPage = createComponent({
+export const AdminPage = defineComponent({
   name: 'AdminPage',
   component() {
     const { t } = use('i18n');

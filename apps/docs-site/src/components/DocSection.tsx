@@ -1,4 +1,4 @@
-import { createComponent } from 'liteforge';
+import { defineComponent } from 'liteforge';
 
 export interface DocSectionProps {
   title: string | (() => string);
@@ -14,7 +14,7 @@ function resolve(v: string | (() => string)): string {
   return typeof v === 'function' ? v() : v;
 }
 
-export const DocSection = createComponent<DocSectionProps>({
+export const DocSection = defineComponent<DocSectionProps>({
   name: 'DocSection',
   component({ props }) {
     const narrow = props.proseWidth !== false;

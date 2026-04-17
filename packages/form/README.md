@@ -171,12 +171,12 @@ form.clearErrors()   // Clear all errors
 ## Usage in Components
 
 ```tsx
-import { createComponent } from '@liteforge/runtime'
+import { defineComponent } from '@liteforge/runtime'
 import { Show } from '@liteforge/runtime'
 import { createForm } from '@liteforge/form'
 import { z } from 'zod'
 
-const ContactForm = createComponent({
+const ContactForm = defineComponent({
   component: () => {
     const form = createForm({
       schema: z.object({

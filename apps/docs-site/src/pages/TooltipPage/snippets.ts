@@ -39,7 +39,7 @@ const cleanup = tooltip(el, 'Hello');
 // Remove listeners + hide active tooltip
 cleanup();
 
-// Inside createComponent — use ref callback + onCleanup:
+// Inside defineComponent — use ref callback + onCleanup:
 import { onCleanup } from 'liteforge';
 
 component({ props }) {

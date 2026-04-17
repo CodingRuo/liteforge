@@ -16,7 +16,7 @@
  *  - Auto-layout        — "Auto Layout" button re-positions nodes with createAutoLayout()
  */
 
-import { createComponent, signal } from 'liteforge';
+import { defineComponent, signal } from 'liteforge';
 import {
   createFlow,
   FlowCanvas,
@@ -120,7 +120,7 @@ const INITIAL_EDGES: FlowEdge[] = [
 // Flow Page
 // =============================================================================
 
-export const FlowPage = createComponent({
+export const FlowPage = defineComponent({
   name: 'FlowPage',
 
   setup() {

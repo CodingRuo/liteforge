@@ -17,11 +17,11 @@ Peer dependencies: `@liteforge/core >= 0.1.0`, `@liteforge/runtime >= 0.1.0`
 ## Setup
 
 ```ts
-import { createApp } from 'liteforge'
+import { defineApp } from 'liteforge'
 import { toastPlugin } from '@liteforge/toast'
 import { App } from './App'
 
-createApp({ root: App, target: '#app' })
+defineApp({ root: App, target: '#app' })
   .use(toastPlugin({
     position: 'bottom-right',   // default
     duration: 4000,             // ms, 0 = persistent
@@ -105,9 +105,9 @@ The `loading` toast stays visible until the Promise settles. `success` and `erro
 When `toastPlugin` is registered, `toast` is available anywhere via `use('toast')`:
 
 ```tsx
-import { createComponent, use } from 'liteforge'
+import { defineComponent, use } from 'liteforge'
 
-export const SaveButton = createComponent({
+export const SaveButton = defineComponent({
   component() {
     const toast = use('toast')
 

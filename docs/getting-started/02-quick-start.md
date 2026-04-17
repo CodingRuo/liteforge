@@ -2,7 +2,7 @@
 title: "Quick Start"
 category: "getting-started"
 tags: ["quickstart", "hello-world", "app", "component"]
-related: ["Installation", "Core Concepts", "createComponent"]
+related: ["Installation", "Core Concepts", "defineComponent"]
 ---
 
 # Quick Start
@@ -19,18 +19,18 @@ npm install liteforge @liteforge/vite-plugin
 
 ```ts
 // main.ts
-import { createApp } from '@liteforge/runtime'
+import { defineApp } from '@liteforge/runtime'
 import { App } from './App'
 
-await createApp({ root: App, target: '#app' })
+await defineApp({ root: App, target: '#app' })
 ```
 
 ```tsx
 // App.tsx
-import { createComponent } from '@liteforge/runtime'
+import { defineComponent } from '@liteforge/runtime'
 import { signal } from '@liteforge/core'
 
-export const App = createComponent({
+export const App = defineComponent({
   component() {
     const count = signal(0)
     return (
@@ -46,7 +46,7 @@ export const App = createComponent({
 
 ## API Reference
 
-### `createApp(config)` → `AppBuilder`
+### `defineApp(config)` → `AppBuilder`
 
 Bootstrap the application and mount it to the DOM.
 
@@ -67,20 +67,20 @@ Bootstrap the application and mount it to the DOM.
 ### With router and store
 
 ```ts
-import { createApp } from '@liteforge/runtime'
+import { defineApp } from '@liteforge/runtime'
 import { routerPlugin } from '@liteforge/router'
 import { devtoolsPlugin } from '@liteforge/devtools'
 import { userStore } from './stores/user'
 import { App } from './App'
 import { router } from './router'
 
-await createApp({ root: App, target: '#app', stores: [userStore] })
+await defineApp({ root: App, target: '#app', stores: [userStore] })
   .use(routerPlugin(router))
   .use(devtoolsPlugin())
 ```
 
 ## Notes
 
-- `createApp` returns an `AppBuilder` with a `.then()` and `.catch()` — you can `await` it directly.
+- `defineApp` returns an `AppBuilder` with a `.then()` and `.catch()` — you can `await` it directly.
 - Stores passed to `stores` are connected to the app context and can call `use()` inside actions.
 - The JSX transform is provided by `@liteforge/vite-plugin`. Without it, JSX will not compile.

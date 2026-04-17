@@ -1,4 +1,4 @@
-import { createComponent, signal } from 'liteforge';
+import { defineComponent, signal } from 'liteforge';
 
 interface CodeBlockProps {
   code: string;
@@ -122,7 +122,7 @@ export function renderHighlighted(code: string): Node {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export const CodeBlock = createComponent<CodeBlockProps>({
+export const CodeBlock = defineComponent<CodeBlockProps>({
   name: 'CodeBlock',
   component({ props }) {
     const copied = signal(false);

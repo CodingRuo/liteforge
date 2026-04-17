@@ -29,7 +29,7 @@ export interface TabResult {
 /**
  * Create the Router Inspector tab content.
  */
-export function createRouterInspector(
+export function defineRouterInspector(
   buffer: EventBuffer,
   state: Signal<PanelState>
 ): TabResult {

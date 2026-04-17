@@ -1,4 +1,4 @@
-import { createComponent } from 'liteforge';
+import { defineComponent } from 'liteforge';
 import { signal, computed, batch } from 'liteforge';
 import { BenchmarkCard, ConfigSelect, RunButton, ResultsTable } from './BenchmarkCard';
 import { measure, formatMs, formatOps, type BenchStatus, type BenchSummary } from './bench-utils';
@@ -10,7 +10,7 @@ interface SignalBenchProps {
   onComplete?: (summary: BenchSummary) => void;
 }
 
-export const SignalBench = createComponent<SignalBenchProps>({
+export const SignalBench = defineComponent<SignalBenchProps>({
   name: 'SignalBench',
   component({ props }) {
     const status = signal<BenchStatus>('idle');

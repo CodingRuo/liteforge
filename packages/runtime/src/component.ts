@@ -1,5 +1,5 @@
 /**
- * LiteForge createComponent
+ * LiteForge defineComponent
  *
  * The central factory for creating reactive components with full lifecycle support.
  *
@@ -12,7 +12,7 @@
  * 6. destroyed()  - On unmount
  *
  * HMR Strategy (Component Registry):
- * - In dev mode, createComponent() registers the definition in componentRegistry
+ * - In dev mode, defineComponent() registers the definition in componentRegistry
  * - When HMR fires, the module is re-evaluated → registry updated with latest code
  * - fullRerender() rebuilds the app; renderComponent() reads the latest definition
  *   from the registry at call-time, picking up the new component/mounted/etc. fns
@@ -66,7 +66,7 @@ const enum ComponentState {
 }
 
 // ============================================================================
-// createComponent Implementation
+// defineComponent Implementation
 // ============================================================================
 
 /**
@@ -77,7 +77,7 @@ const enum ComponentState {
  *
  * @example
  * ```ts
- * const MyComponent = createComponent({
+ * const MyComponent = defineComponent({
  *   props: { name: { type: String, required: true } },
  *   setup({ props }) {
  *     const count = signal(0);
@@ -89,19 +89,19 @@ const enum ComponentState {
  * });
  * ```
  */
-// Overload 1: Explicit generic props type parameter — createComponent<MyProps>({...})
+// Overload 1: Explicit generic props type parameter — defineComponent<MyProps>({...})
 // This is the preferred pattern for typed components without a schema object.
 // Uses `object` constraint (not Record<string, unknown>) for compatibility with
 // exactOptionalPropertyTypes=true, where optional-propertied interfaces don't
 // satisfy Record<string, unknown> due to missing index signature.
-export function createComponent<
+export function defineComponent<
   TProps extends object,
   D = undefined,
   S = undefined,
 >(definition: ComponentDefinition<TProps, D, S> & { props?: never }): ComponentFactory<TProps, TProps>;
 
 // Overload 2: With props schema - computes which props are optional based on defaults
-export function createComponent<
+export function defineComponent<
   Schema extends Record<string, PropDefinition<unknown>>,
   P extends { [K in keyof Schema]: Schema[K] extends PropDefinition<infer T> ? T : never },
   D = undefined,
@@ -111,20 +111,20 @@ export function createComponent<
 ): ComponentFactory<P, Simplify<InputPropsFromSchema<Schema, P>>>;
 
 // Overload 3: Without props schema - all props use the inferred P type directly
-export function createComponent<
+export function defineComponent<
   P extends object = Record<string, unknown>,
   D = undefined,
   S = undefined,
 >(definition: ComponentDefinition<P, D, S>): ComponentFactory<P, P>;
 
 // Implementation
-export function createComponent<
+export function defineComponent<
   P extends object,
   D,
   S,
 >(definition: ComponentDefinition<P, D, S>): ComponentFactory<P, Partial<P>> {
   const factory = (inputProps?: Partial<P>): ComponentInstance => {
-    return createComponentInstance(definition, (inputProps ?? {}) as P);
+    return defineComponentInstance(definition, (inputProps ?? {}) as P);
   };
 
   // Mark as LiteForge component for detection.
@@ -149,7 +149,7 @@ export function createComponent<
 /**
  * Create an instance of a component with full lifecycle management.
  */
-function createComponentInstance<
+function defineComponentInstance<
   P extends object,
   D,
   S,

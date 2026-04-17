@@ -61,7 +61,7 @@ export default function liteforgePlugin(options?: LiteForgePluginOptions): Plugi
       // Add HMR support in dev mode
       let finalCode = result.code;
       if (isDev && resolvedOptions.hmr) {
-        // Inject __hmrId into createComponent() calls for component-level HMR
+        // Inject __hmrId into defineComponent() calls for component-level HMR
         finalCode = injectHmrIds(finalCode, id);
         
         // Add HMR boundary code

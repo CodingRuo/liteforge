@@ -1,7 +1,7 @@
-import { createComponent, signal, effect } from 'liteforge';
+import { defineComponent, signal, effect } from 'liteforge';
 import { toast } from '@liteforge/toast';
 
-export const ToastExample = createComponent({
+export const ToastExample = defineComponent({
   name: 'ToastExample',
   component() {
     const wrap = document.createElement('div');

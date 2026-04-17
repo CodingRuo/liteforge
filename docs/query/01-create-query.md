@@ -115,10 +115,10 @@ Global cache object.
 Register `queryPlugin` in your app to handle all query and mutation errors in one place — no need to add `onError` to every individual `createQuery` or `createMutation` call.
 
 ```ts
-import { createApp } from '@liteforge/runtime'
+import { defineApp } from '@liteforge/runtime'
 import { queryPlugin } from '@liteforge/query'
 
-createApp({ root: App, target: '#app' })
+defineApp({ root: App, target: '#app' })
   .use(queryPlugin({
     onError: (error, ctx) => {
       if (ctx.type === 'query') {
@@ -164,7 +164,7 @@ The handler is automatically cleared when the app is destroyed (plugin cleanup).
 `refetchOnFocus: true` is the default but can be undesirable for CRUD apps where every tab-switch triggers refetches. Override it once in `queryPlugin` instead of patching every call site:
 
 ```ts
-createApp({ root: App, target: '#app' })
+defineApp({ root: App, target: '#app' })
   .use(queryPlugin({
     defaultRefetchOnFocus: false,
     defaultStaleTime: 30_000,
@@ -188,7 +188,7 @@ import { queryPlugin } from '@liteforge/query'
 
 const toast = createToast()
 
-createApp({ root: App, target: '#app' })
+defineApp({ root: App, target: '#app' })
   .use(toastPlugin())
   .use(queryPlugin({
     onError: (error) => toast.error(error.message),
@@ -199,12 +199,12 @@ createApp({ root: App, target: '#app' })
 #### Redirect to login on 401
 
 ```ts
-import { routerPlugin, createRouter } from '@liteforge/router'
+import { routerPlugin, defineRouter } from '@liteforge/router'
 import { queryPlugin } from '@liteforge/query'
 
-const router = createRouter({ routes })
+const router = defineRouter({ routes })
 
-createApp({ root: App, target: '#app' })
+defineApp({ root: App, target: '#app' })
   .use(routerPlugin(router))
   .use(queryPlugin({
     onError: (error) => {
@@ -260,7 +260,7 @@ const orders = createQuery({
 ### Gate all queries behind auth (defaultEnabled)
 
 ```ts
-createApp({ root: App, target: '#app' })
+defineApp({ root: App, target: '#app' })
   .use(queryPlugin({
     defaultEnabled: () => !!authStore.token(),  // no query fires until logged in
   }))

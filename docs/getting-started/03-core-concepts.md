@@ -2,7 +2,7 @@
 title: "Core Concepts"
 category: "getting-started"
 tags: ["signals", "reactivity", "jsx", "components", "effects"]
-related: ["Signals", "createComponent", "JSX"]
+related: ["Signals", "defineComponent", "JSX"]
 ---
 
 # Core Concepts
@@ -83,10 +83,10 @@ dispose()  // stop the effect
 ### Components
 
 ```tsx
-import { createComponent } from '@liteforge/runtime'
+import { defineComponent } from '@liteforge/runtime'
 import { signal } from '@liteforge/core'
 
-const Counter = createComponent({
+const Counter = defineComponent({
   setup() {
     const count = signal(0)
     return { count }

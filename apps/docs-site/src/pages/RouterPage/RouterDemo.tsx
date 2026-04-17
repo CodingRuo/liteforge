@@ -1,4 +1,4 @@
-import { createComponent, For, Show, signal } from 'liteforge';
+import { defineComponent, For, Show, signal } from 'liteforge';
 import { btnClass } from '../../components/Button.js';
 
 type Tab = 'home' | 'patients' | 'settings';
@@ -21,7 +21,7 @@ const PATIENTS = [
   { id: 103, name: 'Clara Huber' },
 ];
 
-export const RouterDemo = createComponent({
+export const RouterDemo = defineComponent({
   name: 'RouterDemo',
   component() {
     const active    = signal<Tab>('home');

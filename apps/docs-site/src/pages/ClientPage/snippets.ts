@@ -1,7 +1,7 @@
 // No imports — pure string constants
 
 // Prevent vite-plugin HMR transform from injecting __hmrId into demo strings
-const _cc = 'createComponent';
+const _cc = 'defineComponent';
 
 export const SETUP_CODE = `import { createClient } from '@liteforge/client';
 

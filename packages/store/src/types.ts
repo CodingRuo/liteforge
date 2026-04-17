@@ -213,7 +213,7 @@ export interface StoreMetadata {
  */
 export interface StoreInternalExtendedMethods<S extends StateDefinition> 
   extends StoreInternalMethods<S> {
-  /** Connect the store to an app context. Called by createApp(). */
+  /** Connect the store to an app context. Called by defineApp(). */
   $connectContext(useFn: UseFn): void;
 
   /** Get the signalified state (for internal use). */

@@ -1,4 +1,4 @@
-import { createComponent, use } from 'liteforge';
+import { defineComponent, use } from 'liteforge';
 import { DocSection } from '../../components/DocSection.js';
 import { CodeBlock } from '../../components/CodeBlock.js';
 import { ApiTable } from '../../components/ApiTable.js';
@@ -17,7 +17,7 @@ import {
 import { getClientApi } from './api.js';
 import { FetchDemo } from './FetchDemo.js';
 
-export const ClientPage = createComponent({
+export const ClientPage = defineComponent({
   name: 'ClientPage',
   component() {
     const { t } = use('i18n');

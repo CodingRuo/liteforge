@@ -90,7 +90,7 @@ import { colorScheme } from '@liteforge/theme'
 
 const scheme = colorScheme()
 
-export const ThemeToggle = createComponent({
+export const ThemeToggle = defineComponent({
   component() {
     return (
       <button onclick={() => scheme.update(s => s === 'dark' ? 'light' : 'dark')}>

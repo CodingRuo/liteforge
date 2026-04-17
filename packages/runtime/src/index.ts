@@ -73,10 +73,10 @@ export {
 } from './context.js';
 
 // Component
-export { createComponent, isComponentFactory, onSetupCleanup } from './component.js';
+export { defineComponent, isComponentFactory, onSetupCleanup } from './component.js';
 
 // App
-export { createApp } from './app.js';
+export { defineApp } from './app.js';
 
 // Control Flow
 export { Show, For, Switch, Match, Dynamic } from './control-flow.js';

@@ -8,7 +8,7 @@ export const PLUGIN_CODE = `import en from './locales/en.js'
 // Vite discovers all locale files at build time — no manual import list.
 const localeModules = import.meta.glob('./locales/*.js')
 
-const app = await createApp({ root: App, target: '#app' })
+const app = await defineApp({ root: App, target: '#app' })
   .use(i18nPlugin({
     default: en,              // T is inferred — no explicit generic needed
     fallback: 'en',           // used when a key is missing in current locale
@@ -21,7 +21,7 @@ const app = await createApp({ root: App, target: '#app' })
   }))
   .mount();`
 
-export const USE_CODE = `// Inside createComponent setup():
+export const USE_CODE = `// Inside defineComponent setup():
 const i18n = use<I18nApi>('i18n');
 
 const { t, locale, setLocale } = i18n;

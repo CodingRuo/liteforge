@@ -1,12 +1,12 @@
 /**
  * Typed routes — Phase 1 tests
  *
- * Verifies that createRouter<T> + typed navigate() provide path-safety at
+ * Verifies that defineRouter<T> + typed navigate() provide path-safety at
  * compile time, while remaining fully non-breaking for existing code.
  */
 import { describe, it, expect, afterEach } from 'vitest';
 import { expectTypeOf } from 'vitest';
-import { createRouter, createMemoryHistory } from '../src/index.js';
+import { defineRouter, createMemoryHistory } from '../src/index.js';
 import type {
   FillParams,
   ExtractRoutePaths,
@@ -81,7 +81,7 @@ describe('TypedNavigationTarget type utility', () => {
 });
 
 // =============================================================================
-// Runtime tests — createRouter with as const routes
+// Runtime tests — defineRouter with as const routes
 // =============================================================================
 
 const ROUTES = [
@@ -92,35 +92,35 @@ const ROUTES = [
   { path: '*', name: 'not-found', component: () => document.createElement('div') },
 ] as const;
 
-describe('createRouter with typed routes', () => {
-  let router: ReturnType<typeof createRouter<typeof ROUTES>>;
+describe('defineRouter with typed routes', () => {
+  let router: ReturnType<typeof defineRouter<typeof ROUTES>>;
 
   afterEach(() => {
     router?.destroy();
   });
 
   it('creates a router instance successfully', () => {
-    router = createRouter({ routes: ROUTES, history: createMemoryHistory() });
+    router = defineRouter({ routes: ROUTES, history: createMemoryHistory() });
     expect(router).toBeDefined();
     expect(router.path()).toBe('/');
   });
 
   it('navigate() to a valid static path resolves to true', async () => {
-    router = createRouter({ routes: ROUTES, history: createMemoryHistory() });
+    router = defineRouter({ routes: ROUTES, history: createMemoryHistory() });
     const result = await router.navigate('/users');
     expect(result).toBe(true);
     expect(router.path()).toBe('/users');
   });
 
   it('navigate() to a valid parameterised path resolves to true', async () => {
-    router = createRouter({ routes: ROUTES, history: createMemoryHistory() });
+    router = defineRouter({ routes: ROUTES, history: createMemoryHistory() });
     const result = await router.navigate('/users/42');
     expect(result).toBe(true);
     expect(router.path()).toBe('/users/42');
   });
 
   it('navigate() to root resolves to true', async () => {
-    router = createRouter({ routes: ROUTES, history: createMemoryHistory() });
+    router = defineRouter({ routes: ROUTES, history: createMemoryHistory() });
     await router.navigate('/users');
     const result = await router.navigate('/');
     expect(result).toBe(true);
@@ -128,7 +128,7 @@ describe('createRouter with typed routes', () => {
   });
 
   it('navigate() with a location object (always-accepted overload) works', async () => {
-    router = createRouter({ routes: ROUTES, history: createMemoryHistory() });
+    router = defineRouter({ routes: ROUTES, history: createMemoryHistory() });
     const result = await router.navigate({ path: '/admin', query: { tab: 'settings' } });
     expect(result).toBe(true);
     expect(router.path()).toBe('/admin');
@@ -136,7 +136,7 @@ describe('createRouter with typed routes', () => {
   });
 
   it('replace() to a valid path resolves to true', async () => {
-    router = createRouter({ routes: ROUTES, history: createMemoryHistory() });
+    router = defineRouter({ routes: ROUTES, history: createMemoryHistory() });
     const result = await router.replace('/admin');
     expect(result).toBe(true);
     expect(router.path()).toBe('/admin');
@@ -148,7 +148,7 @@ describe('createRouter with typed routes', () => {
   // -------------------------------------------------------------------------
 
   it('TS rejects navigate() with an unknown path (@ts-expect-error)', async () => {
-    router = createRouter({ routes: ROUTES, history: createMemoryHistory() });
+    router = defineRouter({ routes: ROUTES, history: createMemoryHistory() });
     // The comment below documents the intended compile-time constraint:
     // @ts-expect-error — '/unknown-xyz' is not a valid route path
     const result = await router.navigate('/unknown-xyz');
@@ -158,7 +158,7 @@ describe('createRouter with typed routes', () => {
   });
 
   it('TS rejects replace() with an unknown path (@ts-expect-error)', async () => {
-    router = createRouter({ routes: ROUTES, history: createMemoryHistory() });
+    router = defineRouter({ routes: ROUTES, history: createMemoryHistory() });
     // @ts-expect-error — '/does-not-exist' is not a valid route path
     const result = await router.replace('/does-not-exist');
     expect(typeof result).toBe('boolean');
@@ -169,13 +169,13 @@ describe('createRouter with typed routes', () => {
 // Non-breaking: existing usage without as const continues to work
 // =============================================================================
 
-describe('createRouter without as const (non-breaking)', () => {
+describe('defineRouter without as const (non-breaking)', () => {
   it('accepts plain mutable routes array and returns a working router', async () => {
     const routes = [
       { path: '/', component: () => document.createElement('div') },
       { path: '/about', component: () => document.createElement('div') },
     ];
-    const router = createRouter({ routes, history: createMemoryHistory() });
+    const router = defineRouter({ routes, history: createMemoryHistory() });
     expect(router).toBeDefined();
 
     // navigate() accepts any string when routes are not literal-typed
@@ -247,27 +247,27 @@ describe('navigate() Phase 2 — path pattern + params — type-level', () => {
   });
 
   it('navigate(pattern, params) — params arg has the correct type for single param', () => {
-    const router = createRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
+    const router = defineRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
     expectTypeOf(router.navigate<'/users/:id'>).parameter(1).toEqualTypeOf<{ id: string }>();
     router.destroy();
   });
 
   it('navigate(pattern, params) — params arg has the correct type for multiple params', () => {
-    const router = createRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
+    const router = defineRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
     expectTypeOf(router.navigate<'/posts/:year/:month'>).parameter(1)
       .toEqualTypeOf<{ year: string; month: string }>();
     router.destroy();
   });
 
   it('navigate(pattern) without params is a TS error', () => {
-    const router = createRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
+    const router = defineRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
     // @ts-expect-error — params argument required for parametric routes
     void router.navigate('/users/:id');
     router.destroy();
   });
 
   it('navigate(static-path, params) is a TS error — /home has no params', () => {
-    const router = createRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
+    const router = defineRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
     // @ts-expect-error — /home is not in ExtractParamPaths, second arg not accepted
     void router.navigate('/home', { id: '42' });
     router.destroy();
@@ -279,35 +279,35 @@ describe('navigate() Phase 2 — path pattern + params — type-level', () => {
 // =============================================================================
 
 describe('navigate() Phase 2 — path pattern + params — runtime', () => {
-  let router: ReturnType<typeof createRouter<typeof PHASE2_ROUTES>>;
+  let router: ReturnType<typeof defineRouter<typeof PHASE2_ROUTES>>;
 
   afterEach(() => {
     router?.destroy();
   });
 
   it('fills a single param into the path at runtime', async () => {
-    router = createRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
+    router = defineRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
     const result = await router.navigate('/users/:id', { id: '99' });
     expect(result).toBe(true);
     expect(router.path()).toBe('/users/99');
   });
 
   it('fills multiple params into the path at runtime', async () => {
-    router = createRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
+    router = defineRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
     const result = await router.navigate('/posts/:year/:month', { year: '2024', month: '03' });
     expect(result).toBe(true);
     expect(router.path()).toBe('/posts/2024/03');
   });
 
   it('encodes params that contain special characters', async () => {
-    router = createRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
+    router = defineRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
     const result = await router.navigate('/users/:id', { id: 'hello world' });
     expect(result).toBe(true);
     expect(router.path()).toBe('/users/hello%20world');
   });
 
   it('navigate(pattern, params, options) respects NavigateOptions', async () => {
-    router = createRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
+    router = defineRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
     // Navigate somewhere first so there is history to replace
     await router.navigate('/home');
     const result = await router.navigate('/users/:id', { id: '7' }, { replace: true });
@@ -316,7 +316,7 @@ describe('navigate() Phase 2 — path pattern + params — runtime', () => {
   });
 
   it('replace(pattern, params) fills params and replaces history', async () => {
-    router = createRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
+    router = defineRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
     await router.navigate('/home');
     const result = await router.replace('/users/:id', { id: '42' });
     expect(result).toBe(true);
@@ -324,7 +324,7 @@ describe('navigate() Phase 2 — path pattern + params — runtime', () => {
   });
 
   it('replace(pattern, params) with multiple params fills all params', async () => {
-    router = createRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
+    router = defineRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
     await router.navigate('/home');
     const result = await router.replace('/posts/:year/:month', { year: '2025', month: '12' });
     expect(result).toBe(true);
@@ -332,14 +332,14 @@ describe('navigate() Phase 2 — path pattern + params — runtime', () => {
   });
 
   it('existing Phase 1 navigate(filled-path) still works', async () => {
-    router = createRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
+    router = defineRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
     const result = await router.navigate('/users/123');
     expect(result).toBe(true);
     expect(router.path()).toBe('/users/123');
   });
 
   it('existing navigate(locationObject) still works', async () => {
-    router = createRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
+    router = defineRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
     const result = await router.navigate({ path: '/home', query: { foo: 'bar' } });
     expect(result).toBe(true);
     expect(router.path()).toBe('/home');
@@ -352,7 +352,7 @@ describe('navigate() Phase 2 — path pattern + params — runtime', () => {
     // the dispatch to fall through to the Phase 1 path, leaving the pattern unfilled.
     // The new /:\w+/.test(target) discriminator uses only the first argument, so
     // param values of 'replace' or 'state' are handled correctly.
-    router = createRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
+    router = defineRouter({ routes: PHASE2_ROUTES, history: createMemoryHistory() });
     await router.navigate('/users/:id', { id: 'replace' });
     expect(router.path()).toBe('/users/replace');
   });

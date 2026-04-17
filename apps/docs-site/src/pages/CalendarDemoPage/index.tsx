@@ -5,7 +5,7 @@
  * - Calendar starts empty, simulation auto-starts and fills it gradually
  * - Slim top bar with back link and badge
  */
-import { createComponent, signal } from 'liteforge';
+import { defineComponent, signal } from 'liteforge';
 import { Link } from '@liteforge/router';
 import { createCalendar, startOfWeek } from '@liteforge/calendar';
 import { tooltip } from '@liteforge/tooltip';
@@ -160,7 +160,7 @@ class CalendarSimulator {
 
 let _apptCounter = 5000;
 
-export const CalendarDemoPage = createComponent({
+export const CalendarDemoPage = defineComponent({
   name: 'CalendarDemoPage',
 
   setup() {

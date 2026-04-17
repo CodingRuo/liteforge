@@ -1,11 +1,11 @@
-import { createComponent, Show } from 'liteforge';
+import { defineComponent, Show } from 'liteforge';
 import { createForm } from '@liteforge/form';
 import type { FieldResult } from '@liteforge/form';
 import { z } from 'zod';
 import { Button } from '../../components/Button.js';
 import { inputClass } from '../../components/Input.js';
 
-export const LoginFormExample = createComponent({
+export const LoginFormExample = defineComponent({
   name: 'LoginFormExample',
   component() {
     const form = createForm({

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { signal, effect } from '@liteforge/core';
 import { Show, For, Switch, Match, Dynamic } from '../src/control-flow.js';
-import { createComponent } from '../src/component.js';
+import { defineComponent } from '../src/component.js';
 import { initAppContext, clearContext } from '../src/context.js';
 
 /**
@@ -838,8 +838,8 @@ describe('control flow components', () => {
       expect(container.textContent).toBe('');
     });
 
-    it('should work with createComponent factories', async () => {
-      const CompA = createComponent<{ value: string }>({
+    it('should work with defineComponent factories', async () => {
+      const CompA = defineComponent<{ value: string }>({
         component: ({ props }) => {
           const div = document.createElement('div');
           div.textContent = `A: ${props.value}`;
@@ -847,7 +847,7 @@ describe('control flow components', () => {
         },
       });
 
-      const CompB = createComponent<{ value: string }>({
+      const CompB = defineComponent<{ value: string }>({
         component: ({ props }) => {
           const div = document.createElement('div');
           div.textContent = `B: ${props.value}`;

@@ -21,11 +21,11 @@ The registry uses a `globalThis` singleton, which means modals defined in lazily
 Register `modalPlugin` when creating your app. The plugin mounts a `ModalProvider` container next to your app root and registers the modal API under the `'modal'` context key.
 
 ```ts
-import { createApp } from 'liteforge'
+import { defineApp } from 'liteforge'
 import { modalPlugin } from '@liteforge/modal'
 import { App } from './App'
 
-createApp({ root: App, target: '#app' })
+defineApp({ root: App, target: '#app' })
   .use(modalPlugin())
   .mount()
 ```
@@ -41,10 +41,10 @@ modalPlugin({ unstyled: true })  // skip default CSS injection
 ## Basic Usage
 
 ```tsx
-import { createComponent, signal } from 'liteforge'
+import { defineComponent, signal } from 'liteforge'
 import { createModal } from '@liteforge/modal'
 
-export const Settings = createComponent({
+export const Settings = defineComponent({
   setup() {
     const confirmDelete = createModal({
       config: {

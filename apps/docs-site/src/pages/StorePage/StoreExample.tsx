@@ -1,11 +1,11 @@
-import { createComponent, signal } from 'liteforge';
+import { defineComponent, signal } from 'liteforge';
 import { defineStore } from '@liteforge/store';
 import { Button } from '../../components/Button.js';
 import { Badge } from '../../components/Badge.js';
 
 type HistoryEntry = { action: string; value: number };
 
-export const StoreExample = createComponent({
+export const StoreExample = defineComponent({
   name: 'StoreExample',
   component() {
     const counter = defineStore('docs-counter', {

@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { signal } from '@liteforge/core';
 import {
-  createComponent,
-  createApp,
+  defineComponent,
+  defineApp,
   clearContext,
 } from '../src/index.js';
 
@@ -23,14 +23,14 @@ describe('component provide', () => {
   it('should provide context to component function', async () => {
     let capturedTheme: string | undefined;
 
-    const Child = createComponent({
+    const Child = defineComponent({
       component: ({ use }) => {
         capturedTheme = use('theme');
         return document.createTextNode(`Theme: ${capturedTheme}`);
       },
     });
 
-    const Parent = createComponent({
+    const Parent = defineComponent({
       provide: () => ({ theme: 'dark' }),
       component: () => {
         const childInstance = Child({});
@@ -40,7 +40,7 @@ describe('component provide', () => {
       },
     });
 
-    await createApp({
+    await defineApp({
       root: Parent,
       target: '#app',
       context: { theme: 'light' },
@@ -51,7 +51,7 @@ describe('component provide', () => {
   });
 
   it('should access parent context in provide', async () => {
-    const Parent = createComponent({
+    const Parent = defineComponent({
       provide: ({ use }) => {
         const baseUrl = use<string>('baseUrl');
         return {
@@ -64,7 +64,7 @@ describe('component provide', () => {
       },
     });
 
-    await createApp({
+    await defineApp({
       root: Parent,
       target: '#app',
       context: { baseUrl: 'https://api.example.com' },
@@ -76,7 +76,7 @@ describe('component provide', () => {
   it('should support nested provides', async () => {
     const values: string[] = [];
 
-    const Inner = createComponent({
+    const Inner = defineComponent({
       provide: () => ({ level: 'inner' }),
       component: ({ use }) => {
         values.push(`Inner sees: ${use('level')}`);
@@ -84,7 +84,7 @@ describe('component provide', () => {
       },
     });
 
-    const Middle = createComponent({
+    const Middle = defineComponent({
       provide: () => ({ level: 'middle' }),
       component: ({ use }) => {
         values.push(`Middle sees: ${use('level')}`);
@@ -95,7 +95,7 @@ describe('component provide', () => {
       },
     });
 
-    const Outer = createComponent({
+    const Outer = defineComponent({
       provide: () => ({ level: 'outer' }),
       component: ({ use }) => {
         values.push(`Outer sees: ${use('level')}`);
@@ -106,7 +106,7 @@ describe('component provide', () => {
       },
     });
 
-    await createApp({
+    await defineApp({
       root: Outer,
       target: '#app',
       context: { level: 'app' },
@@ -122,7 +122,7 @@ describe('component provide', () => {
   it('should not affect sibling components', async () => {
     const values: string[] = [];
 
-    const ChildA = createComponent({
+    const ChildA = defineComponent({
       provide: () => ({ value: 'from-A' }),
       component: ({ use }) => {
         values.push(`ChildA: ${use('value')}`);
@@ -130,14 +130,14 @@ describe('component provide', () => {
       },
     });
 
-    const ChildB = createComponent({
+    const ChildB = defineComponent({
       component: ({ use }) => {
         values.push(`ChildB: ${use('value')}`);
         return document.createTextNode('B');
       },
     });
 
-    const Parent = createComponent({
+    const Parent = defineComponent({
       component: () => {
         const div = document.createElement('div');
         const instanceA = ChildA({});
@@ -148,7 +148,7 @@ describe('component provide', () => {
       },
     });
 
-    await createApp({
+    await defineApp({
       root: Parent,
       target: '#app',
       context: { value: 'from-app' },
@@ -163,14 +163,14 @@ describe('component provide', () => {
   it('should provide signals in context', async () => {
     const theme = signal('light');
 
-    const Child = createComponent({
+    const Child = defineComponent({
       component: ({ use }) => {
         const themeSignal = use<typeof theme>('theme');
         return document.createTextNode(themeSignal());
       },
     });
 
-    const Parent = createComponent({
+    const Parent = defineComponent({
       provide: () => ({ theme }),
       component: () => {
         const div = document.createElement('div');
@@ -180,7 +180,7 @@ describe('component provide', () => {
       },
     });
 
-    await createApp({
+    await defineApp({
       root: Parent,
       target: '#app',
     });

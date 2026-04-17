@@ -44,7 +44,7 @@ npm run dev
 |---------|---------|
 | `liteforge` | Umbrella re-export: `@liteforge/core` + `@liteforge/runtime` |
 | `@liteforge/core` | `signal`, `computed`, `effect`, `batch`, `onCleanup` |
-| `@liteforge/runtime` | `createComponent`, `createApp`, `Show`, `For`, `Switch` |
+| `@liteforge/runtime` | `defineComponent`, `defineApp`, `Show`, `For`, `Switch` |
 | `@liteforge/vite-plugin` | Vite plugin for JSX transform + HMR |
 | `@liteforge/router` | Client-side routing with guards and middleware |
 | `@liteforge/store` | Global reactive state with `defineStore` |

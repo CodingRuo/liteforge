@@ -1,10 +1,10 @@
-import { createComponent, For, Show } from 'liteforge';
+import { defineComponent, For, Show } from 'liteforge';
 import { signal } from 'liteforge';
 import { btnClass } from '../../components/Button.js';
 
 interface Post { id: number; title: string; body: string; }
 
-export const FetchDemo = createComponent({
+export const FetchDemo = defineComponent({
   name: 'FetchDemo',
   component() {
     const loading = signal(false);

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { signal } from '@liteforge/core';
-import { createComponent, pushContext, popContext, clearContext } from '@liteforge/runtime';
-import { createRouter, createMemoryHistory, RouterOutlet, Link, lazy } from '../src/index.js';
+import { defineComponent, pushContext, popContext, clearContext } from '@liteforge/runtime';
+import { defineRouter, createMemoryHistory, RouterOutlet, Link, lazy } from '../src/index.js';
 import type { Router, RouteDefinition } from '../src/types.js';
 
 // Helper to wait for async updates
@@ -16,7 +16,7 @@ const waitForMutation = () => new Promise(resolve => setTimeout(resolve, 10));
 
 function createTestRouter(routes: RouteDefinition[], initialPath = '/'): Router {
   const history = createMemoryHistory({ initialEntries: [initialPath] });
-  return createRouter({ routes, history });
+  return defineRouter({ routes, history });
 }
 
 function setupContext(router: Router, extra: Record<string, unknown> = {}): void {
@@ -189,8 +189,8 @@ describe('RouterOutlet', () => {
     expect(container.children.length).toBe(0);
   });
 
-  it('works with createComponent factories', async () => {
-    const TestComponent = createComponent({
+  it('works with defineComponent factories', async () => {
+    const TestComponent = defineComponent({
       props: {
         params: { type: Object, default: () => ({}) },
       },

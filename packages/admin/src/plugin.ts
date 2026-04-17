@@ -20,12 +20,12 @@ export function adminPlugin(options?: AdminPluginOptions): LiteForgePlugin {
       const basePath = options?.basePath ?? '/admin';
 
       // NOTE: @liteforge/router does NOT support addRoutes() — routes are static.
-      // Users must include buildAdminRoutes() output in their createRouter() config.
+      // Users must include buildAdminRoutes() output in their defineRouter() config.
       // See buildAdminRoutes() export from @liteforge/admin for the routes array.
       //
       // Example setup:
       //   import { buildAdminRoutes } from '@liteforge/admin'
-      //   const router = createRouter({
+      //   const router = defineRouter({
       //     routes: [
       //       ...buildAdminRoutes({ resources, basePath: '/admin', client }),
       //       // your other routes...

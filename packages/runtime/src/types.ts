@@ -167,8 +167,8 @@ export interface LiteForgePlugin {
 }
 
 /**
- * Builder returned by createApp() — supports chained .use() and async .mount().
- * Also implements Thenable so `await createApp(...)` auto-calls mount().
+ * Builder returned by defineApp() — supports chained .use() and async .mount().
+ * Also implements Thenable so `await defineApp(...)` auto-calls mount().
  */
 export interface AppBuilder {
   /** Register a new-style plugin. Chainable. Throws after mount() is called. */
@@ -180,8 +180,8 @@ export interface AppBuilder {
    *
    * @example
    * ```ts
-   * createApp({ root: App, target: '#app' })
-   *   .use(routerPlugin(createAppRouter()))
+   * defineApp({ root: App, target: '#app' })
+   *   .use(routerPlugin(defineAppRouter()))
    *   .useDev(() => import('liteforge/devtools').then(m => m.devtoolsPlugin({
    *     shortcut: 'ctrl+shift+d',
    *     position: 'right',
@@ -193,7 +193,7 @@ export interface AppBuilder {
   /** Bootstrap and mount the application. Returns the AppInstance. */
   mount(): Promise<AppInstance>;
   /**
-   * Thenable — delegates to mount() so `await createApp(...)` still works
+   * Thenable — delegates to mount() so `await defineApp(...)` still works
    * without an explicit `.mount()` call (backward compat).
    */
   then<TResult1 = AppInstance, TResult2 = never>(
@@ -295,7 +295,7 @@ export interface DestroyedArgs<P, S> {
 // ============================================================================
 
 /**
- * Full component definition passed to createComponent().
+ * Full component definition passed to defineComponent().
  */
 export interface ComponentDefinition<
   P extends object = Record<string, unknown>,
@@ -341,12 +341,12 @@ export interface ComponentDefinition<
 }
 
 /**
- * A component factory function returned by createComponent().
+ * A component factory function returned by defineComponent().
  * 
  * @typeParam FullP - The full props type (with all values, including defaults applied)
  * @typeParam InputP - The input props type (what callers must provide)
  * 
- * InputP defaults to FullP for backward compatibility, but createComponent()
+ * InputP defaults to FullP for backward compatibility, but defineComponent()
  * computes the proper InputP based on which props have defaults.
  */
 export interface ComponentFactory<
@@ -356,7 +356,7 @@ export interface ComponentFactory<
   /**
    * Calling a ComponentFactory as a JSX tag produces a Node (JSX.Element = Node).
    * Internally the runtime calls this, detects __liteforge_component, and mounts
-   * the ComponentInstance via h() → createComponentNode().
+   * the ComponentInstance via h() → defineComponentNode().
    *
    * Props are optional so that components with no defined props can be called
    * as `MyComponent()` without passing an empty object.
@@ -438,10 +438,10 @@ export type ErrorComponent = (error: unknown, info: ErrorInfo) => Element | Docu
 // ============================================================================
 
 /**
- * Generic store type for createApp stores array.
+ * Generic store type for defineApp stores array.
  * 
  * This interface defines the minimal contract a store must satisfy
- * to be used with createApp(). It doesn't use an index signature
+ * to be used with defineApp(). It doesn't use an index signature
  * because stores from defineStore() have complex typed properties
  * that would conflict with `[key: string]: unknown`.
  */
@@ -454,7 +454,7 @@ export interface AnyStore {
 }
 
 /**
- * Router interface for createApp.
+ * Router interface for defineApp.
  * Minimal interface that any router implementation should satisfy.
  */
 export interface RouterLike {
@@ -469,7 +469,7 @@ export interface RouterLike {
 }
 
 /**
- * App configuration passed to createApp().
+ * App configuration passed to defineApp().
  */
 export interface AppConfig {
   /** Root component to render */
@@ -508,7 +508,7 @@ export interface AppConfig {
 }
 
 /**
- * App instance returned by createApp().
+ * App instance returned by defineApp().
  */
 export interface AppInstance {
   /** Unmount and clean up the app */
@@ -691,7 +691,7 @@ export interface MatchProps {
  * 
  * The component prop is a getter function that returns either:
  * - RenderFunction: A simple () => Node function
- * - ComponentFactory: A LiteForge component from createComponent()
+ * - ComponentFactory: A LiteForge component from defineComponent()
  * - null: No component to render
  */
 export interface DynamicProps<P extends Record<string, unknown> = Record<string, unknown>> {

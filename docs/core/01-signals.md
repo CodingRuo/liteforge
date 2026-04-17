@@ -2,7 +2,7 @@
 title: "Signals"
 category: "core"
 tags: ["signal", "computed", "effect", "batch", "onCleanup", "reactivity"]
-related: ["Core Concepts", "createComponent", "JSX"]
+related: ["Core Concepts", "defineComponent", "JSX"]
 ---
 
 # Signals

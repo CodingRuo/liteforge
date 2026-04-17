@@ -4,13 +4,13 @@
  * Public landing page with navigation to login/dashboard.
  * 
  * Demonstrates:
- * - Basic component with createComponent
+ * - Basic component with defineComponent
  * - Link navigation
  * - Conditional rendering with Show
  * - Reading from auth store
  */
 
-import { createComponent, Show } from 'liteforge';
+import { defineComponent, Show } from 'liteforge';
 import { Link } from 'liteforge/router';
 import { authStore } from '../stores/auth.js';
 
@@ -18,7 +18,7 @@ import { authStore } from '../stores/auth.js';
 // Component
 // =============================================================================
 
-export const HomePage = createComponent({
+export const HomePage = defineComponent({
   name: 'HomePage',
   component() {
     return (

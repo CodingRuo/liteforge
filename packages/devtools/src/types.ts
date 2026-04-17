@@ -47,7 +47,7 @@ export interface DevToolsConfig {
   maxEvents?: number;
   /**
    * Additional stores to register for time-travel debugging.
-   * Stores already registered via `createApp({ stores: [...] })` are discovered
+   * Stores already registered via `defineApp({ stores: [...] })` are discovered
    * automatically — use this only for stores created outside the app lifecycle.
    */
   stores?: DevToolsStoreMap;

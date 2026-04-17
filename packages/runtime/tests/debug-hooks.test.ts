@@ -16,7 +16,7 @@ import type {
   ComponentUnmountPayload,
 } from '@liteforge/core';
 import {
-  createComponent,
+  defineComponent,
   initAppContext,
   clearContext,
 } from '../src/index.js';
@@ -50,7 +50,7 @@ describe('Component Debug Hooks', () => {
       const events: ComponentMountPayload[] = [];
       bus.on('component:mount', (payload) => events.push(payload));
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         component: () => document.createTextNode('Hello'),
       });
 
@@ -67,7 +67,7 @@ describe('Component Debug Hooks', () => {
       const events: ComponentMountPayload[] = [];
       bus.on('component:mount', (payload) => events.push(payload));
 
-      const NamedComponent = createComponent({
+      const NamedComponent = defineComponent({
         name: 'UserProfile',
         component: () => document.createTextNode('Profile'),
       });
@@ -82,7 +82,7 @@ describe('Component Debug Hooks', () => {
       const events: ComponentMountPayload[] = [];
       bus.on('component:mount', (payload) => events.push(payload));
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         component: () => document.createTextNode('Item'),
       });
 
@@ -103,7 +103,7 @@ describe('Component Debug Hooks', () => {
       const events: ComponentMountPayload[] = [];
       bus.on('component:mount', (payload) => events.push(payload));
 
-      const RootComponent = createComponent({
+      const RootComponent = defineComponent({
         component: () => document.createTextNode('Root'),
       });
 
@@ -123,7 +123,7 @@ describe('Component Debug Hooks', () => {
       const events: ComponentUnmountPayload[] = [];
       bus.on('component:unmount', (payload) => events.push(payload));
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         component: () => document.createTextNode('Hello'),
       });
 
@@ -144,7 +144,7 @@ describe('Component Debug Hooks', () => {
       bus.on('component:mount', (payload) => mountEvents.push(payload));
       bus.on('component:unmount', (payload) => unmountEvents.push(payload));
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         component: () => document.createTextNode('Test'),
       });
 
@@ -164,7 +164,7 @@ describe('Component Debug Hooks', () => {
       const events: ComponentUnmountPayload[] = [];
       bus.on('component:unmount', (payload) => events.push(payload));
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         component: () => document.createTextNode('Created only'),
       });
 
@@ -179,7 +179,7 @@ describe('Component Debug Hooks', () => {
       const events: ComponentUnmountPayload[] = [];
       bus.on('component:unmount', (payload) => events.push(payload));
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         component: () => document.createTextNode('Test'),
       });
 
@@ -201,12 +201,12 @@ describe('Component Debug Hooks', () => {
       const events: ComponentMountPayload[] = [];
       bus.on('component:mount', (payload) => events.push(payload));
 
-      const ChildComponent = createComponent({
+      const ChildComponent = defineComponent({
         name: 'Child',
         component: () => document.createTextNode('Child'),
       });
 
-      const ParentComponent = createComponent({
+      const ParentComponent = defineComponent({
         name: 'Parent',
         component: () => {
           const div = document.createElement('div');
@@ -236,12 +236,12 @@ describe('Component Debug Hooks', () => {
       const events: ComponentMountPayload[] = [];
       bus.on('component:mount', (payload) => events.push(payload));
 
-      const ChildComponent = createComponent({
+      const ChildComponent = defineComponent({
         name: 'Child',
         component: ({ props }) => document.createTextNode(`Child ${props.num}`),
       });
 
-      const ParentComponent = createComponent({
+      const ParentComponent = defineComponent({
         name: 'Parent',
         component: () => {
           const div = document.createElement('div');
@@ -265,12 +265,12 @@ describe('Component Debug Hooks', () => {
       const events: ComponentMountPayload[] = [];
       bus.on('component:mount', (payload) => events.push(payload));
 
-      const GrandchildComponent = createComponent({
+      const GrandchildComponent = defineComponent({
         name: 'Grandchild',
         component: () => document.createTextNode('Grandchild'),
       });
 
-      const ChildComponent = createComponent({
+      const ChildComponent = defineComponent({
         name: 'Child',
         component: () => {
           const span = document.createElement('span');
@@ -280,7 +280,7 @@ describe('Component Debug Hooks', () => {
         },
       });
 
-      const ParentComponent = createComponent({
+      const ParentComponent = defineComponent({
         name: 'Parent',
         component: () => {
           const div = document.createElement('div');
@@ -313,7 +313,7 @@ describe('Component Debug Hooks', () => {
     it('component mounts without debug enabled', () => {
       disableDebug();
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         component: () => document.createTextNode('No debug'),
       });
 
@@ -326,7 +326,7 @@ describe('Component Debug Hooks', () => {
     it('component unmounts without debug enabled', () => {
       disableDebug();
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         component: () => document.createTextNode('No debug'),
       });
 
@@ -340,11 +340,11 @@ describe('Component Debug Hooks', () => {
     it('parent tracking works without debug enabled', () => {
       disableDebug();
 
-      const Child = createComponent({
+      const Child = defineComponent({
         component: () => document.createTextNode('Child'),
       });
 
-      const Parent = createComponent({
+      const Parent = defineComponent({
         component: () => {
           const div = document.createElement('div');
           Child({}).mount(div);
@@ -368,7 +368,7 @@ describe('Component Debug Hooks', () => {
       const events: ComponentMountPayload[] = [];
       bus.on('component:mount', (payload) => events.push(payload));
 
-      const AsyncComponent = createComponent({
+      const AsyncComponent = defineComponent({
         name: 'AsyncComponent',
         async load() {
           await Promise.resolve();
@@ -391,7 +391,7 @@ describe('Component Debug Hooks', () => {
       const events: ComponentMountPayload[] = [];
       bus.on('component:mount', (payload) => events.push(payload));
 
-      const SetupComponent = createComponent({
+      const SetupComponent = defineComponent({
         name: 'SetupComponent',
         setup: () => ({ value: 42 }),
         component: ({ setup }) => document.createTextNode(`Value: ${setup.value}`),
@@ -412,7 +412,7 @@ describe('Component Debug Hooks', () => {
       bus.on('component:mount', (payload) => mountEvents.push(payload));
       bus.on('component:unmount', (payload) => unmountEvents.push(payload));
 
-      const MyComponent = createComponent({
+      const MyComponent = defineComponent({
         component: () => document.createTextNode('Cycle'),
       });
 

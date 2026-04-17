@@ -157,7 +157,7 @@ export {
 // =============================================================================
 
 export {
-  createRouter,
+  defineRouter,
   setActiveRouter,
   getActiveRouter,
   getActiveRouterOrNull,

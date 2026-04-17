@@ -23,7 +23,7 @@
  *  - "Stress Test" button  — generates 200 nodes + 150 edges to show batching
  */
 
-import { createComponent, signal, effect } from 'liteforge';
+import { defineComponent, signal, effect } from 'liteforge';
 import {
   createFlow,
   FlowCanvas,
@@ -290,7 +290,7 @@ function generateStressGraph(): { nodes: FlowNode<ShowcaseNodeData>[]; edges: Fl
 // FlowShowcase Component
 // =============================================================================
 
-export const FlowShowcase = createComponent({
+export const FlowShowcase = defineComponent({
   name: 'FlowShowcase',
 
   setup() {

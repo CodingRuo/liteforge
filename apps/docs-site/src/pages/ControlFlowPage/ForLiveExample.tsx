@@ -1,4 +1,4 @@
-import { createComponent, For } from 'liteforge';
+import { defineComponent, For } from 'liteforge';
 import { signal } from 'liteforge';
 
 interface Patient {
@@ -7,7 +7,7 @@ interface Patient {
   status: 'active' | 'inactive';
 }
 
-export const ForLiveExample = createComponent({
+export const ForLiveExample = defineComponent({
   name: 'ForLiveExample',
   component() {
     let nextId = 4;

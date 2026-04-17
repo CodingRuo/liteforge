@@ -2,7 +2,7 @@
  * Router Configuration
  * 
  * Demonstrates:
- * - createRouter with browser history
+ * - defineRouter with browser history
  * - Route guards (auth, admin)
  * - Nested routes with layouts
  * - **NEW: Inline lazy loading** (no more manual lazy() wrappers!)
@@ -12,7 +12,7 @@
  */
 
 import {
-  createRouter,
+  defineRouter,
   createBrowserHistory,
   defineGuard,
   defineMiddleware,
@@ -303,10 +303,10 @@ export const routes: RouteDefinition[] = [
 // Router Instance
 // =============================================================================
 
-export function createAppRouter() {
+export function defineAppRouter() {
   const history = createBrowserHistory();
   
-  const router = createRouter({
+  const router = defineRouter({
     routes,
     history,
     middleware: [loggerMiddleware],

@@ -441,6 +441,19 @@ When you change a test assertion, state explicitly which of these applies:
 
 `<link>` → `<style>` is category 2, not category 1. "Visual result identical" ≠ "technically identical".
 
+### Test-Environment-Fit Rule
+
+When a test cannot run in the current test environment, the first question is: **"how do I make the test environment-compatible?"** — not "how do I make the production code easier to test?"
+
+Production code must not be degraded to fit a test environment's limitations. Replacing `Bun.file()` with `node:fs/promises` so Vitest can run it is wrong: it degrades Bun-native production code to lowest-common-denominator Node code.
+
+**The right approach:**
+- If the code under test uses runtime-specific APIs (Bun, browser, Node): mock those APIs at the test boundary, OR use the correct runtime for integration tests.
+- If unit tests cannot cover the runtime-specific path: add integration tests in the real runtime (e.g. `bun test` for Bun plugins), and keep unit tests limited to runtime-agnostic logic (shape, registration, pure transforms).
+- Two test layers are acceptable: `test:unit` (Vitest, fast, mocked) + `test:integration` (real runtime, slower, real APIs).
+
+**Applied to `@liteforge/bun-plugin`:** Unit tests (Vitest) cover plugin shape, `onLoad` filter registration, and loader logic with a mock build object. Integration tests (`bun test`) cover real `Bun.build()` with fixture `.tsx` files — the only layer that can verify `Bun.file()` + JSX transform + TS strip end-to-end.
+
 ---
 
 ## Bun Bundler Compatibility (as of Apr 2026)

@@ -54,7 +54,9 @@
     "dev": "tsc -p tsconfig.build.json --watch",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist *.tsbuildinfo",
-    "test": "vitest run tests/"
+    "test:unit": "vitest run tests/*.unit.test.ts",
+    "test:integration": "bun test tests/*.integration.test.ts",
+    "test": "vitest run tests/*.unit.test.ts"
   },
   "dependencies": {
     "@liteforge/transform": "workspace:*"

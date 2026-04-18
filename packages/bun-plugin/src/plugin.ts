@@ -12,7 +12,8 @@ export function liteforgeBunPlugin(options: LiteforgePluginOptions = {}): BunPlu
       build.onLoad({ filter: /\.(tsx|jsx)$/ }, async (args) => {
         const code = await Bun.file(args.path).text()
         const result = transformJsx(code, resolved, false)
-        return { contents: result.code, loader: 'js' }
+        const loader = args.path.endsWith('.tsx') ? 'tsx' : 'jsx'
+        return { contents: result.code, loader }
       })
     },
   }

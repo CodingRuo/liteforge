@@ -22,11 +22,14 @@ export default defineConfig({
       '@liteforge/toast': path.resolve(__dirname, 'packages/toast/src/index.ts'),
       '@liteforge/tooltip': path.resolve(__dirname, 'packages/tooltip/src/index.ts'),
       '@liteforge/flow': path.resolve(__dirname, 'packages/flow/src/index.ts'),
+      '@liteforge/transform': path.resolve(__dirname, 'packages/transform/src/index.ts'),
+      '@liteforge/bun-plugin': path.resolve(__dirname, 'packages/bun-plugin/src/index.ts'),
     },
   },
   test: {
     globals: true,
     include: ['packages/*/tests/**/*.test.ts', 'create-liteforge/tests/**/*.test.ts'],
+    exclude: ['**/node_modules/**', '**/dist/**', '**/*.integration.test.ts'],
     setupFiles: ['./tests/setup.ts'],
     // Use happy-dom for runtime tests (has synchronous MutationObserver)
     environmentMatchGlobs: [
@@ -47,6 +50,8 @@ export default defineConfig({
       ['packages/toast/**', 'happy-dom'],
       ['packages/tooltip/**', 'happy-dom'],
       ['packages/flow/**', 'happy-dom'],
+      ['packages/transform/**', 'node'],
+      ['packages/bun-plugin/**', 'node'],
       ['packages/liteforge/**', 'node'],
       ['create-liteforge/**', 'node'],
     ],

@@ -53,8 +53,8 @@ core (no deps)
 └── calendar
 
 transform (standalone, no liteforge deps — bundler-agnostic AST core)
-└── vite-plugin (thin Vite adapter over @liteforge/transform)
-    └── [future] bun-plugin (thin Bun adapter over @liteforge/transform)
+├── vite-plugin (thin Vite adapter over @liteforge/transform)
+└── bun-plugin  (thin Bun adapter over @liteforge/transform)
 
 devtools (depends on core + store)
 ```
@@ -77,9 +77,10 @@ Build order follows this graph. `pnpm -r build` handles it automatically.
 | `@liteforge/calendar` | 0.1.0 | ~22kb | 184 | createCalendar with 4 views, drag & drop, resources |
 | `@liteforge/transform` | 0.1.0 | ~2kb | 25 | Bundler-agnostic AST transform core (JSX→h(), For/Show, getter-wrap) |
 | `@liteforge/vite-plugin` | 0.5.1 | ~2kb | 388 | Thin Vite adapter over @liteforge/transform + HMR |
+| `@liteforge/bun-plugin` | 0.1.0 | ~1kb | 11+4 | Bun-native adapter over @liteforge/transform (11 unit / 4 integration) |
 | `@liteforge/devtools` | 0.1.0 | ~16kb | ~100 | 5-tab debug panel with time-travel |
 
-**Total: 3507+ tests across all packages**
+**Total: 3518+ tests across all packages**
 
 ---
 
@@ -353,8 +354,11 @@ Dark mode: CSS variables under `:root.dark`, `[data-theme="dark"]`, and `@media 
   └── configResolved + transform hook + HMR injection
       delegates to transformJsx() from @liteforge/transform
 
-[future] @liteforge/bun-plugin — Bun adapter
+@liteforge/bun-plugin          — Bun adapter
+  └── BunPlugin onLoad for .tsx/.jsx
       delegates to transformJsx() from @liteforge/transform
+      loader: 'tsx'/'jsx' — Bun strips TS after JSX transform
+      @liteforge/bun-plugin/dev → createDevServer() (Bun.serve + SPA fallback)
 ```
 
 **Event handler detection** lives in `packages/transform/src/utils.ts` → `isEventHandler()`:
@@ -440,6 +444,19 @@ When you change a test assertion, state explicitly which of these applies:
 3. **Behavior changed intentionally** — new behavior is the design. Update assertion, document in CHANGELOG, communicate in PR.
 
 `<link>` → `<style>` is category 2, not category 1. "Visual result identical" ≠ "technically identical".
+
+### Test-Environment-Fit Rule
+
+When a test cannot run in the current test environment, the first question is: **"how do I make the test environment-compatible?"** — not "how do I make the production code easier to test?"
+
+Production code must not be degraded to fit a test environment's limitations. Replacing `Bun.file()` with `node:fs/promises` so Vitest can run it is wrong: it degrades Bun-native production code to lowest-common-denominator Node code.
+
+**The right approach:**
+- If the code under test uses runtime-specific APIs (Bun, browser, Node): mock those APIs at the test boundary, OR use the correct runtime for integration tests.
+- If unit tests cannot cover the runtime-specific path: add integration tests in the real runtime (e.g. `bun test` for Bun plugins), and keep unit tests limited to runtime-agnostic logic (shape, registration, pure transforms).
+- Two test layers are acceptable: `test:unit` (Vitest, fast, mocked) + `test:integration` (real runtime, slower, real APIs).
+
+**Applied to `@liteforge/bun-plugin`:** Unit tests (Vitest) cover plugin shape, `onLoad` filter registration, and loader logic with a mock build object. Integration tests (`bun test`) cover real `Bun.build()` with fixture `.tsx` files — the only layer that can verify `Bun.file()` + JSX transform + TS strip end-to-end.
 
 ---
 

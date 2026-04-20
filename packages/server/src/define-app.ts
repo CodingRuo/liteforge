@@ -5,23 +5,23 @@
  * plugins, `.serverModules()` for RPC modules, and server-aware terminal methods
  * (`.listen()`, `.build()`, `.dev()`).
  *
- * Phase A: types-only contract. Implementation lands in Phase B–F.
+ * Phase B: builder chain implemented. Terminal methods throw until Phase F.
  *
  * Layer boundary: this file may import from `@liteforge/runtime` and `oakbun`.
  * The low-level `plugin.ts` / `client.ts` remain dependency-free.
  */
 
+import type { Plugin } from 'oakbun'
 import type { LiteForgePlugin } from '@liteforge/runtime'
-import type { AnyServerModule, InferServerApi, LiteForgeServerPlugin, ModulesMap } from './types.js'
+import type { AnyServerModule, BaseCtx, InferServerApi, LiteForgeServerPlugin, ModulesMap } from './types.js'
 import type { ContextMap, ResolveContext } from './context.js'
 import type { DocumentDescriptor } from './define-document.js'
+import { BUILDER_STATE, type BuilderState } from './_internal.js'
 
-// ─── OakBun plugin shape (structural, no runtime import) ──────────────────────
-// OakBun's BunPlugin type is imported as `import type` only — no runtime cost.
-// Using a structural shape here keeps tests/mocks lightweight.
-export interface OakBunPluginLike {
-  readonly name: string
-}
+// ─── OakBun plugin shape ──────────────────────────────────────────────────────
+// Public surface accepts any OakBun Plugin. Generic parameters are erased here
+// because the concrete ctx extension of each plugin is opaque to the facade.
+export type OakBunPluginLike = Plugin<any, object>
 
 // ─── App config ───────────────────────────────────────────────────────────────
 
@@ -40,17 +40,10 @@ export interface AppConfig<TContext extends ContextMap = ContextMap> {
 }
 
 // ─── Server context derivation ────────────────────────────────────────────────
-// What a ServerFn handler sees as `ctx`.
-// BaseCtx is the minimum (req: Request); resolved context is merged on top.
-export interface BaseCtx {
-  req: Request
-}
 
 export type AppServerCtx<TContext extends ContextMap> = BaseCtx & ResolveContext<TContext>
 
-// ─── Required-context inference (Q1 resolution pattern) ───────────────────────
-// Walks a ModulesMap and collects the union of `TCtx` constraints from every fn.
-// Used by `.serverModules()` to verify app context compatibility at compile time.
+// ─── Required-context inference (Q1 resolution pattern) ──────────────────────
 
 type RequiredCtxOfFn<F> = F extends { readonly _ctx: infer C } ? C : never
 
@@ -62,38 +55,32 @@ type RequiredCtxOfMap<TMap> = {
   [K in keyof TMap]: RequiredCtxOfModule<TMap[K]>
 }[keyof TMap]
 
-// Descriptive failure shape surfaced when an app doesn't provide required ctx fields.
 export interface ServerModulesContextError<TRequired, TProvided> {
   readonly _error: 'App context does not provide all required fields'
   readonly _required: TRequired
   readonly _provided: TProvided
 }
 
-// Compile-time check: does `TAppCtx` satisfy `TRequired`?
 type ServerModulesGuard<TAppCtx, TMap extends ModulesMap> =
   TAppCtx extends RequiredCtxOfMap<TMap>
     ? TMap
     : ServerModulesContextError<RequiredCtxOfMap<TMap>, TAppCtx>
 
-// ─── Double-call block for `.serverModules()` (edge-case fix) ─────────────────
-// Once the builder enters `TServerModulesCalled = true`, a second call is typed
-// `(m: never)` — a compile error at the call site rather than a silent replace.
 type ServerModulesInput<
   TAppCtx,
   TMap extends ModulesMap,
   TAlreadyCalled extends boolean,
 > = TAlreadyCalled extends true ? never : ServerModulesGuard<TAppCtx, TMap>
 
-// ─── AppInstance — carries the $server phantom-type (Option E) ────────────────
+// ─── AppInstance — carries the $server phantom-type (Option E) ───────────────
 
 export interface AppInstance<TModules extends ModulesMap = Record<never, never>> {
-  /** Unmount the app. Stops the server (if `.listen()`/`.dev()` was used). */
   unmount(): void
 
   /**
    * Phantom-type carrier for `use('server')`. Undefined at runtime.
    *
-   * Consumers bind this into `PluginRegistry` via a one-time declaration:
+   * Bind into `PluginRegistry` once per project:
    * ```ts
    * declare module '@liteforge/runtime' {
    *   interface PluginRegistry {
@@ -105,50 +92,78 @@ export interface AppInstance<TModules extends ModulesMap = Record<never, never>>
   readonly $server: InferServerApi<LiteForgeServerPlugin<TModules>>
 }
 
-// ─── FullstackAppBuilder ──────────────────────────────────────────────────────
+// ─── FullstackAppBuilder ─────────────────────────────────────────────────────
 
 export interface FullstackAppBuilder<
   TContext extends ContextMap = ContextMap,
   TModules extends ModulesMap = Record<never, never>,
   TServerModulesCalled extends boolean = false,
 > {
-  /** Register an OakBun backend plugin. Chainable. */
   plugin(plugin: OakBunPluginLike): FullstackAppBuilder<TContext, TModules, TServerModulesCalled>
-
-  /** Register a LiteForge client plugin. Chainable. */
   use(plugin: LiteForgePlugin): FullstackAppBuilder<TContext, TModules, TServerModulesCalled>
-
-  /**
-   * Register RPC modules. May be called at most once.
-   *
-   * Emits a compile error if any module's handler declares a `ctx` constraint
-   * the app doesn't satisfy (see {@link ServerModulesContextError}).
-   * Calling `.serverModules()` a second time is a compile error.
-   */
   serverModules<TMap extends ModulesMap>(
     modules: ServerModulesInput<AppServerCtx<TContext>, TMap, TServerModulesCalled>,
   ): FullstackAppBuilder<TContext, TMap, true>
 
-  /** Mount the app in the DOM. SPA-only — does not start a server. */
   mount(): Promise<AppInstance<TModules>>
-
-  /** Start the production server on the given port. */
   listen(port: number): Promise<AppInstance<TModules>>
-
-  /** Produce a deployable bundle in `outDir`. Does not start a server. */
   build(options: { outDir: string }): Promise<void>
-
-  /** Start the development server (rebuild-on-request + RPC routes). */
   dev(options: { port: number }): Promise<AppInstance<TModules>>
 }
 
-// ─── defineApp ────────────────────────────────────────────────────────────────
+// ─── defineApp ───────────────────────────────────────────────────────────────
 
-export declare function defineApp<TContext extends ContextMap = Record<never, never>>(
+export function defineApp<TContext extends ContextMap = Record<never, never>>(
   config: AppConfig<TContext>,
-): FullstackAppBuilder<TContext>
+): FullstackAppBuilder<TContext> {
+  const state: BuilderState = {
+    options: {
+      root: config.root,
+      target: config.target,
+      ...(config.document !== undefined ? { document: config.document } : {}),
+      ...(config.context !== undefined ? { context: config.context as Record<string, unknown> } : {}),
+    },
+    oakbunPlugins: [],
+    liteforgePlugins: [],
+    modulesMap: null,
+    serverModulesCalled: false,
+  }
 
-// ─── Re-exports consumed via this module ──────────────────────────────────────
-// AnyServerModule is re-referenced so the `_ctx` probe in RequiredCtxOfFn matches
-// the shape from `./types.ts`. No runtime export.
+  const builder = {
+    [BUILDER_STATE]: state,
+
+    plugin(plugin: OakBunPluginLike) {
+      state.oakbunPlugins.push(plugin)
+      return builder
+    },
+
+    use(plugin: LiteForgePlugin) {
+      state.liteforgePlugins.push(plugin)
+      return builder
+    },
+
+    serverModules(modules: ModulesMap) {
+      state.modulesMap = modules
+      state.serverModulesCalled = true
+      return builder
+    },
+
+    mount() {
+      throw new Error('[@liteforge/server] .mount() not implemented yet (Phase F)')
+    },
+    listen(_port: number) {
+      throw new Error('[@liteforge/server] .listen() not implemented yet (Phase F)')
+    },
+    build(_options: { outDir: string }) {
+      throw new Error('[@liteforge/server] .build() not implemented yet (Phase F)')
+    },
+    dev(_options: { port: number }) {
+      throw new Error('[@liteforge/server] .dev() not implemented yet (Phase F)')
+    },
+  }
+
+  return builder as unknown as FullstackAppBuilder<TContext>
+}
+
+// ─── Re-exports consumed via this module ─────────────────────────────────────
 export type { AnyServerModule }

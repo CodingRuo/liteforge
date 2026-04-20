@@ -1,11 +1,13 @@
 import type { z } from 'zod'
 
-// ─── BaseCtx (minimal interface — real type comes from OakBun peer dep) ────────
-// We define our own minimal interface so @liteforge/server has no hard OakBun import.
-// The actual ctx flowing through handlers is the full OakBun ctx (superset of this).
+// ─── BaseCtx ──────────────────────────────────────────────────────────────────
+// The minimum a ServerFn handler can rely on. Handlers return plain data;
+// JSON response wrapping is done by the framework (see plugin.ts → handleRpcRequest),
+// so no `json()` helper is exposed on the context.
+// At runtime the actual object passed is the OakBun ctx, which is a superset —
+// defineApp's context resolvers add their keys onto this same object.
 export interface BaseCtx {
   req: Request
-  json: <T>(data: T, status?: number) => Response
 }
 
 // ─── Zod constraint ────────────────────────────────────────────────────────────

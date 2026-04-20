@@ -341,31 +341,13 @@ Dark mode: CSS variables under `:root.dark`, `[data-theme="dark"]`, and `@media 
 
 ## Server Package — `@liteforge/server`
 
-```ts
-// server/greetings.server.ts
-import { defineServerModule } from '@liteforge/server'
-import { z } from 'zod'
+**Status: Low-Level-API (Phase 2 Step 1).** This package provides the typed RPC foundation for LiteForge Fullstack. The high-level `defineApp` Fullstack facade that unifies frontend + backend + RPC into a single entry point is planned for Phase 2 Step 1.5 — until then, Client and Server are set up explicitly.
 
-export const greetingsModule = defineServerModule('greetings')
-  .serverFn('hello', {
-    input: z.object({ name: z.string().min(1) }),
-    handler: async (input) => ({ greeting: `Hello, ${input.name}!`, timestamp: Date.now() }),
-  })
-  .build()
-
-// server/api.ts
-import { liteforgeServer, InferServerApi } from '@liteforge/server'
-export const api = liteforgeServer({ modules: { greetings: greetingsModule } })
-export type Api = InferServerApi<typeof api>
-
-// client
-import { serverClientPlugin } from '@liteforge/server/client'
-import type { Api } from './server/api'
-const { useServer } = serverClientPlugin<Api>()
-const server = useServer()
-const result = await server.greetings.hello({ name: 'René' })
-//    result.greeting → string ✓  (typed, envelope transparent)
-```
+**Core exports:**
+- `defineServerFn` — typed RPC handler with zod-validated input
+- `defineServerModule` — fluent builder for grouping serverFns under a namespace
+- `liteforgeServer({ modules: {...} })` — OakBun plugin that registers RPC routes
+- `serverClientPlugin<Api>()` (subpath `@liteforge/server/client`) — typed client-side proxy
 
 **Security defaults (always active):**
 - `X-Liteforge-RPC: 1` header required → 403 if missing
@@ -374,7 +356,9 @@ const result = await server.greetings.hello({ name: 'René' })
 
 **Routes registered:** `POST /api/_rpc/{moduleKey}/{fnName}` + OPTIONS preflight per route.
 
-**OakBun integration:** `liteforgeServer()` returns a plain object with `name` + `install(hooks)`. Pass it to OakBun's plugin array. No hard import of OakBun — compatible without OakBun if routes registered manually via `.install({ route })`.
+**Architecture note:** In Step 1.5, `defineApp` in `@liteforge/server` will become the canonical entry point — a unified Fullstack facade with `.use()`, `.plugin()`, `.serverModules()`, a central `context` option, `defineDocument` integration, and terminal methods (`.mount()`, `.listen()`, `.build()`, `.dev()`). The Low-Level API documented here will remain available for expert usage and as the internal layer the facade builds on.
+
+**Current demo:** See `examples/starter-bun/src/server/` for a minimal demonstration. The example app itself does not yet consume RPC from the client — this integration lands with Step 1.5.
 
 **Client bundle:** < 1 kb gzip (pure Proxy, no deps).
 

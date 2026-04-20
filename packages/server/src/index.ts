@@ -1,6 +1,11 @@
 export { defineServerFn } from './server-fn.js'
 export { defineServerModule } from './server-module.js'
 export { liteforgeServer } from './plugin.js'
+
+// High-level fullstack facade (Phase 2 Step 1.5)
+export { defineApp } from './define-app.js'
+export { defineDocument } from './define-document.js'
+
 export type {
   BaseCtx,
   AnyZodObject,
@@ -20,3 +25,24 @@ export type {
   RpcSuccessResponse,
   RpcErrorResponse,
 } from './types.js'
+
+export type {
+  AppConfig,
+  AppInstance,
+  FullstackAppBuilder,
+  OakBunPluginLike,
+  AppServerCtx,
+  ServerModulesContextError,
+} from './define-app.js'
+
+export type {
+  DocumentConfig,
+  DocumentDescriptor,
+  DocumentHead,
+  DocumentBody,
+  DocumentMeta,
+  DocumentLink,
+  DocumentScript,
+} from './define-document.js'
+
+export type { ContextMap, ResolveContext } from './context.js'

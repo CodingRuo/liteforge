@@ -555,6 +555,13 @@ export function Link(config: LinkConfig): HTMLAnchorElement {
     throw new Error('Link requires a router in context. Make sure to use defineApp with a router.');
   }
 
+  if (href == null || href === '') {
+    throw new Error(
+      `LiteForge: <Link href> must be a non-empty string. Got: ${JSON.stringify(href)}. ` +
+      `If href comes from a signal or async source, ensure it is resolved before rendering Link.`
+    )
+  }
+
   // Create anchor element
   const anchor = document.createElement('a');
   anchor.href = href;

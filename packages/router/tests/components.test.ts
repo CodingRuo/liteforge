@@ -548,6 +548,33 @@ describe('Link', () => {
     expect(() => Link({ href: '/about', children: 'About' })).toThrow('Link requires a router in context');
   });
 
+  describe('href validation', () => {
+    beforeEach(() => {
+      router = createTestRouter([{ path: '/', component: () => document.createElement('div') }]);
+      setupContext(router);
+    });
+
+    it('throws when href is undefined', () => {
+      expect(() => Link({ href: undefined as unknown as string, children: 'X' }))
+        .toThrow('LiteForge: <Link href> must be a non-empty string. Got: undefined')
+    })
+
+    it('throws when href is null', () => {
+      expect(() => Link({ href: null as unknown as string, children: 'X' }))
+        .toThrow('LiteForge: <Link href> must be a non-empty string. Got: null')
+    })
+
+    it('throws when href is empty string', () => {
+      expect(() => Link({ href: '', children: 'X' }))
+        .toThrow('LiteForge: <Link href> must be a non-empty string. Got: ""')
+    })
+
+    it('error message hints at reactive sources', () => {
+      expect(() => Link({ href: undefined as unknown as string, children: 'X' }))
+        .toThrow('signal or async source')
+    })
+  });
+
   describe('exact prop', () => {
     it('without exact: activeClass applied on prefix match', async () => {
       router = createTestRouter([

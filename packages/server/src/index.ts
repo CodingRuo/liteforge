@@ -41,6 +41,8 @@ export type {
   ContextPlugin,
   ServerOf,
   CtxOf,
+  BuildOptions,
+  BuildResult,
 } from './define-app.js'
 
 export type {

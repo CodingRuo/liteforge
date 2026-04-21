@@ -146,7 +146,7 @@ export interface FullstackAppBuilder<
 
   mount(): Promise<AppInstance<TContext, TModules>>
   listen(port: number): Promise<AppInstance<TContext, TModules>>
-  build(options: { outDir: string }): Promise<void>
+  build(options: BuildOptions): Promise<BuildResult>
   dev(options: { port: number; watchDir?: string }): Promise<AppInstance<TContext, TModules>>
 
   /**
@@ -239,8 +239,8 @@ export function defineApp<TContext extends ContextMap = Record<never, never>>(
     async listen(port: number) {
       return startServer(state, { port })
     },
-    build(_options: { outDir: string }) {
-      throw new Error('[@liteforge/server] .build() not implemented yet (Phase F)')
+    async build(options: BuildOptions) {
+      return runBuild(state, options)
     },
     async dev(options: { port: number; watchDir?: string }) {
       return startServer(state, {
@@ -283,6 +283,36 @@ export type { AnyServerModule }
 export type ServerOf<T> = T extends { readonly $server: infer S } ? S : never
 export type CtxOf<T> = T extends { readonly $ctx: infer C } ? C : never
 
+// ─── .build() types ───────────────────────────────────────────────────────────
+
+export interface BuildOptions {
+  /**
+   * Client entry file path (e.g. `./src/main.tsx`). Compiled with
+   * `@liteforge/bun-plugin` for JSX transform and emitted under
+   * `<outDir>/client/`.
+   */
+  clientEntry: string
+  /**
+   * Output directory. Client bundle lands in `<outDir>/client/`, static HTML
+   * shell (from `defineDocument`) in `<outDir>/client/index.html`.
+   * Defaults to `./dist`.
+   */
+  outDir?: string
+  /** Minify the client bundle. Defaults to true. */
+  minify?: boolean
+  /** Bundle target. Defaults to 'browser'. */
+  target?: 'browser' | 'bun' | 'node'
+}
+
+export interface BuildResult {
+  /** Resolved absolute path of the output directory. */
+  outDir: string
+  /** Relative paths of the emitted files (relative to `outDir`). */
+  files: string[]
+  /** `true` when `Bun.build()` reported success. */
+  success: boolean
+}
+
 // ─── Runtime-Instance wrapper ─────────────────────────────────────────────────
 // Wraps the `@liteforge/runtime` AppInstance in the fullstack AppInstance shape.
 // The `$server` and `$ctx` fields are pure phantom-type carriers — undefined at
@@ -302,6 +332,96 @@ function wrapRuntimeInstance<
     // Phantom carriers — runtime value is undefined; TS sees the precise type.
     $server: undefined as unknown as InferServerApi<LiteForgeServerPlugin<TModules>>,
     $ctx: undefined as unknown as BaseCtx & ResolveContext<TContext>,
+  }
+}
+
+// ─── runBuild — internal implementation for .build() ──────────────────────────
+
+async function runBuild(state: BuilderState, options: BuildOptions): Promise<BuildResult> {
+  const outDir = options.outDir ?? './dist'
+  const clientOutDir = `${outDir}/client`
+  const target = options.target ?? 'browser'
+  const minify = options.minify ?? true
+
+  // Dynamic imports keep bun-specific APIs out of the node test-env import graph.
+  // This only runs at .build()-time, always under Bun.
+  const { liteforgeBunPlugin } = await import('@liteforge/bun-plugin')
+  const path = await import('node:path')
+  const fs = await import('node:fs/promises')
+
+  const bunGlobal = (globalThis as unknown as {
+    Bun?: {
+      build: (opts: unknown) => Promise<{
+        success: boolean
+        outputs: Array<{ path: string }>
+        logs: Array<{ level: string; message: string }>
+      }>
+    }
+  }).Bun
+  if (!bunGlobal) {
+    throw new Error('[@liteforge/server] .build() requires Bun runtime')
+  }
+
+  // 1. Bundle the client entry with the LiteForge JSX transform plugin.
+  //    `external: ['oakbun']` is unnecessary for browser target (OakBun is
+  //    server-only) but we keep it defensive — the starter-bun re-exports
+  //    `app` for both contexts and would otherwise try to bundle OakBun.
+  // Bun.build() can fail two ways:
+  //   1. Throws directly (syntax errors, missing entry, plugin errors)
+  //   2. Returns { success: false, logs: [...] } for resolvable but
+  //      semantically broken builds
+  // We normalise both into a single `.build() failed` message.
+  let buildResult
+  try {
+    buildResult = await bunGlobal.build({
+      entrypoints: [options.clientEntry],
+      outdir: clientOutDir,
+      target,
+      minify,
+      plugins: [liteforgeBunPlugin()],
+      external: target === 'browser' ? ['oakbun'] : [],
+    })
+  } catch (err) {
+    const cause = err instanceof Error ? err.message : String(err)
+    throw new Error(`[@liteforge/server] .build() failed: ${cause}`)
+  }
+
+  if (!buildResult.success) {
+    const messages = buildResult.logs
+      .filter((l) => l.level === 'error')
+      .map((l) => l.message)
+      .join('\n  ')
+    throw new Error(
+      `[@liteforge/server] .build() failed:\n  ${messages || '(no error logs — check Bun.build output)'}`,
+    )
+  }
+
+  // 2. Render the HTML shell (if a document descriptor was configured) and
+  //    write it as <outDir>/client/index.html. The shell references the
+  //    client bundle file emitted by Bun.build — users can adjust the
+  //    document's `scripts` entry to point at `/main.js` etc. if needed.
+  const documentDescriptor = state.options.document as DocumentDescriptor | undefined
+  const mountId = resolveMountId(state.options.target)
+  const html = documentDescriptor
+    ? renderDocument(documentDescriptor, { mountId })
+    : renderDocument({ _tag: 'LiteForgeDocument', config: {} }, { mountId })
+
+  await fs.mkdir(clientOutDir, { recursive: true })
+  const htmlPath = path.join(clientOutDir, 'index.html')
+  await fs.writeFile(htmlPath, html, 'utf-8')
+
+  // 3. Collect emitted files (relative to outDir) for the BuildResult report.
+  const absOutDir = path.resolve(outDir)
+  const files: string[] = []
+  for (const output of buildResult.outputs) {
+    files.push(path.relative(absOutDir, output.path))
+  }
+  files.push(path.relative(absOutDir, htmlPath))
+
+  return {
+    outDir: absOutDir,
+    files,
+    success: true,
   }
 }
 

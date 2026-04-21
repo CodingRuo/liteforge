@@ -87,8 +87,10 @@ describe('defineApp — builder chain (Phase B)', () => {
     expect(state.modulesMap).toBeNull()
   })
 
-  it('build terminal method still throws until Phase F.4', () => {
-    const b = defineApp({ root: {}, target: '#app' })
-    expect(() => b.build({ outDir: './dist' })).toThrow(/not implemented yet/)
-  })
+  // All terminal methods (mount/listen/dev/build) implemented as of F.4.
+  // Their behaviour is covered in:
+  //   - mount.test.ts (Phase F.1, happy-dom)
+  //   - listen.integration.test.ts (Phase F.2, bun:test)
+  //   - dev.integration.test.ts (Phase F.3, bun:test)
+  //   - build.integration.test.ts (Phase F.4, bun:test)
 })

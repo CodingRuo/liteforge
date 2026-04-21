@@ -255,6 +255,7 @@ export function defineApp<TContext extends ContextMap = Record<never, never>>(
         port: opts.port,
         ...(opts.hostname !== undefined ? { hostname: opts.hostname } : {}),
         ...(opts.clientEntry !== undefined ? { clientEntry: opts.clientEntry } : {}),
+        ...(opts.publicDir !== undefined ? { publicDir: opts.publicDir } : {}),
       })
     },
     async build(options: BuildOptions) {
@@ -267,6 +268,7 @@ export function defineApp<TContext extends ContextMap = Record<never, never>>(
         ...(options.hostname !== undefined ? { hostname: options.hostname } : {}),
         ...(options.watchDir !== undefined ? { watchDir: options.watchDir } : {}),
         ...(options.clientEntry !== undefined ? { clientEntry: options.clientEntry } : {}),
+        ...(options.publicDir !== undefined ? { publicDir: options.publicDir } : {}),
       })
     },
   }
@@ -315,6 +317,14 @@ export interface ListenOptions {
   hostname?: string
   /** Path to the browser entry file (e.g. `./src/client.ts`). */
   clientEntry?: string
+  /**
+   * Directory whose files are served as static assets at the request path
+   * (e.g. `./public/styles.css` → `GET /styles.css`). Defaults to `'./public'`.
+   * Framework routes (`/`, `/client.js`, `/__liteforge_hmr__`, `/api/*`) take
+   * precedence — a conflicting file logs a warning at start time but is
+   * still ignored in favour of the framework route.
+   */
+  publicDir?: string
 }
 
 /**
@@ -328,6 +338,8 @@ export interface DevOptions {
   clientEntry?: string
   /** Directory watched for HMR triggers. Defaults to `'src'`. */
   watchDir?: string
+  /** Static asset directory (see ListenOptions.publicDir). Defaults to `'./public'`. */
+  publicDir?: string
 }
 
 // ─── .build() types ───────────────────────────────────────────────────────────
@@ -565,7 +577,16 @@ interface StartServerOptions {
    * `/client.js`. The HTML shell automatically references `/client.js`.
    */
   clientEntry?: string
+  /** Static asset directory (default: `'./public'`). */
+  publicDir?: string
 }
+
+const DEFAULT_PUBLIC_DIR = './public'
+
+// Reserved by the framework — static files with these URL paths are shadowed
+// (warning logged at start time). `/api/` is a prefix-match.
+const RESERVED_ROUTES = new Set(['/', '/client.js', '/__liteforge_hmr__'])
+const RESERVED_PREFIX = '/api/'
 
 const HMR_WS_PATH = '/__liteforge_hmr__'
 
@@ -600,12 +621,23 @@ async function startServer<
     ;(oakbun as unknown as { plugin: (p: unknown) => void }).plugin(extensionPlugin)
   }
 
-  // 3. Register RPC routes for every module.fn in state.modulesMap
+  // 3. Register static assets from publicDir (if it exists).
+  //    Registered before RPC and shell routes so that file-vs-reserved-route
+  //    conflicts can be logged at start time. Framework routes below still
+  //    win because OakBun's router uses first-registered-wins — and we walk
+  //    publicDir files that match RESERVED_ROUTES are skipped entirely.
+  await registerStaticAssets(
+    oakbun,
+    options.publicDir ?? DEFAULT_PUBLIC_DIR,
+    options.devMode ?? false,
+  )
+
+  // 4. Register RPC routes for every module.fn in state.modulesMap
   if (state.modulesMap) {
     registerRpcRoutes(oakbun, state.modulesMap)
   }
 
-  // 4. Client bundle — bundled once at start, rebuilt on file change in dev mode.
+  // 5. Client bundle — bundled once at start, rebuilt on file change in dev mode.
   //    Kept in a mutable reference so the rebuilder (below) can swap the bundle
   //    atomically without restarting the server.
   const clientBundle: { current: BundledClient | null } = { current: null }
@@ -851,6 +883,85 @@ async function startDevHmr(
 function resolveMountId(target: string | HTMLElement): string {
   if (typeof target !== 'string') return 'app'
   return target.startsWith('#') ? target.slice(1) : target
+}
+
+// ─── Static asset serving (publicDir) ─────────────────────────────────────────
+// Scans publicDir recursively at server start and registers each file as an
+// explicit GET route. Start-up is O(N) in asset count; runtime lookup is O(1).
+// Conflicts with reserved framework routes are logged but the framework route
+// wins. Path-traversal is structurally impossible since routes are explicit
+// URL paths, not dynamic filesystem joins at request time.
+
+async function registerStaticAssets(
+  oakbun: unknown,
+  publicDir: string,
+  devMode: boolean,
+): Promise<void> {
+  const fs = await import('node:fs/promises')
+  const path = await import('node:path')
+
+  const absPublic = path.resolve(publicDir)
+  let exists = false
+  try {
+    const stat = await fs.stat(absPublic)
+    exists = stat.isDirectory()
+  } catch {
+    exists = false
+  }
+  if (!exists) return
+
+  const register = oakbun as {
+    get: (p: string, handler: () => Response | Promise<Response>) => void
+  }
+  const cacheControl = devMode ? 'no-cache' : 'public, max-age=3600'
+  const conflicts: string[] = []
+
+  async function walk(dir: string, prefix: string): Promise<void> {
+    const entries = await fs.readdir(dir, { withFileTypes: true })
+    for (const entry of entries) {
+      const abs = path.join(dir, entry.name)
+      const urlPath = `${prefix}/${entry.name}`
+      if (entry.isDirectory()) {
+        await walk(abs, urlPath)
+        continue
+      }
+      if (!entry.isFile()) continue
+
+      // Conflict check — reserved routes win, log warning but skip
+      if (RESERVED_ROUTES.has(urlPath) || urlPath.startsWith(RESERVED_PREFIX)) {
+        conflicts.push(urlPath)
+        continue
+      }
+
+      const filePath = abs
+      register.get(urlPath, async () => {
+        const Bun = (globalThis as { Bun?: { file: (p: string) => { type: string; exists: () => Promise<boolean> } } }).Bun
+        if (!Bun) {
+          return new Response('Bun runtime required', { status: 500 })
+        }
+        const file = Bun.file(filePath)
+        if (!(await file.exists())) {
+          return new Response('Not Found', { status: 404 })
+        }
+        return new Response(file as unknown as BodyInit, {
+          status: 200,
+          headers: {
+            'Content-Type': file.type || 'application/octet-stream',
+            'Cache-Control': cacheControl,
+          },
+        })
+      })
+    }
+  }
+
+  await walk(absPublic, '')
+
+  if (conflicts.length > 0) {
+    console.warn(
+      `[@liteforge/server] ${conflicts.length} file(s) in ${publicDir} conflict with framework routes — framework routes take precedence:\n  ` +
+        conflicts.map((c) => `${publicDir}${c}`).join('\n  '),
+    )
+  }
 }
 
 function registerRpcRoutes(oakbun: unknown, modulesMap: ModulesMap): void {

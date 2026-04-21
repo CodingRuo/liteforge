@@ -7,6 +7,8 @@
  */
 
 import { app } from './app.js'
-import './styles.css'
+
+// Styles are served from public/styles.css via the publicDir static handler —
+// referenced in the HTML shell through the document's head.links config.
 
 await app.mount()

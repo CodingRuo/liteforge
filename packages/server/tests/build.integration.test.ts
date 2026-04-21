@@ -29,7 +29,7 @@ afterEach(() => {
 })
 
 describe('.build() — client bundle', () => {
-  it('emits a JS bundle to <outDir>/client/ from a .tsx entry', async () => {
+  it('emits a JS bundle directly to <outDir> from a .tsx entry', async () => {
     const clientEntry = path.join(projectDir!, 'src/main.tsx')
     writeFileSync(
       clientEntry,
@@ -44,7 +44,7 @@ describe('.build() — client bundle', () => {
     expect(result.outDir).toBe(path.resolve(outDir))
     expect(result.files.length).toBeGreaterThan(0)
     expect(result.files.some((f) => f.endsWith('.js'))).toBe(true)
-    expect(result.files.some((f) => f === path.join('client', 'index.html'))).toBe(true)
+    expect(result.files.some((f) => f === 'index.html')).toBe(true)
 
     // Bundle must contain the function body (verifies Bun.build actually ran)
     const jsFile = result.files.find((f) => f.endsWith('.js'))!
@@ -115,7 +115,7 @@ describe('.build() — client bundle', () => {
 })
 
 describe('.build() — HTML shell emission', () => {
-  it('writes the rendered HTML shell into <outDir>/client/index.html', async () => {
+  it('writes the rendered HTML shell into <outDir>/index.html', async () => {
     const clientEntry = path.join(projectDir!, 'src/main.tsx')
     writeFileSync(clientEntry, `export const x = 1\n`)
 
@@ -128,7 +128,7 @@ describe('.build() — HTML shell emission', () => {
     await defineApp({ root: makeRoot(), target: '#app', document: doc })
       .build({ clientEntry, outDir })
 
-    const html = readFileSync(path.join(outDir, 'client/index.html'), 'utf-8')
+    const html = readFileSync(path.join(outDir, 'index.html'), 'utf-8')
     expect(html).toMatch(/^<!DOCTYPE html>/)
     expect(html).toContain('<html lang="de">')
     expect(html).toContain('<title>Build Test</title>')
@@ -144,7 +144,7 @@ describe('.build() — HTML shell emission', () => {
     await defineApp({ root: makeRoot(), target: '#app' })
       .build({ clientEntry, outDir })
 
-    const html = readFileSync(path.join(outDir, 'client/index.html'), 'utf-8')
+    const html = readFileSync(path.join(outDir, 'index.html'), 'utf-8')
     expect(html).toContain('<!DOCTYPE html>')
     expect(html).toContain('<div id="app"></div>')
   })
@@ -199,7 +199,7 @@ describe('.build() — error handling', () => {
 })
 
 describe('.build() — publicDir copy', () => {
-  it('copies flat files from publicDir into <outDir>/client/', async () => {
+  it('copies flat files from publicDir into <outDir>', async () => {
     const clientEntry = path.join(projectDir!, 'src/main.tsx')
     writeFileSync(clientEntry, `export const x = 1\n`)
 
@@ -212,12 +212,12 @@ describe('.build() — publicDir copy', () => {
       .build({ clientEntry, outDir, publicDir })
 
     expect(result.success).toBe(true)
-    const copied = path.join(outDir, 'client/styles.css')
+    const copied = path.join(outDir, 'styles.css')
     expect(readFileSync(copied, 'utf-8')).toBe('body { color: red; }')
     expect(result.files.some((f) => f.endsWith('styles.css'))).toBe(true)
   })
 
-  it('copies nested directories (public/images/logo.png → dist/client/images/logo.png)', async () => {
+  it('copies nested directories (public/images/logo.png → dist/images/logo.png)', async () => {
     const clientEntry = path.join(projectDir!, 'src/main.tsx')
     writeFileSync(clientEntry, `export const x = 1\n`)
 
@@ -230,7 +230,7 @@ describe('.build() — publicDir copy', () => {
     await defineApp({ root: makeRoot(), target: '#app' })
       .build({ clientEntry, outDir, publicDir })
 
-    const copied = readFileSync(path.join(outDir, 'client/images/logo.png'))
+    const copied = readFileSync(path.join(outDir, 'images/logo.png'))
     // Binary round-trip must be byte-identical
     expect(Array.from(copied)).toEqual(Array.from(pngBytes))
   })
@@ -246,7 +246,7 @@ describe('.build() — publicDir copy', () => {
     expect(result.success).toBe(true)
     // Build still succeeds; only bundle + index.html present
     expect(result.files.some((f) => f.endsWith('.js'))).toBe(true)
-    expect(result.files.some((f) => f === path.join('client', 'index.html'))).toBe(true)
+    expect(result.files.some((f) => f === 'index.html')).toBe(true)
   })
 
   it('defaults to ./public if publicDir is omitted', async () => {
@@ -266,7 +266,7 @@ describe('.build() — publicDir copy', () => {
       process.chdir(projectDir!)
       await defineApp({ root: makeRoot(), target: '#app' })
         .build({ clientEntry, outDir })
-      expect(readFileSync(path.join(outDir, 'client/robots.txt'), 'utf-8')).toBe('User-agent: *')
+      expect(readFileSync(path.join(outDir, 'robots.txt'), 'utf-8')).toBe('User-agent: *')
     } finally {
       process.chdir(origCwd)
     }
@@ -285,7 +285,7 @@ describe('.build() — publicDir copy', () => {
       .build({ clientEntry, outDir, publicDir: false })
 
     // File should not exist in output
-    expect(() => readFileSync(path.join(outDir, 'client/should-not-copy.txt'))).toThrow()
+    expect(() => readFileSync(path.join(outDir, 'should-not-copy.txt'))).toThrow()
   })
 
   it('logs a warning and keeps framework output when public file conflicts with bundle output', async () => {
@@ -313,7 +313,7 @@ describe('.build() — publicDir copy', () => {
     }
 
     // Framework client.js bundle is intact (contains bundled source marker)
-    const clientJs = readFileSync(path.join(outDir, 'client/client.js'), 'utf-8')
+    const clientJs = readFileSync(path.join(outDir, 'client.js'), 'utf-8')
     expect(clientJs).toContain('42') // from entry
     expect(clientJs).not.toContain('user override that must NOT overwrite')
 

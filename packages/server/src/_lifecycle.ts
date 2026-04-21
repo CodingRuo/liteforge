@@ -125,7 +125,6 @@ export async function runBuild(
   options: BuildOptions,
 ): Promise<BuildResult> {
   const outDir = options.outDir ?? './dist'
-  const clientOutDir = `${outDir}/client`
   const target = options.target ?? 'browser'
   const minify = options.minify ?? true
 
@@ -136,7 +135,7 @@ export async function runBuild(
     clientEntry: options.clientEntry,
     target,
     minify,
-    outDir: clientOutDir,
+    outDir,
     contextLabel: '.build()',
   })
 
@@ -147,8 +146,8 @@ export async function runBuild(
     ? renderDocument(withClientScript(documentDescriptor), { mountId })
     : renderDocument(defaultDocumentWithClientScript(), { mountId })
 
-  await fs.mkdir(clientOutDir, { recursive: true })
-  const htmlPath = path.join(clientOutDir, 'index.html')
+  await fs.mkdir(outDir, { recursive: true })
+  const htmlPath = path.join(outDir, 'index.html')
   await fs.writeFile(htmlPath, html, 'utf-8')
 
   // Copy static assets from publicDir (if configured + exists).
@@ -158,7 +157,7 @@ export async function runBuild(
   const publicAssetPaths: string[] = []
   if (options.publicDir !== false) {
     const publicDir = options.publicDir ?? './public'
-    const copied = await copyPublicAssets(publicDir, clientOutDir)
+    const copied = await copyPublicAssets(publicDir, outDir)
     publicAssetPaths.push(...copied)
   }
 

@@ -1,12 +1,14 @@
 /**
- * Fullstack entry.
+ * App declaration.
  *
- *   bun run dev               → HMR dev server (default)
- *   LF_MODE=listen bun run start  → production server
- *   LF_MODE=build bun run build   → emits dist/
+ * Pure `export default defineApp(...)` — the CLI (`@liteforge/cli`) handles
+ * dev / build / start dispatch. Run via:
  *
- * The same `app` const is consumed by src/client.ts on the browser via
- * `await app.mount()`.
+ *   bun run dev     → liteforge dev   (HMR dev server)
+ *   bun run build   → liteforge build (production bundle in ./dist)
+ *   bun run start   → liteforge start (production server)
+ *
+ * The CLI auto-discovers this file (src/app.ts) and src/client.ts.
  */
 
 import { defineApp, defineDocument } from '@liteforge/server'
@@ -42,22 +44,4 @@ export const app = defineApp({
   })))
   .use(toastPlugin({ position: 'bottom-right' }))
 
-if (import.meta.main) {
-  const mode = process.env['LF_MODE'] ?? 'dev'
-  const port = Number(process.env['PORT'] ?? 3000)
-  const clientEntry = './src/client.ts'
-
-  if (mode === 'listen') {
-    const handle = await app.listen({ port, clientEntry })
-    console.log(`Production server at http://localhost:${handle.port}`)
-  } else if (mode === 'build') {
-    const outDir = process.env['OUT_DIR'] ?? './dist'
-    const result = await app.build({ clientEntry, outDir })
-    console.log(`Built → ${result.outDir}`)
-    for (const f of result.files) console.log(`  ${f}`)
-  } else {
-    const handle = await app.dev({ port, clientEntry })
-    console.log(`Dev server at http://localhost:${handle.port}`)
-    console.log('  HMR active — save a file under ./src to reload the browser.')
-  }
-}
+export default app

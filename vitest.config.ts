@@ -55,6 +55,7 @@ export default defineConfig({
       ['packages/transform/**', 'node'],
       ['packages/bun-plugin/**', 'node'],
       ['packages/server/**', 'node'],
+      ['packages/cli/**', 'node'],
       ['packages/liteforge/**', 'node'],
       ['create-liteforge/**', 'node'],
     ],

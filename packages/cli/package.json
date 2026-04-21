@@ -1,0 +1,58 @@
+{
+  "name": "@liteforge/cli",
+  "version": "0.1.0",
+  "description": "LiteForge CLI — dev, build, start commands for fullstack LiteForge apps.",
+  "author": "SchildW3rk <contact@schildw3rk.dev>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/schildw3rk/liteforge",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/schildw3rk/liteforge#readme",
+  "bugs": {
+    "url": "https://github.com/schildw3rk/liteforge/issues"
+  },
+  "keywords": [
+    "liteforge",
+    "cli",
+    "dev",
+    "build",
+    "fullstack",
+    "bun"
+  ],
+  "type": "module",
+  "main": "./dist/cli.js",
+  "bin": {
+    "liteforge": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/cli.d.ts",
+      "import": "./dist/cli.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && bun run chmod",
+    "chmod": "chmod +x dist/cli.js",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.7.2"
+  }
+}

@@ -40,7 +40,9 @@
       "@liteforge/flow": ["./packages/flow/src/index.ts"],
       "@liteforge/flow/*": ["./packages/flow/src/*"],
       "@liteforge/server": ["./packages/server/src/index.ts"],
-      "@liteforge/server/*": ["./packages/server/src/*"]
+      "@liteforge/server/*": ["./packages/server/src/*"],
+      "@liteforge/cli": ["./packages/cli/src/cli.ts"],
+      "@liteforge/cli/*": ["./packages/cli/src/*"]
     },
     "noUncheckedIndexedAccess": true,
     "noEmit": false,

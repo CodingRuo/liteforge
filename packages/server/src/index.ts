@@ -8,6 +8,8 @@ export { defineDocument } from './define-document.js'
 
 export type {
   BaseCtx,
+  ServerCtxRegistry,
+  ResolvedCtx,
   AnyZodObject,
   ServerFn,
   ServerFnDef,
@@ -26,6 +28,9 @@ export type {
   RpcErrorResponse,
 } from './types.js'
 
+export { createContextPlugin } from './define-app.js'
+export { resolveRequestContext } from './context.js'
+
 export type {
   AppConfig,
   AppInstance,
@@ -33,6 +38,7 @@ export type {
   OakBunPluginLike,
   AppServerCtx,
   ServerModulesContextError,
+  ContextPlugin,
 } from './define-app.js'
 
 export type {

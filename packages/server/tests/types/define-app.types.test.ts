@@ -4,9 +4,9 @@
 
 import { describe, it, expect } from 'vitest'
 import { z } from 'zod'
-import { defineApp } from '../src/define-app.js'
-import { defineServerModule } from '../src/server-module.js'
-import type { BaseCtx } from '../src/types.js'
+import { defineApp } from '../../src/define-app.js'
+import { defineServerModule } from '../../src/server-module.js'
+import type { BaseCtx } from '../../src/types.js'
 
 describe('defineApp — chain type-level contracts (Phase B)', () => {
   it('chain returns typed builder, double serverModules() is a compile error', () => {

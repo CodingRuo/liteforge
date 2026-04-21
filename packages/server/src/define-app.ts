@@ -15,6 +15,7 @@ import type { Plugin } from 'oakbun'
 import type { LiteForgePlugin } from '@liteforge/runtime'
 import type { AnyServerModule, BaseCtx, InferServerApi, LiteForgeServerPlugin, ModulesMap } from './types.js'
 import type { ContextMap, ResolveContext } from './context.js'
+import { resolveRequestContext } from './context.js'
 import type { DocumentDescriptor } from './define-document.js'
 import { BUILDER_STATE, type BuilderState } from './_internal.js'
 
@@ -72,9 +73,12 @@ type ServerModulesInput<
   TAlreadyCalled extends boolean,
 > = TAlreadyCalled extends true ? never : ServerModulesGuard<TAppCtx, TMap>
 
-// ─── AppInstance — carries the $server phantom-type (Option E) ───────────────
+// ─── AppInstance — carries $server and $ctx phantom-types ────────────────────
 
-export interface AppInstance<TModules extends ModulesMap = Record<never, never>> {
+export interface AppInstance<
+  TContext extends ContextMap = Record<never, never>,
+  TModules extends ModulesMap = Record<never, never>,
+> {
   unmount(): void
 
   /**
@@ -90,6 +94,21 @@ export interface AppInstance<TModules extends ModulesMap = Record<never, never>>
    * ```
    */
   readonly $server: InferServerApi<LiteForgeServerPlugin<TModules>>
+
+  /**
+   * Phantom-type carrier for the resolved request context. Undefined at runtime.
+   *
+   * Bind into `ServerCtxRegistry` once per project to make server handlers see
+   * the resolved context without annotation or generic:
+   * ```ts
+   * declare module '@liteforge/server' {
+   *   interface ServerCtxRegistry {
+   *     ctx: typeof app['$ctx']
+   *   }
+   * }
+   * ```
+   */
+  readonly $ctx: BaseCtx & ResolveContext<TContext>
 }
 
 // ─── FullstackAppBuilder ─────────────────────────────────────────────────────
@@ -105,10 +124,10 @@ export interface FullstackAppBuilder<
     modules: ServerModulesInput<AppServerCtx<TContext>, TMap, TServerModulesCalled>,
   ): FullstackAppBuilder<TContext, TMap, true>
 
-  mount(): Promise<AppInstance<TModules>>
-  listen(port: number): Promise<AppInstance<TModules>>
+  mount(): Promise<AppInstance<TContext, TModules>>
+  listen(port: number): Promise<AppInstance<TContext, TModules>>
   build(options: { outDir: string }): Promise<void>
-  dev(options: { port: number }): Promise<AppInstance<TModules>>
+  dev(options: { port: number }): Promise<AppInstance<TContext, TModules>>
 }
 
 // ─── defineApp ───────────────────────────────────────────────────────────────
@@ -167,3 +186,26 @@ export function defineApp<TContext extends ContextMap = Record<never, never>>(
 
 // ─── Re-exports consumed via this module ─────────────────────────────────────
 export type { AnyServerModule }
+
+// ─── Context-Plugin Fabrik (wired into OakBun in Phase F) ────────────────────
+// Produces an OakBun-compatible plugin that, on every request, runs the
+// context declaration against the request and merges resolved values into ctx.
+// The returned plugin's `request` hook is what the OakBun `.extend()` pattern
+// consumes at request time.
+//
+// Exported for Phase F's `.listen()` / `.dev()` wiring and for isolated testing.
+export interface ContextPlugin {
+  readonly name: 'liteforge-context'
+  request: (ctx: { req: Request }) => Promise<Record<string, unknown>>
+}
+
+export function createContextPlugin<TContext extends ContextMap>(
+  declaration: TContext,
+): ContextPlugin {
+  return {
+    name: 'liteforge-context',
+    async request(ctx) {
+      return resolveRequestContext(declaration, ctx.req) as unknown as Record<string, unknown>
+    },
+  }
+}

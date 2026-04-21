@@ -1,4 +1,4 @@
-import type { AnyZodObject, BaseCtx, FnsRecord, ServerFn, ServerFnDef, ServerModule } from './types.js'
+import type { AnyZodObject, BaseCtx, FnsRecord, ResolvedCtx, ServerFn, ServerFnDef, ServerModule } from './types.js'
 import { defineServerFn } from './server-fn.js'
 
 class ServerModuleBuilder<TName extends string, TFns extends FnsRecord> {
@@ -11,7 +11,7 @@ class ServerModuleBuilder<TName extends string, TFns extends FnsRecord> {
     FName extends string,
     TInput extends AnyZodObject,
     TOutput,
-    TCtx extends BaseCtx = BaseCtx
+    TCtx extends BaseCtx = ResolvedCtx
   >(
     name: FName,
     def: ServerFnDef<TInput, TOutput, TCtx>

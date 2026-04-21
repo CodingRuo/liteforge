@@ -1,9 +1,9 @@
-import type { AnyZodObject, BaseCtx, ServerFn, ServerFnDef } from './types.js'
+import type { AnyZodObject, BaseCtx, ResolvedCtx, ServerFn, ServerFnDef } from './types.js'
 
 export function defineServerFn<
   TInput extends AnyZodObject,
   TOutput,
-  TCtx extends BaseCtx = BaseCtx
+  TCtx extends BaseCtx = ResolvedCtx
 >(def: ServerFnDef<TInput, TOutput, TCtx>): ServerFn<TInput, TOutput, TCtx> {
   return {
     _tag: 'ServerFn',

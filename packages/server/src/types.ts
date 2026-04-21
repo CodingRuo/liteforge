@@ -10,16 +10,40 @@ export interface BaseCtx {
   req: Request
 }
 
+// ─── ServerCtxRegistry — late-binding extension point ────────────────────────
+// Users augment this interface once per project to make server handlers aware
+// of the app's resolved context without annotating every handler:
+//
+//   declare module '@liteforge/server' {
+//     interface ServerCtxRegistry {
+//       ctx: typeof app['$ctx']
+//     }
+//   }
+//
+// `ServerCtxRegistry.ctx` (if set) becomes the handler's `ctx` type everywhere.
+// Without augmentation, `ResolvedCtx` falls back to `BaseCtx`.
+//
+// Pattern mirrors `PluginRegistry` from `@liteforge/runtime`.
+export interface ServerCtxRegistry {}
+
+export type ResolvedCtx = ServerCtxRegistry extends { ctx: infer C }
+  ? C extends BaseCtx ? C : BaseCtx
+  : BaseCtx
+
 // ─── Zod constraint ────────────────────────────────────────────────────────────
 export type AnyZodObject = z.ZodObject<z.ZodRawShape>
 
 // ─── ServerFn ─────────────────────────────────────────────────────────────────
 // Phantom-type carrier. Runtime value is just { _tag, _def }.
 // _output and _ctx are undefined at runtime — they exist only for type inference.
+//
+// `TCtx` defaults to `ResolvedCtx` (user-augmented via ServerCtxRegistry).
+// Explicit generic is still accepted for cases where a module needs a tighter
+// contract than the app-wide registry provides.
 export interface ServerFn<
   TInput extends AnyZodObject,
   TOutput,
-  TCtx extends BaseCtx = BaseCtx
+  TCtx extends BaseCtx = ResolvedCtx
 > {
   readonly _tag: 'ServerFn'
   readonly _input: TInput
@@ -31,7 +55,7 @@ export interface ServerFn<
 export interface ServerFnDef<
   TInput extends AnyZodObject,
   TOutput,
-  TCtx extends BaseCtx = BaseCtx
+  TCtx extends BaseCtx = ResolvedCtx
 > {
   input: TInput
   handler: (input: z.infer<TInput>, ctx: TCtx) => Promise<TOutput> | TOutput

@@ -8,16 +8,17 @@
 
 import { describe, it, expect } from 'vitest'
 import { z } from 'zod'
-import { defineServerModule } from '../../../src/server-module.js'
+import { defineServerModule } from '../../../../src/server-module.js'
 
 // ─── User-side augmentation (what users write once in src/types.d.ts) ────────
 //
 // NOTE on test isolation: this augmentation affects type resolution for every
-// file in the same TS program. We isolate this file in `tests/types/augmented/`
-// with its own `tsconfig.json` so other tests remain unaffected. In a real
-// project, augmentation goes into `src/types.d.ts` and naturally applies
-// project-wide, which is the desired behaviour.
-declare module '../../../src/types.js' {
+// file in the same TS program. We isolate this file under
+// `tests/types/augmented/ctx/` with its own `tsconfig.json` so that other
+// augmentation-dependent tests (server, etc.) get their own isolated TS scope.
+// In a real project, augmentation goes into `src/types.d.ts` and naturally
+// applies project-wide — which is the desired behaviour there.
+declare module '../../../../src/types.js' {
   interface ServerCtxRegistry {
     ctx: {
       req: Request

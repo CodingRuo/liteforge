@@ -1,0 +1,65 @@
+// Type-level test: with PluginRegistry augmented, `use('server')` in a
+// component returns the typed RPC proxy — not `unknown`.
+//
+// Isolated in `tests/types/augmented/` with its own tsconfig — see
+// context.augmented.types.test.ts for the isolation rationale.
+//
+// NOTE: we directly import the `use` from @liteforge/runtime to exercise the
+// typed-key path. In Phase F, this same mechanism is reached via the runtime
+// plugin-install pass that composeLiteForgePlugins() produces.
+
+import { describe, it, expect } from 'vitest'
+import { use } from '@liteforge/runtime'
+import { z } from 'zod'
+import { defineApp } from '../../../src/define-app.js'
+import { defineServerModule } from '../../../src/server-module.js'
+
+// ─── App definition — `typeof app` drives the $server phantom carrier ────────
+const greetingsModule = defineServerModule('greetings')
+  .serverFn('hello', {
+    input: z.object({ name: z.string() }),
+    handler: async (input) => ({ greeting: `Hello ${input.name}`, ts: Date.now() }),
+  })
+  .build()
+
+const app = defineApp({ root: {}, target: '#app' })
+  .serverModules({ greetings: greetingsModule })
+
+// ─── User-side augmentation (what users write once in src/types.d.ts) ────────
+declare module '@liteforge/runtime' {
+  interface PluginRegistry {
+    server: typeof app['$server']
+  }
+}
+
+describe('use("server") typed via PluginRegistry augmentation', () => {
+  it('use("server") returns the typed RPC proxy (not unknown)', () => {
+    // Compile-time check — the cast in `use` resolves because of the
+    // PluginRegistry augmentation above. If the augmentation were missing,
+    // `use('server')` would resolve to `unknown` and the accesses below
+    // would fail.
+
+    // We wrap in a function so the compile-time checks happen without
+    // actually hitting the runtime `use()` (which would need a mounted app).
+    function _compileTimeProbe() {
+      const server = use('server')
+
+      // Positive: typed chain access
+      const call: (input: { name: string }) => Promise<{ greeting: string; ts: number }> =
+        server.greetings.hello
+      void call
+
+      // Negative: unknown fn on known module
+      // @ts-expect-error — "nonExistent" is not a registered fn on greetings
+      const _bad1 = server.greetings.nonExistent
+
+      // Negative: unknown module
+      // @ts-expect-error — "invoices" is not a registered module
+      const _bad2 = server.invoices
+
+      return call
+    }
+
+    expect(typeof _compileTimeProbe).toBe('function')
+  })
+})

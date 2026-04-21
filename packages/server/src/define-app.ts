@@ -17,6 +17,7 @@ import type { AnyServerModule, BaseCtx, InferServerApi, LiteForgeServerPlugin, M
 import type { ContextMap, ResolveContext } from './context.js'
 import { resolveRequestContext } from './context.js'
 import type { DocumentDescriptor } from './define-document.js'
+import { serverClientPlugin as createServerClient, type ServerClientOptions } from './client.js'
 import { BUILDER_STATE, type BuilderState } from './_internal.js'
 
 // ─── OakBun plugin shape ──────────────────────────────────────────────────────
@@ -128,6 +129,37 @@ export interface FullstackAppBuilder<
   listen(port: number): Promise<AppInstance<TContext, TModules>>
   build(options: { outDir: string }): Promise<void>
   dev(options: { port: number }): Promise<AppInstance<TContext, TModules>>
+
+  /**
+   * Phantom-type carrier for `use('server')`. Undefined at runtime.
+   *
+   * Exposed on the builder (not only on AppInstance) so that users can
+   * augment `PluginRegistry` against `typeof app['$server']` when `app` is
+   * the exported builder const in `src/app.ts`:
+   *
+   * ```ts
+   * // src/app.ts
+   * export const app = defineApp({...}).serverModules({...}).use(...)
+   * if (import.meta.main) await app.dev({ port: 3000 })
+   *
+   * // src/types.d.ts
+   * declare module '@liteforge/runtime' {
+   *   interface PluginRegistry {
+   *     server: typeof app['$server']   // ← builder, not instance
+   *   }
+   * }
+   * ```
+   */
+  readonly $server: InferServerApi<LiteForgeServerPlugin<TModules>>
+
+  /**
+   * Phantom-type carrier for the resolved request context. Undefined at runtime.
+   *
+   * Same rationale as `$server` — exposed on the builder so `typeof app['$ctx']`
+   * works regardless of whether the user captured the builder or the
+   * mounted instance.
+   */
+  readonly $ctx: BaseCtx & ResolveContext<TContext>
 }
 
 // ─── defineApp ───────────────────────────────────────────────────────────────
@@ -187,6 +219,32 @@ export function defineApp<TContext extends ContextMap = Record<never, never>>(
 // ─── Re-exports consumed via this module ─────────────────────────────────────
 export type { AnyServerModule }
 
+// ─── Typeof-Helpers: ServerOf / CtxOf ─────────────────────────────────────────
+// Extract the $server / $ctx phantom types from an app reference. Works with
+// both the builder (pre-mount) and the resolved AppInstance (post-mount),
+// since both carry the same readonly phantom fields.
+//
+// Usage in `src/types.d.ts`:
+//
+//   import type { ServerOf, CtxOf } from '@liteforge/server'
+//   import type { app } from './app.js'
+//
+//   declare module '@liteforge/runtime' {
+//     interface PluginRegistry {
+//       server: ServerOf<typeof app>
+//     }
+//   }
+//   declare module '@liteforge/server' {
+//     interface ServerCtxRegistry {
+//       ctx: CtxOf<typeof app>
+//     }
+//   }
+//
+// Preferred over `typeof app['$server']` because it hides the `$` sigil and
+// works uniformly whether `app` is the builder or the resolved instance.
+export type ServerOf<T> = T extends { readonly $server: infer S } ? S : never
+export type CtxOf<T> = T extends { readonly $ctx: infer C } ? C : never
+
 // ─── Context-Plugin Fabrik (wired into OakBun in Phase F) ────────────────────
 // Produces an OakBun-compatible plugin that, on every request, runs the
 // context declaration against the request and merges resolved values into ctx.
@@ -208,4 +266,53 @@ export function createContextPlugin<TContext extends ContextMap>(
       return resolveRequestContext(declaration, ctx.req) as unknown as Record<string, unknown>
     },
   }
+}
+
+// ─── serverClientPlugin auto-install (Q3-B: deferred at terminal) ─────────────
+// Wraps the Proxy-based client (`./client.ts`) as a LiteForgePlugin so it can
+// be `.use()`-d on the runtime app-builder. The plugin registers the proxy
+// under the `server` key in the app context — `use('server')` returns it.
+//
+// The returned plugin's `.install()` calls `provide('server', proxy)`, so
+// `use('server')` in a component retrieves the typed proxy.
+
+const SERVER_PLUGIN_NAME = 'liteforge-server-client'
+
+export function createServerClientLiteForgePlugin<TMap extends ModulesMap>(
+  _modulesMap: TMap,
+  options?: ServerClientOptions,
+): LiteForgePlugin {
+  // TMap is phantom — the proxy is a Proxy, any module/fn access produces a
+  // fetch. It's TypeScript that cares about the map at compile time via
+  // the PluginRegistry augmentation the user writes.
+  const client = createServerClient<InferServerApi<LiteForgeServerPlugin<TMap>>>(options ?? {})
+  const proxy = client.useServer()
+
+  return {
+    name: SERVER_PLUGIN_NAME,
+    install(ctx) {
+      ctx.provide('server', proxy)
+    },
+  }
+}
+
+// ─── Plugin composition — user plugins first, server last ─────────────────────
+// Given a builder state, returns the ordered LiteForgePlugin list that should
+// be installed on the runtime builder at terminal time (Phase F consumes this).
+//
+// Contract (verified in define-app.test.ts):
+//   1. All user `.use()`-registered plugins appear first, in registration order
+//   2. If `.serverModules()` was called, the server client plugin is appended
+//      last — so user plugins see an empty `server` context, and the server
+//      client plugin is the final provider
+//   3. If `.serverModules()` was NOT called, no server plugin is added
+export function composeLiteForgePlugins(
+  state: BuilderState,
+  options?: ServerClientOptions,
+): LiteForgePlugin[] {
+  const plugins: LiteForgePlugin[] = [...state.liteforgePlugins]
+  if (state.serverModulesCalled && state.modulesMap !== null) {
+    plugins.push(createServerClientLiteForgePlugin(state.modulesMap, options))
+  }
+  return plugins
 }

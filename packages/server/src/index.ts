@@ -28,7 +28,7 @@ export type {
   RpcErrorResponse,
 } from './types.js'
 
-export { createContextPlugin } from './define-app.js'
+export { createContextPlugin, createServerClientLiteForgePlugin, composeLiteForgePlugins } from './define-app.js'
 export { resolveRequestContext } from './context.js'
 
 export type {
@@ -39,6 +39,8 @@ export type {
   AppServerCtx,
   ServerModulesContextError,
   ContextPlugin,
+  ServerOf,
+  CtxOf,
 } from './define-app.js'
 
 export type {

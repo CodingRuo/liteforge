@@ -197,3 +197,128 @@ describe('.build() — error handling', () => {
     await expect(app.build({ clientEntry, outDir })).rejects.toThrow()
   })
 })
+
+describe('.build() — publicDir copy', () => {
+  it('copies flat files from publicDir into <outDir>/client/', async () => {
+    const clientEntry = path.join(projectDir!, 'src/main.tsx')
+    writeFileSync(clientEntry, `export const x = 1\n`)
+
+    const publicDir = path.join(projectDir!, 'public')
+    mkdirSync(publicDir, { recursive: true })
+    writeFileSync(path.join(publicDir, 'styles.css'), 'body { color: red; }')
+
+    const outDir = path.join(projectDir!, 'dist')
+    const result = await defineApp({ root: makeRoot(), target: '#app' })
+      .build({ clientEntry, outDir, publicDir })
+
+    expect(result.success).toBe(true)
+    const copied = path.join(outDir, 'client/styles.css')
+    expect(readFileSync(copied, 'utf-8')).toBe('body { color: red; }')
+    expect(result.files.some((f) => f.endsWith('styles.css'))).toBe(true)
+  })
+
+  it('copies nested directories (public/images/logo.png → dist/client/images/logo.png)', async () => {
+    const clientEntry = path.join(projectDir!, 'src/main.tsx')
+    writeFileSync(clientEntry, `export const x = 1\n`)
+
+    const publicDir = path.join(projectDir!, 'public')
+    mkdirSync(path.join(publicDir, 'images'), { recursive: true })
+    const pngBytes = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 1, 2, 3, 4])
+    writeFileSync(path.join(publicDir, 'images/logo.png'), pngBytes)
+
+    const outDir = path.join(projectDir!, 'dist')
+    await defineApp({ root: makeRoot(), target: '#app' })
+      .build({ clientEntry, outDir, publicDir })
+
+    const copied = readFileSync(path.join(outDir, 'client/images/logo.png'))
+    // Binary round-trip must be byte-identical
+    expect(Array.from(copied)).toEqual(Array.from(pngBytes))
+  })
+
+  it('skips copy silently when publicDir does not exist', async () => {
+    const clientEntry = path.join(projectDir!, 'src/main.tsx')
+    writeFileSync(clientEntry, `export const x = 1\n`)
+
+    const outDir = path.join(projectDir!, 'dist')
+    const result = await defineApp({ root: makeRoot(), target: '#app' })
+      .build({ clientEntry, outDir, publicDir: path.join(projectDir!, 'no-public-dir') })
+
+    expect(result.success).toBe(true)
+    // Build still succeeds; only bundle + index.html present
+    expect(result.files.some((f) => f.endsWith('.js'))).toBe(true)
+    expect(result.files.some((f) => f === path.join('client', 'index.html'))).toBe(true)
+  })
+
+  it('defaults to ./public if publicDir is omitted', async () => {
+    // Write publicDir as ./public relative to cwd inside projectDir by using
+    // a subproject layout: run with absolute paths but pass no publicDir opt.
+    const clientEntry = path.join(projectDir!, 'src/main.tsx')
+    writeFileSync(clientEntry, `export const x = 1\n`)
+
+    // Create ./public in projectDir, then `cd` so default './public' resolves here
+    const publicDir = path.join(projectDir!, 'public')
+    mkdirSync(publicDir, { recursive: true })
+    writeFileSync(path.join(publicDir, 'robots.txt'), 'User-agent: *')
+
+    const outDir = path.join(projectDir!, 'dist')
+    const origCwd = process.cwd()
+    try {
+      process.chdir(projectDir!)
+      await defineApp({ root: makeRoot(), target: '#app' })
+        .build({ clientEntry, outDir })
+      expect(readFileSync(path.join(outDir, 'client/robots.txt'), 'utf-8')).toBe('User-agent: *')
+    } finally {
+      process.chdir(origCwd)
+    }
+  })
+
+  it('skips publicDir copy entirely when publicDir: false', async () => {
+    const clientEntry = path.join(projectDir!, 'src/main.tsx')
+    writeFileSync(clientEntry, `export const x = 1\n`)
+
+    const publicDir = path.join(projectDir!, 'public')
+    mkdirSync(publicDir, { recursive: true })
+    writeFileSync(path.join(publicDir, 'should-not-copy.txt'), 'x')
+
+    const outDir = path.join(projectDir!, 'dist')
+    await defineApp({ root: makeRoot(), target: '#app' })
+      .build({ clientEntry, outDir, publicDir: false })
+
+    // File should not exist in output
+    expect(() => readFileSync(path.join(outDir, 'client/should-not-copy.txt'))).toThrow()
+  })
+
+  it('logs a warning and keeps framework output when public file conflicts with bundle output', async () => {
+    // Use `client.tsx` as entry so Bun.build emits `client.js` — which
+    // matches the public file name and triggers the conflict-skip path.
+    const clientEntry = path.join(projectDir!, 'src/client.tsx')
+    writeFileSync(clientEntry, `export const x = 42\n`)
+
+    const publicDir = path.join(projectDir!, 'public')
+    mkdirSync(publicDir, { recursive: true })
+    writeFileSync(path.join(publicDir, 'client.js'), '// user override that must NOT overwrite framework bundle')
+
+    const warnings: string[] = []
+    const originalWarn = console.warn
+    console.warn = (...args: unknown[]) => {
+      warnings.push(args.map(String).join(' '))
+    }
+
+    const outDir = path.join(projectDir!, 'dist')
+    try {
+      await defineApp({ root: makeRoot(), target: '#app' })
+        .build({ clientEntry, outDir, publicDir })
+    } finally {
+      console.warn = originalWarn
+    }
+
+    // Framework client.js bundle is intact (contains bundled source marker)
+    const clientJs = readFileSync(path.join(outDir, 'client/client.js'), 'utf-8')
+    expect(clientJs).toContain('42') // from entry
+    expect(clientJs).not.toContain('user override that must NOT overwrite')
+
+    const conflictWarning = warnings.find((w) => w.includes('client.js'))
+    expect(conflictWarning).toBeDefined()
+    expect(conflictWarning).toMatch(/conflict with build output/)
+  })
+})

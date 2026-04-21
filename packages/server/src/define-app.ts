@@ -108,6 +108,12 @@ export interface BuildOptions {
   outDir?: string
   minify?: boolean
   target?: 'browser' | 'bun' | 'node'
+  /**
+   * Static asset directory whose contents are copied into `<outDir>/client/`
+   * after bundling. Defaults to `'./public'`. Pass `false` to skip copying
+   * (useful for projects that manage assets themselves).
+   */
+  publicDir?: string | false
 }
 
 export interface BuildResult {

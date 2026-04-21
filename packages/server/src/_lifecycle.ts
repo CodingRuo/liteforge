@@ -151,18 +151,97 @@ export async function runBuild(
   const htmlPath = path.join(clientOutDir, 'index.html')
   await fs.writeFile(htmlPath, html, 'utf-8')
 
+  // Copy static assets from publicDir (if configured + exists).
+  // Must run AFTER Bun.build so framework-emitted files win any naming
+  // conflicts with user assets — a file in public/ that collides with a
+  // bundle output (e.g. public/client.js) is skipped with a warning.
+  const publicAssetPaths: string[] = []
+  if (options.publicDir !== false) {
+    const publicDir = options.publicDir ?? './public'
+    const copied = await copyPublicAssets(publicDir, clientOutDir)
+    publicAssetPaths.push(...copied)
+  }
+
   const absOutDir = path.resolve(outDir)
   const files: string[] = []
   for (const p of bundled.outputPaths) {
     files.push(path.relative(absOutDir, p))
   }
   files.push(path.relative(absOutDir, htmlPath))
+  for (const p of publicAssetPaths) {
+    files.push(path.relative(absOutDir, p))
+  }
 
   return {
     outDir: absOutDir,
     files,
     success: true,
   }
+}
+
+/**
+ * Recursively copy every file under `publicDir` into `destDir`.
+ * - Skip files whose destination path already exists (framework outputs win).
+ * - Silent no-op if publicDir doesn't exist.
+ * - Returns the list of absolute paths that were actually written.
+ *
+ * Binary-safe via `fs.cp` (which uses streaming copies under the hood).
+ */
+async function copyPublicAssets(publicDir: string, destDir: string): Promise<string[]> {
+  const fs = await import('node:fs/promises')
+  const path = await import('node:path')
+
+  const absPublic = path.resolve(publicDir)
+  try {
+    const stat = await fs.stat(absPublic)
+    if (!stat.isDirectory()) return []
+  } catch {
+    return [] // publicDir doesn't exist — legitimate
+  }
+
+  const written: string[] = []
+  const conflicts: string[] = []
+
+  async function walk(srcDir: string, relDir: string): Promise<void> {
+    const entries = await fs.readdir(srcDir, { withFileTypes: true })
+    for (const entry of entries) {
+      const srcPath = path.join(srcDir, entry.name)
+      const relPath = relDir ? `${relDir}/${entry.name}` : entry.name
+      const destPath = path.join(destDir, relPath)
+
+      if (entry.isDirectory()) {
+        await fs.mkdir(destPath, { recursive: true })
+        await walk(srcPath, relPath)
+        continue
+      }
+      if (!entry.isFile()) continue
+
+      // Framework output wins — skip with warning if destination exists.
+      try {
+        await fs.access(destPath)
+        conflicts.push(relPath)
+        continue
+      } catch {
+        // Destination doesn't exist, proceed with copy
+      }
+
+      await fs.mkdir(path.dirname(destPath), { recursive: true })
+      // fs.cp is streaming + binary-safe; fallback to copyFile for older Bun.
+      await fs.copyFile(srcPath, destPath)
+      written.push(destPath)
+    }
+  }
+
+  await walk(absPublic, '')
+
+  if (conflicts.length > 0) {
+    console.warn(
+      `[@liteforge/server] ${conflicts.length} file(s) in ${publicDir} conflict with build output — framework output wins:\n  ` +
+        conflicts.join('\n  '),
+    )
+  }
+
+  return written
 }
 
 // ─── Document client-script injection ─────────────────────────────────────────

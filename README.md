@@ -1,20 +1,24 @@
 # LiteForge
 
+> **Deprecated:** LiteForge is now legacy and will not receive further feature development.
+> The planned successor is `@schildw3rk/shield`, the frontend framework of SchildW3rk.
+> Shield is not stable yet, so existing LiteForge projects can stay on LiteForge for now; new framework work moves to SchildW3rk.
+
 A signals-based frontend framework with no virtual DOM, zero external dependencies, and TypeScript-first APIs.
 
-**⚠️ STATUS: ALPHA / EXPERIMENTAL — This framework is currently in heavy active development. It is used in production for specific projects (Kontor), but the API is subject to breaking changes. Use at your own risk. Expect bugs!**
+**Status:** Legacy alpha. The API will be superseded by SchildW3rk Shield.
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ---
 
-## Status: Powering Real-World SaaS
+## Status: Legacy
 
-LiteForge is the engine behind Kontor, a comprehensive accounting and invoicing SaaS. It's not just a UI library — it's a framework built to handle complex state, secure routing, and heavy data-loading requirements in production.
+LiteForge was built from real application needs and remains available for reference and existing projects. It is no longer the active development target.
 
 **The Full Stack Experience**
 
-LiteForge was designed to work seamlessly with OakBun, a native Bun-powered backend framework. Together, they provide a unified development experience from the database to the DOM, focusing on type-safety, performance, and developer happiness.
+LiteForge was designed to work with OakBun. Both projects are now legacy. The SchildW3rk rewrite splits the stack into Shell for backend and Shield for frontend.
 
 ---
 
